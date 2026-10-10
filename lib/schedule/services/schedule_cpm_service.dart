@@ -12,6 +12,7 @@ class ScheduleCpmService {
         walk(child);
       }
     }
+
     for (final root in roots) {
       walk(root);
     }
@@ -85,6 +86,22 @@ class ScheduleCpmService {
       order.add(id);
     }
 
+    // An activity with no duration is silently given one day by [_duration],
+    // which quietly shortens the critical path and makes a planner trust a
+    // finish date that was never earned. Summaries legitimately have no
+    // duration of their own, so only real work is reported.
+    for (final a in activities) {
+      if (a.duration == null &&
+          a.type != ActivityType.milestone &&
+          a.type != ActivityType.summary) {
+        diags.add(CpmDiagnostic(
+          activityId: a.id,
+          type: CpmDiagnosticType.missingDuration,
+          message: 'No duration set for "${a.name}"; assumed 1 day.',
+        ));
+      }
+    }
+
     for (final a in activities) {
       visit(a.id, <String>[]);
     }
@@ -114,9 +131,8 @@ class ScheduleCpmService {
       ef[id] = maxConstraint + dur;
     }
 
-    final projectDuration = ef.values.isEmpty
-        ? 0.0
-        : ef.values.reduce((a, b) => a > b ? a : b);
+    final projectDuration =
+        ef.values.isEmpty ? 0.0 : ef.values.reduce((a, b) => a > b ? a : b);
 
     // Backward pass
     final ls = <String, double>{};
@@ -312,4 +328,5 @@ enum CpmDiagnosticType {
   missingDependency,
   selfDependency,
   cycle,
+  missingDuration,
 }

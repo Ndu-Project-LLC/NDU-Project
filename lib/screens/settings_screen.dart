@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/services/permission_service.dart';
 import 'package:ndu_project/services/subscription_service.dart';
-import 'package:ndu_project/widgets/draggable_sidebar.dart';
-import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/services/currency_service.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -21,16 +19,17 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/utils/web_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/theme_provider.dart';
+import 'package:ndu_project/providers/display_preferences_provider.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/security_services.dart';
-import 'package:ndu_project/screens/mfa_enrollment_screen.dart';
-import 'package:ndu_project/screens/recovery_codes_screen.dart';
+import 'package:ndu_project/cost_estimate/widgets/accounting_connection_panel.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -71,11 +70,9 @@ class _SettingsScreenState extends State<SettingsScreen>
     return tabs;
   }
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   // ── SharedPreferences keys ──
   static const _prefLanguage = 'pref_language';
-  static const _prefTimezone = 'pref_timezone';
+  static const _prefTimezone = UserPreferencesService.timezoneKey;
   static const _prefDateFormat = 'pref_date_format';
   static const _prefEmailNotif = 'pref_email_notif';
   static const _prefPushNotif = 'pref_push_notif';
@@ -85,6 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   static const _prefFontSize = 'pref_font_size';
   static const _prefCompactMode = 'pref_compact_mode';
   static const _prefReduceAnimations = 'pref_reduce_animations';
+  static const _prefDisableOpenEditor = 'pref_disable_open_editor';
 
   // ── Preference state ──
   String _language = 'English';
@@ -98,18 +96,13 @@ class _SettingsScreenState extends State<SettingsScreen>
   String _fontSize = 'medium'; // 'small', 'medium', 'large'
   bool _compactMode = false;
   bool _reduceAnimations = false;
+  bool _disableOpenEditor = false;
   bool _twoFactorEnabled = false;
   bool _twoFactorLoading = true;
-  bool _passwordLoginEnabled = true;
-  bool _passwordlessEmailEnabled = false;
-  bool _mfaEnabledPolicy = true;
-  MfaMethod _defaultMfaMethod = MfaMethod.authenticator;
   final Set<MfaMethod> _backupMfaMethods = {
     MfaMethod.sms,
     MfaMethod.emailCode,
   };
-  MfaRequirement _mfaRequirement = MfaRequirement.everyLogin;
-  int _rememberDeviceDays = 30;
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
@@ -126,6 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       _fontSize = prefs.getString(_prefFontSize) ?? 'medium';
       _compactMode = prefs.getBool(_prefCompactMode) ?? false;
       _reduceAnimations = prefs.getBool(_prefReduceAnimations) ?? false;
+      _disableOpenEditor = prefs.getBool(_prefDisableOpenEditor) ?? false;
     });
     // Load 2FA status
     try {
@@ -135,21 +129,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         setState(() {
           _twoFactorEnabled = enabled;
           _twoFactorLoading = false;
-          _passwordLoginEnabled = policy.passwordLoginEnabled;
-          _passwordlessEmailEnabled = policy.passwordlessEmailEnabled;
-          _mfaEnabledPolicy = policy.mfaEnabled;
-          _defaultMfaMethod = policy.defaultMfaMethod;
           _backupMfaMethods
             ..clear()
             ..addAll(policy.backupMethods);
-          _mfaRequirement = policy.requireMfaEveryLogin
-              ? MfaRequirement.everyLogin
-              : policy.requireMfaNewDeviceOnly
-                  ? MfaRequirement.newDeviceOnly
-                  : policy.requireMfaHighRiskOnly
-                      ? MfaRequirement.highRiskOnly
-                      : MfaRequirement.adminOnly;
-          _rememberDeviceDays = policy.rememberDeviceDays;
         });
       }
     } catch (e) {
@@ -206,7 +188,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     return ResponsiveScaffold(
       activeItemLabel: 'Settings',
-      backgroundColor: Colors.white,
       appBarTitle: 'Settings',
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: Column(
@@ -233,22 +214,6 @@ class _SettingsScreenState extends State<SettingsScreen>
         ],
       ),
     );
-  }
-
-  Future<void> _saveSecurityPolicy() async {
-    final policy = SecurityPolicy(
-      passwordLoginEnabled: _passwordLoginEnabled,
-      passwordlessEmailEnabled: _passwordlessEmailEnabled,
-      mfaEnabled: _mfaEnabledPolicy,
-      requireMfaEveryLogin: _mfaRequirement == MfaRequirement.everyLogin,
-      requireMfaNewDeviceOnly: _mfaRequirement == MfaRequirement.newDeviceOnly,
-      requireMfaHighRiskOnly: _mfaRequirement == MfaRequirement.highRiskOnly,
-      requireMfaAdminOnly: _mfaRequirement == MfaRequirement.adminOnly,
-      defaultMfaMethod: _defaultMfaMethod,
-      backupMethods: _backupMfaMethods.toList(),
-      rememberDeviceDays: _rememberDeviceDays,
-    );
-    await TwoFactorAuthService.savePolicy(policy);
   }
 
   void _handleLogout() {
@@ -292,8 +257,10 @@ class _SettingsScreenState extends State<SettingsScreen>
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          color: Colors.white,
-          border: Border.all(color: Colors.grey.withOpacity(0.12)),
+          color: Theme.of(context).cardTheme.color ?? Colors.white,
+          border: Border.all(
+              color: Theme.of(context).dividerTheme.color ??
+                  Colors.grey.withValues(alpha: 0.12)),
           boxShadow: const [
             BoxShadow(
                 blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -308,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.18),
+                    color: accent.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: accent, size: 22),
@@ -335,21 +302,23 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 20, color: Colors.black54),
+              Icon(icon, size: 20, color: theme.iconTheme.color),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w500)),
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: theme.textTheme.bodyLarge?.color)),
             ),
             Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: accent,
+              activeThumbColor: accent,
               trackColor: WidgetStateProperty.resolveWith((states) =>
                   states.contains(WidgetState.selected)
-                      ? accent.withOpacity(0.4)
+                      ? accent.withValues(alpha: 0.4)
                       : null),
             ),
           ],
@@ -365,7 +334,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 20, color: Colors.black54),
+              Icon(icon, size: 20, color: theme.iconTheme.color),
               const SizedBox(width: 12),
             ],
             Expanded(
@@ -376,7 +345,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -395,10 +364,10 @@ class _SettingsScreenState extends State<SettingsScreen>
       );
     }
 
-    Widget _buildDefaultCurrencyRow() {
+    Widget buildDefaultCurrencyRow() {
       final currencyService = CurrencyService.instance;
       final currentCode = currencyService.defaultCurrencyCode;
-      final currencies = CurrencyService.supportedCurrencies;
+      const currencies = CurrencyService.supportedCurrencies;
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
@@ -421,7 +390,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -440,6 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   if (code == null) return;
                   await currencyService.setDefaultCurrency(code);
                   setState(() {});
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Default currency set to $code'),
@@ -485,7 +455,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.18),
+                            color: accent.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text('Preferences',
@@ -493,7 +463,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   color: accent, fontWeight: FontWeight.w700)),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.tune, color: accent, size: 20),
+                        const Icon(Icons.tune, color: accent, size: 20),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -504,7 +474,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Text(
                         'Personalize appearance, notifications, and privacy settings to match your workflow.',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withOpacity(0.78),
+                            color: Colors.white.withValues(alpha: 0.78),
                             height: 1.45)),
                   ],
                 ),
@@ -619,7 +589,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             }
                           }, icon: Icons.calendar_today),
                           const SizedBox(height: 8),
-                          _buildDefaultCurrencyRow(),
+                          buildDefaultCurrencyRow(),
                         ],
                       ),
                     ),
@@ -706,7 +676,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       }
                     }, icon: Icons.calendar_today),
                     const SizedBox(height: 8),
-                    _buildDefaultCurrencyRow(),
+                    buildDefaultCurrencyRow(),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -744,54 +714,91 @@ class _SettingsScreenState extends State<SettingsScreen>
                 title: 'Display & Accessibility',
                 icon: Icons.accessibility_new,
                 children: [
-                  const Text('Font size',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Text('A',
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w600)),
-                      Expanded(
-                        child: Slider(
-                          value: _fontSize == 'small'
-                              ? 0
-                              : _fontSize == 'medium'
-                                  ? 0.5
-                                  : 1.0,
-                          divisions: 2,
-                          activeColor: accent,
-                          label: _fontSize == 'small'
-                              ? 'Small'
-                              : _fontSize == 'medium'
-                                  ? 'Medium'
-                                  : 'Large',
-                          onChanged: (v) {
-                            final size = v == 0
-                                ? 'small'
-                                : v == 0.5
-                                    ? 'medium'
-                                    : 'large';
-                            setState(() => _fontSize = size);
-                            _setPref(_prefFontSize, size);
-                          },
+                  Builder(builder: (context) {
+                    final displayPreferences =
+                        context.watch<DisplayPreferencesProvider>();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Font size',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Text('A',
+                                style: TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600)),
+                            Expanded(
+                              child: Slider(
+                                value: _fontSize == 'small'
+                                    ? 0
+                                    : _fontSize == 'medium'
+                                        ? 0.5
+                                        : 1.0,
+                                divisions: 2,
+                                activeColor: accent,
+                                label: _fontSize == 'small'
+                                    ? 'Small'
+                                    : _fontSize == 'medium'
+                                        ? 'Medium'
+                                        : 'Large',
+                                onChanged: (v) {
+                                  final size = v == 0
+                                      ? 'small'
+                                      : v == 0.5
+                                          ? 'medium'
+                                          : 'large';
+                                  setState(() => _fontSize = size);
+                                  displayPreferences.setFontSize(size);
+                                },
+                              ),
+                            ),
+                            const Text('A',
+                                style: TextStyle(
+                                    fontSize: 20, fontWeight: FontWeight.w600)),
+                          ],
                         ),
-                      ),
-                      const Text('A',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  toggleRow('Compact mode', _compactMode, (v) {
-                    setState(() => _compactMode = v);
-                    _setPref(_prefCompactMode, v);
-                  }, icon: Icons.view_compact),
-                  toggleRow('Reduce animations', _reduceAnimations, (v) {
-                    setState(() => _reduceAnimations = v);
-                    _setPref(_prefReduceAnimations, v);
-                  }, icon: Icons.animation),
+                        const SizedBox(height: 8),
+                        toggleRow('Compact mode', _compactMode, (v) {
+                          setState(() => _compactMode = v);
+                          displayPreferences.setCompactMode(v);
+                        }, icon: Icons.view_compact),
+                        toggleRow('Reduce animations', _reduceAnimations, (v) {
+                          setState(() => _reduceAnimations = v);
+                          displayPreferences.setReduceAnimations(v);
+                        }, icon: Icons.animation),
+                        toggleRow(
+                          'Speech to text',
+                          displayPreferences.speechToTextEnabled,
+                          displayPreferences.setSpeechToTextEnabled,
+                          icon: Icons.mic_none_outlined,
+                        ),
+                        toggleRow(
+                          'KAZ AI',
+                          displayPreferences.kazAiEnabled,
+                          displayPreferences.setKazAiEnabled,
+                          icon: Icons.smart_toy_outlined,
+                        ),
+                        const SizedBox(height: 8),
+                        toggleRow('Disable Open Editor', _disableOpenEditor,
+                            (v) {
+                          setState(() => _disableOpenEditor = v);
+                          _setPref(_prefDisableOpenEditor, v);
+                        }, icon: Icons.edit_off_outlined),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // ── Accounting Integration (account-level, all users) ──
+              sectionCard(
+                title: 'Accounting Integration',
+                icon: Icons.account_balance_outlined,
+                children: [
+                  const AccountingConnectionPanel(),
                 ],
               ),
               const SizedBox(height: 20),
@@ -830,7 +837,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     subtitle: 'Permanently remove your account and all data',
                     labelColor: Colors.red,
                     onTap: () {
-                      showDialog(
+                      showAppDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
                           title: const Text('Delete Account?'),
@@ -876,8 +883,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                           height: 20,
                           decoration: BoxDecoration(
                             color: _twoFactorEnabled
-                                ? Colors.green.withOpacity(0.18)
-                                : Colors.grey.withOpacity(0.12),
+                                ? Colors.green.withValues(alpha: 0.18)
+                                : Colors.grey.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
@@ -902,7 +909,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 _twoFactorEnabled
                                     ? 'Your account is protected with email verification'
                                     : 'Add an extra layer of security to your account',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.black54,
                                 ),
@@ -920,11 +927,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                           Switch(
                             value: _twoFactorEnabled,
                             onChanged: _handleTwoFactorToggle,
-                            activeColor: accent,
+                            activeThumbColor: accent,
                             trackColor: WidgetStateProperty.resolveWith(
                                 (states) =>
                                     states.contains(WidgetState.selected)
-                                        ? accent.withOpacity(0.4)
+                                        ? accent.withValues(alpha: 0.4)
                                         : null),
                           ),
                       ],
@@ -948,8 +955,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 title: 'About',
                 icon: Icons.info_outline,
                 children: [
-                  _PrefInfoRow(label: 'App version', value: '1.0.0'),
-                  _PrefInfoRow(label: 'Build', value: '2024.12'),
+                  const _PrefInfoRow(label: 'App version', value: '1.0.0'),
+                  const _PrefInfoRow(label: 'Build', value: '2024.12'),
                   const SizedBox(height: 8),
                   _PrefActionTile(
                     icon: Icons.description_outlined,
@@ -1073,11 +1080,17 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _integrationsPanel() {
-    return ListView(
+    // Column, not ListView: this panel is rendered inside the page's
+    // SingleChildScrollView, so a viewport here would get unbounded height
+    // and crash (same fix as the Interface Management screen).
+    return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
-        _openAiIntegrationTile(),
-      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _openAiIntegrationTile(),
+        ],
+      ),
     );
   }
 
@@ -1129,7 +1142,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
     ];
 
-    final actionItems = const <_ActionItemData>[
+    const actionItems = <_ActionItemData>[
       _ActionItemData(
         title: 'Finalize migration test plan for release 7.2',
         owner: 'Product Ops',
@@ -1243,7 +1256,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.18),
+                color: accent.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text('Executive Summary',
@@ -1263,8 +1276,8 @@ class _SettingsScreenState extends State<SettingsScreen>
         const SizedBox(height: 12),
         Text(
           'StackOne delivery is pacing ahead of target, with stakeholder sentiment at an all-time high.\nWe are on track for the Q4 milestone with strong compliance posture and predictable burn.',
-          style: theme.textTheme.bodyLarge
-              ?.copyWith(color: Colors.white.withOpacity(0.78), height: 1.45),
+          style: theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.78), height: 1.45),
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -1280,8 +1293,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     final highlightCard = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        color: Colors.white.withOpacity(0.12),
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -1311,7 +1324,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: LinearProgressIndicator(
                 value: 0.94,
                 minHeight: 10,
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation(accent),
               ),
             ),
@@ -1368,8 +1381,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
-        color: Colors.white,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: const [
           BoxShadow(
               blurRadius: 20, offset: Offset(0, 18), color: Color(0x11000000)),
@@ -1382,7 +1395,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.18),
+              color: accent.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(data.icon, color: accent, size: 24),
@@ -1421,7 +1434,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             child: LinearProgressIndicator(
               value: data.progress,
               minHeight: 10,
-              backgroundColor: Colors.grey.withOpacity(0.12),
+              backgroundColor: Colors.grey.withValues(alpha: 0.12),
               valueColor: AlwaysStoppedAnimation(accent),
             ),
           ),
@@ -1439,8 +1452,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1453,19 +1466,19 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
-          Text(
+          const Text(
               'Velocity trend across the past six sprints with forecast confidence.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           SizedBox(
             height: 160,
             child: _VelocitySparkline(accent: accent),
           ),
           const SizedBox(height: 16),
-          Wrap(
+          const Wrap(
             spacing: 16,
             runSpacing: 12,
-            children: const [
+            children: [
               _TrendStat(
                   label: 'Throughput',
                   value: '42 pts',
@@ -1495,18 +1508,18 @@ class _SettingsScreenState extends State<SettingsScreen>
     final heatMap = {
       'Delivery': {
         'High': accent,
-        'Medium': accent.withOpacity(0.6),
-        'Low': accent.withOpacity(0.25)
+        'Medium': accent.withValues(alpha: 0.6),
+        'Low': accent.withValues(alpha: 0.25)
       },
       'Security': {
         'High': Colors.redAccent,
         'Medium': Colors.orangeAccent,
-        'Low': Colors.orange.withOpacity(0.4)
+        'Low': Colors.orange.withValues(alpha: 0.4)
       },
       'People': {
-        'High': Colors.blue,
-        'Medium': Colors.blueAccent.withOpacity(0.6),
-        'Low': Colors.blueAccent.withOpacity(0.3)
+        'High': const Color(0xFFFFC812),
+        'Medium': const Color(0xFFFFC812).withValues(alpha: 0.6),
+        'Low': const Color(0xFFFFC812).withValues(alpha: 0.3)
       },
     };
 
@@ -1514,8 +1527,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1528,13 +1541,13 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          Text(
+          const Text(
               'Risk posture for current delivery window, mapped by likelihood vs per-domain impact.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           Table(
             border: TableBorder.symmetric(
-                inside: BorderSide(color: Colors.grey.withOpacity(0.2))),
+                inside: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
             columnWidths: const {0: IntrinsicColumnWidth()},
             children: [
               TableRow(
@@ -1598,8 +1611,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1612,9 +1625,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Text(
+          const Text(
               'Prioritized interventions to sustain momentum and de-risk the next release.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           ...actionItems
               .map((item) => _ActionItemRow(item: item, accent: accent)),
@@ -1647,8 +1660,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1661,9 +1674,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          Text(
+          const Text(
               'Latest artefacts ready to distribute to project leadership and partners.',
-              style: const TextStyle(color: Colors.black54)),
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 16),
           ...downloads.map((item) {
             return Padding(
@@ -1673,7 +1686,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.18),
+                      color: accent.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.insert_drive_file_outlined,
@@ -1727,9 +1740,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     const accent = Color(0xFFFFC107);
     final theme = Theme.of(context);
 
-    return ListView(
+    // Column, not ListView: this panel is rendered inside the page's
+    // SingleChildScrollView, so a viewport here would get unbounded height
+    // and crash (same fix as the Interface Management screen).
+    return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         Card(
           margin: EdgeInsets.zero,
           shape:
@@ -1747,24 +1765,25 @@ class _SettingsScreenState extends State<SettingsScreen>
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.18),
+                        color: accent.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(Icons.edit_note, color: accent, size: 28),
+                      child:
+                          const Icon(Icons.edit_note, color: accent, size: 28),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Inline Content Editor',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 22, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Text(
                             'Edit text content directly on any page in your application.',
-                            style: const TextStyle(
-                                color: Colors.black54, fontSize: 15),
+                            style:
+                                TextStyle(color: Colors.black54, fontSize: 15),
                           ),
                         ],
                       ),
@@ -1776,13 +1795,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: isEditMode
-                        ? Colors.green.withOpacity(0.08)
-                        : Colors.grey.withOpacity(0.06),
+                        ? Colors.green.withValues(alpha: 0.08)
+                        : Colors.grey.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                         color: isEditMode
-                            ? Colors.green.withOpacity(0.3)
-                            : Colors.grey.withOpacity(0.2)),
+                            ? Colors.green.withValues(alpha: 0.3)
+                            : Colors.grey.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -1790,8 +1809,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isEditMode
-                              ? Colors.green.withOpacity(0.18)
-                              : Colors.grey.withOpacity(0.12),
+                              ? Colors.green.withValues(alpha: 0.18)
+                              : Colors.grey.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1888,27 +1907,29 @@ class _SettingsScreenState extends State<SettingsScreen>
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.08),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                    border: Border.all(
+                        color: const Color(0xFFFFC812).withValues(alpha: 0.2)),
                   ),
-                  child: Row(
+                  child: const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue, size: 22),
-                      const SizedBox(width: 12),
+                      Icon(Icons.info_outline,
+                          color: Color(0xFFFFC812), size: 22),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Admin Only',
                               style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.blue),
+                                  color: Color(0xFFFFC812)),
                             ),
-                            const SizedBox(height: 6),
-                            const Text(
+                            SizedBox(height: 6),
+                            Text(
                               'Only users with admin privileges can access edit mode. Regular users will see the published content without editing capabilities.',
                               style:
                                   TextStyle(color: Colors.black87, height: 1.4),
@@ -1924,13 +1945,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: contentProvider.showEditButton
-                        ? Colors.red.withOpacity(0.08)
-                        : Colors.green.withOpacity(0.06),
+                        ? Colors.red.withValues(alpha: 0.08)
+                        : Colors.green.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                         color: contentProvider.showEditButton
-                            ? Colors.red.withOpacity(0.3)
-                            : Colors.green.withOpacity(0.2)),
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.green.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -1938,8 +1959,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: contentProvider.showEditButton
-                              ? Colors.red.withOpacity(0.18)
-                              : Colors.green.withOpacity(0.12),
+                              ? Colors.red.withValues(alpha: 0.18)
+                              : Colors.green.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1957,9 +1978,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Remove Content Modification Button',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -2002,7 +2023,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -2027,10 +2049,10 @@ class _SettingsScreenState extends State<SettingsScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.bolt, color: Colors.blue),
+              child: const Icon(Icons.bolt, color: Color(0xFFFFC812)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -2047,17 +2069,15 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.08),
+                          color: statusColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                                Icons.check_circle,
-                                size: 14,
-                                color: statusColor),
-                            const SizedBox(width: 4),
+                            Icon(Icons.check_circle,
+                                size: 14, color: statusColor),
+                            SizedBox(width: 4),
                             Text(statusLabel,
                                 style: TextStyle(
                                     fontSize: 12,
@@ -2069,9 +2089,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  const Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.black54),
+                    style: TextStyle(color: Colors.black54),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -2091,7 +2111,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Future<void> _handleTwoFactorToggle(bool enabled) async {
     if (enabled) {
       // Show confirmation dialog before enabling
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showAppDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Enable Two-Factor Authentication'),
@@ -2135,7 +2155,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       }
     } else {
       // Show confirmation dialog before disabling
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showAppDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Disable Two-Factor Authentication'),
@@ -2207,7 +2227,6 @@ class _SettingsScreenState extends State<SettingsScreen>
       }
     }
   }
-
 }
 
 // ── New Settings UI Widgets ──────────────────────────────────────────────
@@ -2220,469 +2239,21 @@ class _TopAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 56,
-      color: Colors.white,
-      child: Row(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: const Row(
         children: [
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, size: 22),
-              color: const Color(0xFF005bb3),
-              padding: EdgeInsets.zero,
-              style: IconButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-          ),
-          const Expanded(
+          Expanded(
             child: Text(
               'Settings',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF005bb3),
+                color: Color(0xFFFFC812),
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(width: 48), // balance the back button
         ],
-      ),
-    );
-  }
-}
-
-class _AccountPlanCard extends StatelessWidget {
-  const _AccountPlanCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Subscription?>(
-      future: SubscriptionService.getCurrentSubscription(),
-      builder: (context, snapshot) {
-        final subscription = snapshot.data;
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final tierName = subscription != null
-            ? SubscriptionService.getTierName(subscription.tier)
-            : 'Free';
-        final renewalDate = subscription?.nextBillingDate;
-        final renewalText = renewalDate != null
-            ? 'Renews on ${DateFormat.yMMMd().format(renewalDate)}'
-            : 'No active subscription';
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-                color: Colors.black.withOpacity(0.06),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (isLoading)
-                          const SizedBox(
-                            width: 80,
-                            height: 20,
-                            child: LinearProgressIndicator(),
-                          )
-                        else ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFABD00),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'PREMIUM',
-                              style: TextStyle(
-                                color: Color(0xFF261A00),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$tierName Plan',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF191C1E),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            renewalText,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF414754),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF005bb3).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.workspace_premium,
-                      color: Color(0xFF005bb3),
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () {
-                    context.go('/${AppRoutes.pricing}');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFC0C6D6)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Manage Subscription'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BillingPaymentCard extends StatelessWidget {
-  const _BillingPaymentCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Invoice>>(
-      future: SubscriptionService.getInvoiceHistory(),
-      builder: (context, snapshot) {
-        final invoices = snapshot.data ?? [];
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-                color: Colors.black.withOpacity(0.06),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Billing & Payment',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF191C1E),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.go('/${AppRoutes.pricing}');
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF005bb3),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text('Update'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Payment method row
-              Row(
-                children: [
-                  const Icon(Icons.credit_card,
-                      color: Color(0xFF717786), size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Visa ending in 4242',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF191C1E),
-                          ),
-                        ),
-                        Text(
-                          'Expires 12/25',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: const Color(0xFF414754).withOpacity(0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Recent invoices header
-              const Text(
-                'RECENT INVOICES',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF414754),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Invoice rows
-              if (isLoading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (invoices.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    'No invoices yet',
-                    style: TextStyle(color: Color(0xFF414754), fontSize: 14),
-                  ),
-                )
-              else
-                ...invoices.take(3).map((invoice) {
-                  final dateStr = DateFormat.yMMMd().format(invoice.createdAt);
-                  final amountStr = '\$${invoice.amount.toStringAsFixed(2)}';
-                  final isPaid = invoice.status.toLowerCase() == 'paid' ||
-                      invoice.status.toLowerCase() == 'succeeded';
-                  return _InvoiceRow(
-                    date: dateStr,
-                    amount: amountStr,
-                    isPaid: isPaid,
-                  );
-                }),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InvoiceRow extends StatelessWidget {
-  const _InvoiceRow({
-    required this.date,
-    required this.amount,
-    required this.isPaid,
-  });
-
-  final String date;
-  final String amount;
-  final bool isPaid;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 56),
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Color(0xFFE0E3E5), width: 1),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF191C1E),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        amount,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF414754),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isPaid
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFFFDAD6),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          isPaid ? 'Paid' : 'Pending',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isPaid
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFBA1A1A),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.download_outlined, size: 20),
-              color: const Color(0xFF717786),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LegalTermsCard extends StatelessWidget {
-  const _LegalTermsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-            color: Colors.black.withOpacity(0.06),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _LegalTile(
-            title: 'Terms and Conditions',
-            onTap: () => context.go('/${AppRoutes.termsConditions}'),
-          ),
-          _LegalTile(
-            title: 'Privacy Policy',
-            onTap: () => context.go('/${AppRoutes.privacyPolicy}'),
-          ),
-          _LegalTile(
-            title: 'Data Processing Agreement',
-            onTap: () {
-              // Could navigate to a DPA screen or open a URL
-            },
-            isLast: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LegalTile extends StatelessWidget {
-  const _LegalTile({
-    required this.title,
-    required this.onTap,
-    this.isLast = false,
-  });
-
-  final String title;
-  final VoidCallback onTap;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 56),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            border: isLast
-                ? null
-                : const Border(
-                    bottom: BorderSide(color: Color(0xFFE0E3E5), width: 1),
-                  ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF191C1E),
-                  ),
-                ),
-              ),
-              const Icon(Icons.chevron_right,
-                  color: Color(0xFF717786), size: 22),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -2699,7 +2270,8 @@ class _AccountActionsSection extends StatelessWidget {
       children: [
         // Change Password
         SizedBox(
-          height: 44,
+          height: 48,
+          width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
               // Navigate to password reset or show dialog
@@ -2716,8 +2288,9 @@ class _AccountActionsSection extends StatelessWidget {
               }
             },
             style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               side: const BorderSide(color: Color(0xFFC0C6D6)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -2726,7 +2299,8 @@ class _AccountActionsSection extends StatelessWidget {
               'Change Password',
               style: TextStyle(
                 color: Color(0xFF191C1E),
-                fontWeight: FontWeight.w500,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -2754,115 +2328,6 @@ class _AccountActionsSection extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: const Color(0xFFECEEF0),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4,
-            offset: const Offset(0, -1),
-            color: Colors.black.withOpacity(0.06),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _BottomNavItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
-            label: 'Home',
-            isActive: false,
-            onTap: () => context.go('/${AppRoutes.dashboard}'),
-          ),
-          _BottomNavItem(
-            icon: Icons.folder_outlined,
-            activeIcon: Icons.folder,
-            label: 'Projects',
-            isActive: false,
-            onTap: () => context.go('/${AppRoutes.dashboard}'),
-          ),
-          _BottomNavItem(
-            icon: Icons.timeline_outlined,
-            activeIcon: Icons.timeline,
-            label: 'Reports',
-            isActive: false,
-            onTap: () => context.go('/${AppRoutes.dashboard}'),
-          ),
-          _BottomNavItem(
-            icon: Icons.settings_outlined,
-            activeIcon: Icons.settings,
-            label: 'Settings',
-            isActive: true,
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomNavItem extends StatelessWidget {
-  const _BottomNavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 64,
-        height: 56,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFFABD00) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 22,
-              color:
-                  isActive ? const Color(0xFF261A00) : const Color(0xFF414754),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: isActive
-                    ? const Color(0xFF261A00)
-                    : const Color(0xFF414754),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -2931,8 +2396,8 @@ class _InsightBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withOpacity(0.12),
-        border: Border.all(color: accent.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2945,8 +2410,8 @@ class _InsightBadge extends StatelessWidget {
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Text(badge.value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w700)),
         ],
@@ -2967,8 +2432,8 @@ class _VelocitySparkline extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.grey.withOpacity(0.08),
-        border: Border.all(color: Colors.grey.withOpacity(0.14)),
+        color: Colors.grey.withValues(alpha: 0.08),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.14)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -3026,7 +2491,10 @@ class _VelocitySparklinePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accent.withOpacity(0.28), accent.withOpacity(0.04)],
+        colors: [
+          accent.withValues(alpha: 0.28),
+          accent.withValues(alpha: 0.04)
+        ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
@@ -3070,7 +2538,7 @@ class _TrendStat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.grey.withOpacity(0.08),
+        color: Colors.grey.withValues(alpha: 0.08),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -3196,8 +2664,8 @@ class _ActionItemRow extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.grey.withOpacity(0.06),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Colors.grey.withValues(alpha: 0.06),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3208,7 +2676,7 @@ class _ActionItemRow extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: priorityColor.withOpacity(0.16),
+                  color: priorityColor.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text('Priority $priorityLabel',
@@ -3239,7 +2707,7 @@ class _ActionItemRow extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: accent.withOpacity(0.2),
+                backgroundColor: accent.withValues(alpha: 0.2),
                 child: const Icon(Icons.person_outline, color: Colors.black87),
               ),
               const SizedBox(width: 12),
@@ -3330,7 +2798,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.18),
+                      color: accent.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text('Billing & Subscription',
@@ -3351,7 +2819,7 @@ class _BillingHeroBanner extends StatelessWidget {
               Text(
                 'View your current plan, manage payment methods, and access your billing history.\nUpgrade anytime to unlock premium features.',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.78), height: 1.45),
+                    color: Colors.white.withValues(alpha: 0.78), height: 1.45),
               ),
               const SizedBox(height: 18),
               if (isLoading)
@@ -3379,8 +2847,8 @@ class _BillingHeroBanner extends StatelessWidget {
           final highlightCard = DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              color: Colors.white.withOpacity(0.12),
-              border: Border.all(color: Colors.white.withOpacity(0.18)),
+              color: Colors.white.withValues(alpha: 0.12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -3402,7 +2870,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     children: [
                       Text(price,
                           style: theme.textTheme.displaySmall?.copyWith(
-                              color: Colors.white,
+                              color: Theme.of(context).scaffoldBackgroundColor,
                               fontWeight: FontWeight.w800)),
                       const SizedBox(width: 4),
                       Text(period,
@@ -3423,7 +2891,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: billingProgress,
                       minHeight: 10,
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation(accent),
                     ),
                   ),
@@ -3475,8 +2943,8 @@ class _BillingStatBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withOpacity(0.12),
-        border: Border.all(color: accent.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3489,8 +2957,8 @@ class _BillingStatBadge extends StatelessWidget {
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w700)),
         ],
@@ -3523,7 +2991,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
     final statusColor = isActive
         ? Colors.green
         : (hasSubscription && subscription!.isTrial
-            ? Colors.blue
+            ? const Color(0xFFFFC812)
             : Colors.grey);
     final billingCycle = hasSubscription
         ? (subscription!.isAnnual ? 'Annual' : 'Monthly')
@@ -3547,8 +3015,8 @@ class _CurrentSubscriptionCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3568,7 +3036,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.18),
+                        color: accent.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(Icons.workspace_premium,
@@ -3593,7 +3061,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -3620,9 +3088,10 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.06),
+                    color: Colors.grey.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                    border:
+                        Border.all(color: Colors.grey.withValues(alpha: 0.12)),
                   ),
                   child: Column(
                     children: [
@@ -3646,7 +3115,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: hasSubscription && isActive
                             ? () async {
-                                final confirmed = await showDialog<bool>(
+                                final confirmed = await showAppDialog<bool>(
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                     title: const Text('Cancel Subscription'),
@@ -3745,8 +3214,8 @@ class _PaymentMethodsCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3759,8 +3228,8 @@ class _PaymentMethodsCard extends StatelessWidget {
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Text('Connect your preferred payment provider',
-              style: const TextStyle(color: Colors.black54)),
+          const Text('Connect your preferred payment provider',
+              style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           _PaymentProviderTile(
             name: 'Stripe',
@@ -3835,12 +3304,12 @@ class _PaymentProviderTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: isConnected
-            ? accent.withOpacity(0.08)
-            : Colors.grey.withOpacity(0.06),
+            ? accent.withValues(alpha: 0.08)
+            : Colors.grey.withValues(alpha: 0.06),
         border: Border.all(
             color: isConnected
-                ? accent.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.12)),
+                ? accent.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
@@ -3848,7 +3317,7 @@ class _PaymentProviderTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.15),
+              color: iconColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: 24),
@@ -3869,7 +3338,7 @@ class _PaymentProviderTile extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.15),
+                          color: Colors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text('Connected',
@@ -3914,8 +3383,8 @@ class _InvoicesCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3932,7 +3401,7 @@ class _InvoicesCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.18),
+                    color: accent.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.receipt_long, color: accent, size: 24),
@@ -3946,8 +3415,8 @@ class _InvoicesCard extends StatelessWidget {
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
-                      Text('View and download past invoices',
-                          style: const TextStyle(color: Colors.black54)),
+                      const Text('View and download past invoices',
+                          style: TextStyle(color: Colors.black54)),
                     ],
                   ),
                 ),
@@ -3957,7 +3426,7 @@ class _InvoicesCard extends StatelessWidget {
                   label: const Text('Export All'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.black87,
-                    side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                    side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -4012,8 +3481,8 @@ class _InvoicesCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF6B7280)),
-                    dataTextStyle: const TextStyle(
-                        fontSize: 13, color: Color(0xFF374151)),
+                    dataTextStyle:
+                        const TextStyle(fontSize: 13, color: Color(0xFF374151)),
                     horizontalMargin: 24,
                     columnSpacing: 48,
                     columns: const [
@@ -4050,14 +3519,14 @@ class _InvoicesCard extends StatelessWidget {
                                                 invoice.receiptUrl!);
                                           }
                                         : null,
-                                      icon: Icon(Icons.download_outlined,
-                                          color: invoice.receiptUrl != null
-                                              ? accent
-                                              : Colors.grey,
-                                          size: 20),
-                                      tooltip: 'Download',
-                                    ),
+                                    icon: Icon(Icons.download_outlined,
+                                        color: invoice.receiptUrl != null
+                                            ? accent
+                                            : Colors.grey,
+                                        size: 20),
+                                    tooltip: 'Download',
                                   ),
+                                ),
                               ],
                             ))
                         .toList(),
@@ -4211,9 +3680,12 @@ class _UpgradePlanCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accent.withOpacity(0.15), accent.withOpacity(0.05)],
+          colors: [
+            accent.withValues(alpha: 0.15),
+            accent.withValues(alpha: 0.05)
+          ],
         ),
-        border: Border.all(color: accent.withOpacity(0.3)),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -4266,10 +3738,10 @@ class _UpgradePlanCard extends StatelessWidget {
                         style: theme.textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(width: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
                       child: Text('/month',
-                          style: const TextStyle(color: Colors.black54)),
+                          style: TextStyle(color: Colors.black54)),
                     ),
                   ],
                 ),
@@ -4289,7 +3761,7 @@ class _UpgradePlanCard extends StatelessWidget {
                   ),
                 ),
               ] else
-                Icon(Icons.check_circle, color: Colors.green, size: 48),
+                const Icon(Icons.check_circle, color: Colors.green, size: 48),
             ],
           );
 
@@ -4551,9 +4023,9 @@ class _AccessCollaboratorsPanel extends StatefulWidget {
 
 class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
   static const _accent = Color(0xFFFFC107);
-  final _emailController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _messageController = TextEditingController(
+  final _emailController = SpellCheckTextEditingController();
+  final _nameController = SpellCheckTextEditingController();
+  final _messageController = SpellCheckTextEditingController(
     text: 'You have been invited to collaborate in NDU Project.',
   );
 
@@ -4561,18 +4033,18 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
   ResourceAccessLevel _selectedAccess = ResourceAccessLevel.editor;
   String _selectedScope = 'Current project';
   String _selectedExpiry = '30 days';
-  bool _requireMfa = true;
+  final bool _requireMfa = true;
   bool _notifyOnAccessChange = true;
-  bool _passwordLoginEnabled = true;
-  bool _passwordlessEmailEnabled = false;
+  final bool _passwordLoginEnabled = true;
+  final bool _passwordlessEmailEnabled = false;
   bool _mfaEnabledPolicy = true;
-  MfaMethod _defaultMfaMethod = MfaMethod.authenticator;
+  final MfaMethod _defaultMfaMethod = MfaMethod.authenticator;
   final Set<MfaMethod> _backupMfaMethods = {
     MfaMethod.sms,
     MfaMethod.emailCode,
   };
-  MfaRequirement _mfaRequirement = MfaRequirement.everyLogin;
-  int _rememberDeviceDays = 30;
+  final MfaRequirement _mfaRequirement = MfaRequirement.everyLogin;
+  final int _rememberDeviceDays = 30;
   bool _isSending = false;
   final Set<Permission> _customPermissions = {
     Permission.viewAnalytics,
@@ -4606,7 +4078,8 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
     // TwoFactorVerificationScreen pattern and prevents unauthorized
     // invitation creation even if the inviter's session is hijacked.
     setState(() => _isSending = true);
-    try {
+if (!mounted) return;
+        try {
       // Step 1: Send OTP to the inviter's email
       await TwoFactorAuthService.sendCode(email: user.email!);
 
@@ -4615,7 +4088,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
       // Step 2: Show the verification dialog and wait for the user to
       // enter the 6-digit code. The dialog returns true if verification
       // succeeded, false if the user cancelled or verification failed.
-      final verified = await showDialog<bool>(
+      final verified = await showAppDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (context) => InviteVerificationDialog(
@@ -4634,6 +4107,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
       }
 
       // Step 3: OTP verified — proceed to create the invitation
+      if (!mounted) return;
       final project = ProjectDataInherited.maybeOf(context)?.projectData;
       final expiresAt = _expiryDate(_selectedExpiry);
 
@@ -4773,7 +4247,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.18),
+                  color: _accent.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.admin_panel_settings_outlined,
@@ -4789,14 +4263,14 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               Text(
                 'Invite collaborators, assign least-privilege roles, control project-level access, and review the RBAC policy before changes reach delivery data.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withOpacity(0.72), height: 1.45),
+                    color: Colors.white.withValues(alpha: 0.72), height: 1.45),
               ),
             ],
           );
-          final stats = Wrap(
+          const stats = Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: const [
+            children: [
               _AccessStat(label: 'Role tiers', value: '5'),
               _AccessStat(label: 'Access levels', value: '5'),
               _AccessStat(label: 'Policy gates', value: '22'),
@@ -4865,140 +4339,6 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
     );
   }
 
-  Widget _securitySettingsPanel() {
-    return _RbacCard(
-      title: 'Security Settings',
-      subtitle:
-          'Configure authentication method, MFA defaults, trusted devices, and backup verification methods.',
-      icon: Icons.security,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              FilterChip(
-                label: const Text('Password Login'),
-                selected: _passwordLoginEnabled,
-                onSelected: (v) async {
-                  setState(() => _passwordLoginEnabled = v);
-                  await _saveSecurityPolicy();
-                },
-              ),
-              FilterChip(
-                label: const Text('Passwordless Email'),
-                selected: _passwordlessEmailEnabled,
-                onSelected: (v) async {
-                  setState(() => _passwordlessEmailEnabled = v);
-                  await _saveSecurityPolicy();
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Text('Default MFA Method',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          Wrap(
-            spacing: 12,
-            children: [
-              _mfaChoice(MfaMethod.authenticator, 'Authenticator App'),
-              _mfaChoice(MfaMethod.sms, 'Text Message'),
-              _mfaChoice(MfaMethod.emailCode, 'Email Code'),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Text('Backup methods',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          Wrap(
-            spacing: 12,
-            children: [
-              _backupChoice(MfaMethod.sms, 'SMS'),
-              _backupChoice(MfaMethod.emailCode, 'Email Code'),
-            ],
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<MfaRequirement>(
-            value: _mfaRequirement,
-            items: const [
-              DropdownMenuItem(
-                  value: MfaRequirement.everyLogin, child: Text('Every Login')),
-              DropdownMenuItem(
-                  value: MfaRequirement.newDeviceOnly,
-                  child: Text('New Device Only')),
-              DropdownMenuItem(
-                  value: MfaRequirement.highRiskOnly,
-                  child: Text('High Risk Login Only')),
-              DropdownMenuItem(
-                  value: MfaRequirement.adminOnly,
-                  child: Text('Administrator Accounts Only')),
-            ],
-            onChanged: (value) async {
-              if (value == null) return;
-              setState(() => _mfaRequirement = value);
-              await _saveSecurityPolicy();
-            },
-            decoration: const InputDecoration(labelText: 'Require MFA'),
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<int>(
-            value: _rememberDeviceDays,
-            items: const [
-              DropdownMenuItem(value: 7, child: Text('7 days')),
-              DropdownMenuItem(value: 30, child: Text('30 days')),
-              DropdownMenuItem(value: 60, child: Text('60 days')),
-            ],
-            onChanged: (value) async {
-              if (value == null) return;
-              setState(() => _rememberDeviceDays = value);
-              await _saveSecurityPolicy();
-            },
-            decoration:
-                const InputDecoration(labelText: 'Remember this device'),
-          ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              onPressed: () => context.pushNamed(AppRoutes.securityManagement),
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('Open Security Management'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _mfaChoice(MfaMethod method, String label) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: _defaultMfaMethod == method,
-      onSelected: (value) async {
-        if (!value) return;
-        setState(() => _defaultMfaMethod = method);
-        await _saveSecurityPolicy();
-      },
-    );
-  }
-
-  Widget _backupChoice(MfaMethod method, String label) {
-    return FilterChip(
-      label: Text(label),
-      selected: _backupMfaMethods.contains(method),
-      onSelected: (value) async {
-        setState(() {
-          if (value) {
-            _backupMfaMethods.add(method);
-          } else {
-            _backupMfaMethods.remove(method);
-          }
-        });
-        await _saveSecurityPolicy();
-      },
-    );
-  }
-
   Widget _inviteCard() {
     return _RbacCard(
       title: 'Invite Collaborator',
@@ -5032,7 +4372,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<SiteRole>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration:
@@ -5058,7 +4398,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<ResourceAccessLevel>(
-                  value: _selectedAccess,
+                  initialValue: _selectedAccess,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Resource access',
@@ -5082,7 +4422,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _selectedScope,
+                  initialValue: _selectedScope,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Access scope',
@@ -5105,7 +4445,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _selectedExpiry,
+                  initialValue: _selectedExpiry,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Invite expires',
@@ -5151,7 +4491,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               return FilterChip(
                 selected: selected,
                 label: Text(_permissionLabel(permission)),
-                selectedColor: _accent.withOpacity(0.22),
+                selectedColor: _accent.withValues(alpha: 0.22),
                 checkmarkColor: Colors.black,
                 onSelected: (value) {
                   setState(() {
@@ -5207,7 +4547,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             return const _RbacLoadingRow(label: 'Loading collaborators...');
           }
           if (snapshot.hasError) {
-            return _EmptyRbacState(
+            return const _EmptyRbacState(
               icon: Icons.lock_outline,
               title: 'Roster unavailable',
               message:
@@ -5253,17 +4593,19 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: selected
-                    ? _accent.withOpacity(0.12)
+                    ? _accent.withValues(alpha: 0.12)
                     : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: selected ? _accent : Colors.grey.withOpacity(0.14)),
+                    color: selected
+                        ? _accent
+                        : Colors.grey.withValues(alpha: 0.14)),
               ),
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: role.color.withOpacity(0.14),
+                    backgroundColor: role.color.withValues(alpha: 0.14),
                     child: Icon(_roleIcon(role), color: role.color, size: 18),
                   ),
                   const SizedBox(width: 12),
@@ -5415,7 +4757,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           child: Table(
             border: TableBorder(
               horizontalInside:
-                  BorderSide(color: Colors.grey.withOpacity(0.12)),
+                  BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
             ),
             columnWidths: const {
               0: FlexColumnWidth(2.6),
@@ -5450,9 +4792,8 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                       ),
                     ),
                     ...SiteRole.values.map((role) {
-                      final allowed =
-                          Permission.getPermissionsForRole(role)
-                              .contains(permission);
+                      final allowed = Permission.getPermissionsForRole(role)
+                          .contains(permission);
                       return _PermissionTableCell(
                         child: Icon(
                           allowed
@@ -5489,11 +4830,11 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
       fillColor: const Color(0xFFF8FAFC),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.18)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.18)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.18)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.18)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -5521,9 +4862,9 @@ class _RbacCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.16)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.16)),
         boxShadow: const [
           BoxShadow(
             blurRadius: 18,
@@ -5542,7 +4883,7 @@ class _RbacCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFC107).withOpacity(0.16),
+                  color: const Color(0xFFFFC107).withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: const Color(0xFFFFC107), size: 22),
@@ -5586,22 +4927,22 @@ class _AccessStat extends StatelessWidget {
       width: 118,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   fontSize: 24,
                   fontWeight: FontWeight.w900)),
           const SizedBox(height: 4),
           Text(label,
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.65), fontSize: 12)),
+                  color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
         ],
       ),
     );
@@ -5631,7 +4972,8 @@ class _PolicyToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.28)),
+        border:
+            Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.28)),
       ),
       child: Row(
         children: [
@@ -5673,7 +5015,7 @@ class _CollaboratorTile extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: user.siteRole.color.withOpacity(0.16),
+            backgroundColor: user.siteRole.color.withValues(alpha: 0.16),
             child: Text(user.initials,
                 style: TextStyle(
                     color: user.siteRole.color, fontWeight: FontWeight.w800)),
@@ -5771,7 +5113,7 @@ class _RolePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: role.color.withOpacity(0.12),
+        color: role.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(role.displayName,
@@ -5922,9 +5264,9 @@ class _FeatureChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withOpacity(0.3)),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -5966,11 +5308,11 @@ class _ThemeModeOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
           color: selected
-              ? accent.withOpacity(0.12)
-              : Colors.grey.withOpacity(0.06),
+              ? accent.withValues(alpha: 0.12)
+              : Colors.grey.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? accent : Colors.grey.withOpacity(0.2),
+            color: selected ? accent : Colors.grey.withValues(alpha: 0.2),
             width: selected ? 2 : 1,
           ),
         ),
@@ -6011,7 +5353,7 @@ class _PrefActionTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Material(
-        color: Colors.grey.withOpacity(0.06),
+        color: Colors.grey.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -6025,7 +5367,7 @@ class _PrefActionTile extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: (labelColor ?? const Color(0xFFFFC107))
-                        .withOpacity(0.18),
+                        .withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child:
@@ -6124,7 +5466,7 @@ class InviteVerificationDialog extends StatefulWidget {
 
 class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
   final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+      List.generate(6, (_) => SpellCheckTextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;
@@ -6264,7 +5606,7 @@ class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.15),
+                      color: accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.mark_email_read_outlined,
@@ -6299,9 +5641,9 @@ class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
               const SizedBox(height: 20),
 
               // ── Description ───────────────────────────────────────
-              Text(
+              const Text(
                 'Enter the 6-digit code sent to',
-                style: const TextStyle(fontSize: 13, color: secondaryText),
+                style: TextStyle(fontSize: 13, color: secondaryText),
               ),
               const SizedBox(height: 2),
               Text(

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -16,6 +18,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -23,7 +26,7 @@ Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
     screenTitle: 'Infrastructure Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -48,7 +51,7 @@ class ExecutionPlanInfrastructurePlanScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Plan - Infrastructure Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -185,42 +188,25 @@ class _PlanningInfrastructureCostSection extends StatefulWidget {
 
 class _PlanningInfrastructureCostSectionState
     extends State<_PlanningInfrastructureCostSection> {
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Infrastructure Plan',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'execution_plan_infrastructure_plan_screen'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
 
   Future<void> _editItem({
     InfrastructurePlanningItem? existing,
   }) async {
-    final nameController = TextEditingController(text: existing?.name ?? '');
+    final nameController = SpellCheckTextEditingController(text: existing?.name ?? '');
     final summaryController =
-        TextEditingController(text: existing?.summary ?? '');
+        SpellCheckTextEditingController(text: existing?.summary ?? '');
     final detailsController =
-        TextEditingController(text: existing?.details ?? '');
-    final costController = TextEditingController(
+        SpellCheckTextEditingController(text: existing?.details ?? '');
+    final costController = SpellCheckTextEditingController(
       text: existing == null || existing.potentialCost == 0
           ? ''
           : existing.potentialCost.toStringAsFixed(2),
     );
-    final ownerController = TextEditingController(text: existing?.owner ?? '');
+    final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
     final statusController =
-        TextEditingController(text: existing?.status ?? 'Planned');
+        SpellCheckTextEditingController(text: existing?.status ?? 'Planned');
 
-    final result = await showDialog<InfrastructurePlanningItem>(
+    final result = await showAppDialog<InfrastructurePlanningItem>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(existing == null
@@ -299,7 +285,7 @@ class _PlanningInfrastructureCostSectionState
               Navigator.of(dialogContext).pop(
                 InfrastructurePlanningItem(
                   id: existing?.id ??
-                      DateTime.now().microsecondsSinceEpoch.toString(),
+                      newId(),
                   number: existing?.number ?? 0,
                   name: name,
                   summary: summaryController.text.trim(),
@@ -345,7 +331,8 @@ class _PlanningInfrastructureCostSectionState
       (data) => data.copyWith(planningInfrastructureItems: current),
     );
     await provider.saveToFirebase(checkpoint: 'execution_infrastructure_plan');
-      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   @override
@@ -389,7 +376,7 @@ class _PlanningInfrastructureCostSectionState
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: const Text(
               'No infrastructure cost items yet. Add hosting, environments, network, tooling, migration, or platform costs here.',
@@ -404,7 +391,7 @@ class _PlanningInfrastructureCostSectionState
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Color(0xFFE5E7EB)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +431,7 @@ class _PlanningInfrastructureCostSectionState
                               currency.format(item.potentialCost),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF2563EB),
+                                color: Color(0xFFFFC812),
                               ),
                             ),
                             if (item.owner.trim().isNotEmpty)

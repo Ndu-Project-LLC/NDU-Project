@@ -123,7 +123,8 @@ enum CostCategory {
   financing,
   startup,
   warranty,
-  decommissioning;
+  decommissioning,
+  other;
 
   String get label => switch (this) {
         CostCategory.labor => 'Labor',
@@ -138,7 +139,7 @@ enum CostCategory {
         CostCategory.facilities => 'Facilities & Infrastructure',
         CostCategory.insuranceCompliance => 'Insurance & Compliance',
         CostCategory.ssher =>
-          'SSHER (Safety, Health, Env, Radiation)',
+          'Safety, Security, Health, Environmental and Regulatory',
         CostCategory.quality => 'Quality Management',
         CostCategory.riskAllowance => 'Risk Allowances',
         CostCategory.contingency => 'Contingency',
@@ -149,6 +150,7 @@ enum CostCategory {
         CostCategory.startup => 'Startup & Transition',
         CostCategory.warranty => 'Warranty & Closeout',
         CostCategory.decommissioning => 'Decommissioning & Disposal',
+        CostCategory.other => 'Other',
       };
 
   String get group => switch (this) {
@@ -192,6 +194,7 @@ enum CostCategory {
         CostCategory.startup => 'rocket_launch',
         CostCategory.warranty => 'fact_check',
         CostCategory.decommissioning => 'delete',
+        CostCategory.other => 'more_horiz',
       };
 }
 
@@ -435,6 +438,51 @@ class BasisOfEstimate {
           escalationAssumptions ?? this.escalationAssumptions,
     );
   }
+
+  /// Full serialization so the BOE survives a save/load round-trip.
+  Map<String, dynamic> toJson() => {
+        'scopeBasis': scopeBasis,
+        'assumptions': assumptions,
+        'constraints': constraints,
+        'exclusions': exclusions,
+        'dataSources': dataSources.map((d) => d.toJson()).toList(growable: false),
+        'methodology': methodology.map((m) => m.name).toList(growable: false),
+        'accuracyLow': accuracyRange.low,
+        'accuracyHigh': accuracyRange.high,
+        'escalationAssumptions': escalationAssumptions,
+      };
+
+  factory BasisOfEstimate.fromJson(Map<String, dynamic> json) {
+    final dataSourcesJson = json['dataSources'] as List<dynamic>?;
+    final methodologyJson = json['methodology'] as List<dynamic>?;
+    return BasisOfEstimate(
+      scopeBasis: json['scopeBasis'] as String? ?? '',
+      assumptions: (json['assumptions'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      constraints: (json['constraints'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      exclusions: (json['exclusions'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      dataSources: dataSourcesJson != null
+          ? dataSourcesJson
+              .map((d) => BOEDataSource.fromJson(d as Map<String, dynamic>))
+              .toList(growable: false)
+          : const [],
+      methodology: methodologyJson != null
+          ? methodologyJson
+              .map((m) => EstimationMethod.values.byName(m.toString()))
+              .toList(growable: false)
+          : const [],
+      accuracyRange: (
+        low: (json['accuracyLow'] as num?)?.toInt() ?? -20,
+        high: (json['accuracyHigh'] as num?)?.toInt() ?? 30,
+      ),
+      escalationAssumptions: json['escalationAssumptions'] as String? ?? '',
+    );
+  }
 }
 
 class BOEDataSource {
@@ -447,6 +495,19 @@ class BOEDataSource {
     required this.reference,
     required this.validated,
   });
+
+  Map<String, dynamic> toJson() => {
+        'source': source.name,
+        'reference': reference,
+        'validated': validated,
+      };
+
+  factory BOEDataSource.fromJson(Map<String, dynamic> json) => BOEDataSource(
+        source: CostSourceType.values
+            .byName(json['source'] as String? ?? 'historical'),
+        reference: json['reference'] as String? ?? '',
+        validated: json['validated'] as bool? ?? false,
+      );
 }
 
 /// Computed totals from cost lines.
@@ -498,6 +559,45 @@ class EstimateTotals {
         costBaseline: 0,
         managementReserve: 0,
         totalAuthorizedBudget: 0,
+      );
+
+  /// Phase 0 fix — full serialization so totals survive a save/load
+  /// round-trip. Previously only metadata was persisted, losing all
+  /// rolled-up cost totals on app restart.
+  Map<String, dynamic> toJson() => {
+        'direct': direct,
+        'indirect': indirect,
+        'sherQuality': sherQuality,
+        'riskAllowances': riskAllowances,
+        'contingency': contingency,
+        'escalation': escalation,
+        'taxes': taxes,
+        'financing': financing,
+        'startup': startup,
+        'warranty': warranty,
+        'decommissioning': decommissioning,
+        'costBaseline': costBaseline,
+        'managementReserve': managementReserve,
+        'totalAuthorizedBudget': totalAuthorizedBudget,
+      };
+
+  factory EstimateTotals.fromJson(Map<String, dynamic> json) => EstimateTotals(
+        direct: (json['direct'] as num?)?.toDouble() ?? 0,
+        indirect: (json['indirect'] as num?)?.toDouble() ?? 0,
+        sherQuality: (json['sherQuality'] as num?)?.toDouble() ?? 0,
+        riskAllowances: (json['riskAllowances'] as num?)?.toDouble() ?? 0,
+        contingency: (json['contingency'] as num?)?.toDouble() ?? 0,
+        escalation: (json['escalation'] as num?)?.toDouble() ?? 0,
+        taxes: (json['taxes'] as num?)?.toDouble() ?? 0,
+        financing: (json['financing'] as num?)?.toDouble() ?? 0,
+        startup: (json['startup'] as num?)?.toDouble() ?? 0,
+        warranty: (json['warranty'] as num?)?.toDouble() ?? 0,
+        decommissioning: (json['decommissioning'] as num?)?.toDouble() ?? 0,
+        costBaseline: (json['costBaseline'] as num?)?.toDouble() ?? 0,
+        managementReserve:
+            (json['managementReserve'] as num?)?.toDouble() ?? 0,
+        totalAuthorizedBudget:
+            (json['totalAuthorizedBudget'] as num?)?.toDouble() ?? 0,
       );
 }
 
@@ -647,6 +747,24 @@ class AccessGrant {
     required this.grantedBy,
     required this.grantedAt,
   });
+
+  /// Phase 0 fix — full serialization so access grants survive a save/
+  /// load round-trip. Previously dropped on persistence.
+  Map<String, dynamic> toJson() => {
+        'userEmail': userEmail,
+        'role': role.name,
+        'grantedBy': grantedBy,
+        'grantedAt': grantedAt.toIso8601String(),
+      };
+
+  factory AccessGrant.fromJson(Map<String, dynamic> json) => AccessGrant(
+        userEmail: json['userEmail'] as String? ?? '',
+        role: RBACRole.values.byName(json['role'] as String? ?? 'viewer'),
+        grantedBy: json['grantedBy'] as String? ?? '',
+        grantedAt: json['grantedAt'] is String
+            ? DateTime.tryParse(json['grantedAt'] as String) ?? DateTime.now()
+            : DateTime.now(),
+      );
 }
 
 /// Stakeholder for the estimate development process.
@@ -666,21 +784,107 @@ class Stakeholder {
     required this.sme,
     required this.includedInDevelopment,
   });
+
+  /// Full serialization so stakeholders survive a save/load round-trip.
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'role': role,
+        'sme': sme,
+        'includedInDevelopment': includedInDevelopment,
+      };
+
+  factory Stakeholder.fromJson(Map<String, dynamic> json) => Stakeholder(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        email: json['email'] as String? ?? '',
+        role: json['role'] as String? ?? '',
+        sme: json['sme'] as bool? ?? false,
+        includedInDevelopment: json['includedInDevelopment'] as bool? ?? true,
+      );
 }
 
 /// Accounting integration config.
+///
+/// [connected] is only ever true when the provider actually returned a usable
+/// access token (see `AccountingIntegrationService`). [accountLabel], [scopes]
+/// and [expiresAt] record what that token authorises.
 class AccountingIntegration {
   final AccountingProvider provider;
   final bool connected;
   final DateTime? connectedAt;
   final List<AccountingGLMapping> glMapping;
 
+  /// Identity of the account the provider authorised — the company/realm name
+  /// (QuickBooks/Xero), entity id (Sage Intacct) or tenant host (SAP).
+  final String? accountLabel;
+
+  /// Scopes the provider granted for this connection.
+  final List<String> scopes;
+
+  /// Access-token expiry, when the provider returned one.
+  final DateTime? expiresAt;
+
   const AccountingIntegration({
     required this.provider,
     required this.connected,
     this.connectedAt,
     required this.glMapping,
+    this.accountLabel,
+    this.scopes = const [],
+    this.expiresAt,
   });
+
+  Map<String, dynamic> toJson() => {
+        'provider': provider.name,
+        'connected': connected,
+        'connectedAt': connectedAt?.toIso8601String(),
+        'accountLabel': accountLabel,
+        'scopes': scopes,
+        'expiresAt': expiresAt?.toIso8601String(),
+        'glMapping': glMapping
+            .map((m) => {
+                  'category': m.category.name,
+                  'glCode': m.glCode,
+                  'glName': m.glName,
+                })
+            .toList(growable: false),
+      };
+
+  factory AccountingIntegration.fromJson(Map<String, dynamic> json) {
+    final mappingsJson = json['glMapping'] as List<dynamic>?;
+    final glMapping = <AccountingGLMapping>[];
+    for (final entry in mappingsJson ?? const <dynamic>[]) {
+      if (entry is! Map) continue;
+      final categoryName = entry['category']?.toString();
+      CostCategory? category;
+      for (final candidate in CostCategory.values) {
+        if (candidate.name == categoryName) {
+          category = candidate;
+          break;
+        }
+      }
+      if (category == null) continue;
+      glMapping.add(AccountingGLMapping(
+        category: category,
+        glCode: entry['glCode']?.toString() ?? '',
+        glName: entry['glName']?.toString() ?? '',
+      ));
+    }
+
+    return AccountingIntegration(
+      provider: AccountingProvider.fromName(json['provider']?.toString()),
+      connected: json['connected'] as bool? ?? false,
+      connectedAt: DateTime.tryParse(json['connectedAt']?.toString() ?? ''),
+      glMapping: glMapping,
+      accountLabel: json['accountLabel']?.toString(),
+      scopes: ((json['scopes'] as List<dynamic>?) ?? const <dynamic>[])
+          .map((s) => s.toString())
+          .toList(growable: false),
+      expiresAt: DateTime.tryParse(json['expiresAt']?.toString() ?? ''),
+    );
+  }
 }
 
 enum AccountingProvider {
@@ -705,6 +909,15 @@ enum AccountingProvider {
         AccountingProvider.sap => 'corporate_fare',
         AccountingProvider.none => 'link_off',
       };
+
+  /// Tolerant parse for persisted values — unknown names mean "not
+  /// connected" rather than losing the whole estimate.
+  static AccountingProvider fromName(String? name) {
+    for (final provider in AccountingProvider.values) {
+      if (provider.name == name) return provider;
+    }
+    return AccountingProvider.none;
+  }
 }
 
 class AccountingGLMapping {

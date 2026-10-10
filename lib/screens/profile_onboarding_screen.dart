@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/profile_onboarding_service.dart';
@@ -10,6 +11,7 @@ import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/services/team_invitation_service.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/world_data.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 // ── Brand palette (mirrors the attached HTML design system) ─────────────
 // Top-level file-private constants so all widgets in this file can access
@@ -55,7 +57,7 @@ class ProfileOnboardingScreen extends StatefulWidget {
  /// renders above the current screen with a blurred backdrop.
  static Future<void> show(BuildContext context,
  {String returnTo = AppRoutes.dashboard}) async {
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.transparent, // we render our own backdrop
@@ -76,13 +78,13 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
 
  // ── State ──────────────────────────────────────────────────────────────
  ProfileOnboardingAnswers _answers = const ProfileOnboardingAnswers();
- final TextEditingController _positionOtherController = TextEditingController();
- final TextEditingController _countryOtherController = TextEditingController();
- final TextEditingController _currencyOtherController = TextEditingController();
- final TextEditingController _toolsOtherController = TextEditingController();
- final TextEditingController _orgOverviewController = TextEditingController();
- final TextEditingController _emailInviteController = TextEditingController();
- final TextEditingController _maxTeamSizeController = TextEditingController();
+ final TextEditingController _positionOtherController = SpellCheckTextEditingController();
+ final TextEditingController _countryOtherController = SpellCheckTextEditingController();
+ final TextEditingController _currencyOtherController = SpellCheckTextEditingController();
+ final TextEditingController _toolsOtherController = SpellCheckTextEditingController();
+ final TextEditingController _orgOverviewController = SpellCheckTextEditingController();
+ final TextEditingController _emailInviteController = SpellCheckTextEditingController();
+ final TextEditingController _maxTeamSizeController = SpellCheckTextEditingController();
  bool _isSaving = false;
  bool _isCelebrating = false;
  String? _emailError;
@@ -1800,7 +1802,8 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
  onTap: widget.onTap,
  child: AnimatedContainer(
  duration: const Duration(milliseconds: 150),
- transform: Matrix4.identity()..scale(_press ? 0.96 : 1.0),
+ transform:
+     Matrix4.identity()..scaleByDouble(_press ? 0.96 : 1.0, _press ? 0.96 : 1.0, 1.0, 1.0),
  transformAlignment: Alignment.center,
  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
  decoration: BoxDecoration(
@@ -2140,7 +2143,7 @@ class _SearchableOptionList extends StatefulWidget {
 }
 
 class _SearchableOptionListState extends State<_SearchableOptionList> {
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String _query = '';
 
  @override
@@ -2192,6 +2195,7 @@ class _SearchableOptionListState extends State<_SearchableOptionList> {
  ),
  child: ListView.separated(
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  padding: const EdgeInsets.symmetric(vertical: 4),
  itemCount: filtered.length,
  separatorBuilder: (_, __) => Divider(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/front_end_planning_technology_personnel_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
@@ -16,6 +17,8 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
  const FrontEndPlanningInfrastructureScreen({super.key});
 
@@ -30,7 +33,7 @@ class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
 
 class _FrontEndPlanningInfrastructureScreenState
  extends State<FrontEndPlanningInfrastructureScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
  List<InfrastructurePlanningItem> _items = [];
  Timer? _infrastructurePromptTimer;
  bool _hasShownPrompt = false;
@@ -61,9 +64,9 @@ class _FrontEndPlanningInfrastructureScreenState
  screenTitle: 'Infrastructure',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -127,24 +130,24 @@ class _FrontEndPlanningInfrastructureScreenState
  InfrastructurePlanningItem? existing,
  }) async {
  final nameController =
- TextEditingController(text: existing?.name.trim() ?? '');
+ SpellCheckTextEditingController(text: existing?.name.trim() ?? '');
  final summaryController =
- TextEditingController(text: existing?.summary.trim() ?? '');
+ SpellCheckTextEditingController(text: existing?.summary.trim() ?? '');
  final detailsController =
- TextEditingController(text: existing?.details.trim() ?? '');
- final costController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.details.trim() ?? '');
+ final costController = SpellCheckTextEditingController(
  text: existing != null && existing.potentialCost > 0
  ? existing.potentialCost.toStringAsFixed(0)
  : '',
  );
  final ownerController =
- TextEditingController(text: existing?.owner.trim() ?? '');
+ SpellCheckTextEditingController(text: existing?.owner.trim() ?? '');
  var status = existing?.status.trim().isNotEmpty == true
  ? existing!.status.trim()
  : 'Planned';
 
  try {
- final result = await showDialog<InfrastructurePlanningItem>(
+ final result = await showAppDialog<InfrastructurePlanningItem>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -322,7 +325,7 @@ class _FrontEndPlanningInfrastructureScreenState
  Future<void> _deleteInfrastructureItem(
  InfrastructurePlanningItem item,
  ) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete Infrastructure Item'),
@@ -349,7 +352,8 @@ class _FrontEndPlanningInfrastructureScreenState
  }).toList();
  });
  _syncItemsToProvider();
-    showDeleteSuccessSnackBar(context, itemLabel: 'Infrastructure Planning Item');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Infrastructure Planning Item');
  }
 
  double get _infrastructureTotal => _items.fold<double>(
@@ -360,7 +364,7 @@ class _FrontEndPlanningInfrastructureScreenState
  @override
  Widget build(BuildContext context) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,10 +388,13 @@ class _FrontEndPlanningInfrastructureScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notes,
  hint: 'Input your notes here...',
  minLines: 3,
+ ),
  ),
  const SizedBox(height: 22),
  Row(
@@ -645,7 +652,7 @@ class _InfrastructureTable extends StatelessWidget {
  6: FixedColumnWidth(110),
  7: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -689,7 +696,7 @@ class _InfrastructureTable extends StatelessWidget {
  6: FixedColumnWidth(110),
  7: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -828,13 +835,13 @@ class _BottomOverlays extends StatelessWidget {
  ),
  child: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Text(
  'AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  SizedBox(width: 10),

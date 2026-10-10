@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -13,15 +14,17 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/screen_flow_navigator.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kMuted = Color(0xFF6B7280);
 const Color _kHeadline = Color(0xFF111827);
 const Color _kAccent = Color(0xFFD97706);
 
-const List<String> _frameworkOptions = ['Scrum', 'Kanban', 'ScrumBan', 'Waterfall'];
+const List<String> _frameworkOptions = ['Scrum', 'Kanban', 'ScrumBan'];
 const List<String> _sprintLengthOptions = [
   '1 Week',
   '2 Weeks',
@@ -73,9 +76,11 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   ///
   /// Backlog Governance, Team Structure & Roles, and Impediment & Risk
   /// Handling were removed from this screen because they each have their
-  /// own dedicated sidebar sub-section under Agile Delivery. Metrics &
-  /// Reporting was moved to its own dedicated sub-tab — see
-  /// [_metricsFields] below.
+  /// own dedicated sidebar sub-section under Agile Delivery. The old
+  /// standalone "Metrics & Reporting" sidebar entry is gone too (Lusaka 27:
+  /// "it's supposed to be turned into a dashboard, Agile dashboard") — the
+  /// metrics prose lives on in this screen's fields and the tracked metrics
+  /// are chosen in Metrics Planning and reported on the Agile Dashboard.
   static const List<_FieldConfig> _fields = [
     _FieldConfig(
       key: 'cadence',
@@ -85,7 +90,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     ),
   ];
 
-  /// Fields shown on the "Metrics & Reporting" sub-tab.
+  /// Fields shown on the "Metrics & Reporting" section (its own sidebar
+  /// page since the tab was removed from this screen).
   /// Persisted at the top level of the deliveryModel document under the
   /// `metrics` key — same key as before the move, so existing data is
   /// preserved.
@@ -180,13 +186,13 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   void initState() {
     super.initState();
     for (final f in _fields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     for (final f in _metricsFields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     for (final f in _releaseFields) {
-      _controllers[f.key] = TextEditingController();
+      _controllers[f.key] = SpellCheckTextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
@@ -363,8 +369,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         'Context:\n$contextText\n\n'
         'The selected framework is "$_selectedFramework". Tailor the recommendations to that framework.\n\n'
         'Return ONLY a valid JSON object with these exact keys:\n'
-        '- "framework": "Scrum", "Kanban", "ScrumBan", or "Waterfall"\n'
-        '- "sprintLength": "1 Week", "2 Weeks", "3 Weeks", or "4 Weeks" (omit for Kanban / Waterfall)\n'
+        '- "framework": "Scrum", "Kanban", or "ScrumBan"\n'
+        '- "sprintLength": "1 Week", "2 Weeks", "3 Weeks", or "4 Weeks" (omit for Kanban)\n'
         '- "estimationMethod": "Story Points (Fibonacci)", "T-Shirt Sizes", "Ideal Days", etc.\n'
         '- "cadence": Sprint cadence & calendar (2-3 sentences)\n'
         '- "metrics": Metrics & reporting (2-3 sentences)\n'
@@ -425,7 +431,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+          SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -517,7 +523,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI regeneration failed: $e')),
+          SnackBar(content: Text('AI regeneration failed: ${aiErrorMessage(e)}')),
         );
       }
     }
@@ -528,9 +534,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
     final double hp = isMobile ? 20 : 40;
+    const String activeSidebarLabel = 'Agile Delivery Model - Delivery Model';
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: _kBackground,
       body: SafeArea(
@@ -539,16 +546,14 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           children: [
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
-              child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Agile Delivery Model - Delivery Model'),
+              child: const InitiationLikeSidebar(activeItemLabel: activeSidebarLabel),
             ),
             Expanded(
               child: Stack(
                 children: [
                   const MobileSidebarHamburger(
                     sidebar: InitiationLikeSidebar(
-                        activeItemLabel:
-                            'Agile Delivery Model - Delivery Model'),
+                        activeItemLabel: activeSidebarLabel),
                   ),
                   SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
@@ -563,7 +568,12 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                               context, 'agile_delivery_model'),
                           onExportPdf: _exportPdf,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
+                        ScreenFlowNavigator(
+                          steps: PlanningPhaseNavigation.agileDeliverySteps,
+                          currentCheckpoint: 'agile_delivery_model',
+                        ),
+                        const SizedBox(height: 24),
                         Row(
                           children: [
                             const Expanded(
@@ -632,29 +642,29 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     );
   }
 
-  /// Three-tab layout for the Agile Delivery Model screen.
+  /// Two-tab layout for the Agile Delivery Model screen.
   ///
   ///  * **Delivery Model** — framework / sprint length / estimation /
   ///    cadence fields. Backlog Governance, Team Structure & Roles, and
   ///    Impediment & Risk Handling were removed because they have their
   ///    own sidebar sub-sections under Agile Delivery.
-  ///  * **Metrics & Reporting** — velocity, throughput, predictability,
-  ///    and quality measures.
   ///  * **Release Strategy** — the 9 typical sections that define how
   ///    product increments will be planned, validated, and released to
   ///    deliver value throughout the project lifecycle.
   ///
-  /// All three tabs share the same auto-save pipeline — typing in any tab
-  /// triggers the same 500ms debounced save to Firestore.
+  /// **Metrics & Reporting** no longer has a tab on this screen — it moved
+  /// to its own sidebar entry under Agile Delivery and renders through
+  /// [AgileDeliveryModelScreen.metricsOnly]. The two remaining tabs share
+  /// the same auto-save pipeline — typing in any tab triggers the same
+  /// 500ms debounced save to Firestore.
   Widget _buildTabs() {
     final bool isWaterfall = _selectedFramework == 'Waterfall';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TabBar(
-          tabs: const [
+        const TabBar(
+          tabs: [
             Tab(text: 'Delivery Model'),
-            Tab(text: 'Metrics & Reporting'),
             Tab(text: 'Release Strategy'),
           ],
           labelColor: _kAccent,
@@ -662,8 +672,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           indicatorColor: _kAccent,
           indicatorSize: TabBarIndicatorSize.tab,
           labelStyle:
-              const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 14),
+              TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: TextStyle(fontSize: 14),
           isScrollable: true,
         ),
         const SizedBox(height: 16),
@@ -675,9 +685,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             children: [
               SingleChildScrollView(
                 child: _buildDeliveryModelTab(),
-              ),
-              SingleChildScrollView(
-                child: _buildMetricsTab(),
               ),
               SingleChildScrollView(
                 child: _buildReleaseStrategyTab(isWaterfall: isWaterfall),
@@ -769,39 +776,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     );
   }
 
-  Widget _buildMetricsTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFBFDBFE)),
-          ),
-          child: const Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.insights, size: 18, color: Color(0xFF2563EB)),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Define how delivery progress, throughput, predictability, '
-                  'and quality will be measured and reported across the project.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF1E40AF)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        ..._metricsFields.map((f) => _buildField(f)),
-      ],
-    );
-  }
-
   Widget _buildReleaseStrategyTab({bool isWaterfall = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -886,6 +860,24 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             visualDensity: VisualDensity.compact,
             textStyle: WidgetStateProperty.all(
                 const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFFFFC812); // Yellow theme
+              }
+              return Colors.white;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFF111827); // Dark text on yellow
+              }
+              return const Color(0xFF374151); // Gray text when not selected
+            }),
+            side: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const BorderSide(color: Color(0xFFFFC812));
+              }
+              return const BorderSide(color: Color(0xFFD1D5DB));
+            }),
           ),
         ),
         const SizedBox(height: 6),
@@ -933,6 +925,24 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             visualDensity: VisualDensity.compact,
             textStyle: WidgetStateProperty.all(
                 const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFFFFC812); // Yellow theme
+              }
+              return Colors.white;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const Color(0xFF111827); // Dark text on yellow
+              }
+              return const Color(0xFF374151); // Gray text when not selected
+            }),
+            side: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const BorderSide(color: Color(0xFFFFC812));
+              }
+              return const BorderSide(color: Color(0xFFD1D5DB));
+            }),
           ),
         ),
       ],
@@ -994,20 +1004,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFE0F2FE),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFF0284C7)),
+                          size: 10, color: Color(0xFFFFC812)),
                       SizedBox(width: 3),
                       Text('AI',
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7))),
+                              color: Color(0xFFFFC812))),
                     ],
                   ),
                 ),
@@ -1031,7 +1041,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFD1D5DB)),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,
@@ -1103,8 +1113,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       screenTitle: 'Agile Delivery Model',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

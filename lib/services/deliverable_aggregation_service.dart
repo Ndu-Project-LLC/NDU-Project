@@ -145,7 +145,6 @@ class DeliverableAggregationService {
     RoadmapDeliverablePriority priority = RoadmapDeliverablePriority.medium,
     List<String> dependencies = const [],
   }) async {
-    final now = DateTime.now();
     final deliverable = RoadmapDeliverable(
       title: title,
       description: description,
@@ -344,7 +343,7 @@ class DeliverableAggregationService {
       deliverables.add(AggregatedDeliverable(
         id: 'fep_opportunity_$i',
         title: opp.opportunity.isNotEmpty ? opp.opportunity : 'Opportunity ${i + 1}',
-        description: opp.potentialCostSavings ?? '',
+        description: opp.potentialCostSavings,
         phase: DeliverablePhase.frontEndPlanning,
         category: DeliverableCategory.governance,
         sourceCheckpoint: 'fep_opportunities',

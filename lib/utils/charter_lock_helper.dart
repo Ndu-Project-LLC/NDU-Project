@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart';
-import 'package:ndu_project/theme.dart';
 
 class CharterLockHelper {
   /// Returns true if the FEP is locked because the charter has been
@@ -24,7 +23,7 @@ class CharterLockHelper {
   static bool isFepLocked(ProjectDataModel? data) {
     if (data == null) return false;
     return data.charterApprovalDate != null ||
-        (data.frontEndPlanning.charterApproved ?? false);
+        (data.frontEndPlanning.charterApproved);
   }
 
   /// Returns the approval timestamp (prefers `frontEndPlanning

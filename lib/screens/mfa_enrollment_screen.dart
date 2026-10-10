@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/security_services.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class MfaEnrollmentScreen extends StatefulWidget {
   const MfaEnrollmentScreen({super.key});
@@ -16,8 +18,8 @@ class MfaEnrollmentScreen extends StatefulWidget {
 
 class _MfaEnrollmentScreenState extends State<MfaEnrollmentScreen> {
   MfaMethod _method = MfaMethod.authenticator;
-  final _phoneController = TextEditingController();
-  final _codeController = TextEditingController();
+  final _phoneController = SpellCheckTextEditingController();
+  final _codeController = SpellCheckTextEditingController();
   String _secret = '';
   String _emailCode = '';
   String _smsVerificationId = '';
@@ -211,7 +213,7 @@ class _MfaEnrollmentScreenState extends State<MfaEnrollmentScreen> {
       await TwoFactorAuthService.rememberDevice(user.uid, days: 30);
       setState(() => _verified = true);
       if (mounted) {
-        showDialog(
+        showAppDialog(
           context: context,
           builder: (_) => AlertDialog(
             title: const Text('Enrollment complete'),

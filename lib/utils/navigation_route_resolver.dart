@@ -121,6 +121,12 @@ import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/screens/team_training_building_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
 import 'package:ndu_project/screens/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
+import 'package:ndu_project/screens/execution_work_packages_screen.dart';
+import 'package:ndu_project/screens/integration_dashboard_screen.dart';
+import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
+import 'package:ndu_project/screens/financial_closeout_screen.dart';
+import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -343,6 +349,14 @@ class NavigationRouteResolver {
         );
       case 'execution_enabling_work_plan':
         return const ExecutionEnablingWorkPlanScreen();
+      case 'execution_work_packages':
+        return const ExecutionWorkPackagesScreen();
+      case 'execution_quality_tracking':
+        return const ExecutionQualityTrackingScreen();
+      case 'integration_dashboard':
+        return const IntegrationDashboardScreen(
+          initialView: IntegrationDashboardView.baseline,
+        );
       case 'execution_issue_management':
         return const ExecutionIssueManagementScreen();
       case 'execution_plan_lessons_learned':
@@ -521,6 +535,12 @@ class NavigationRouteResolver {
         return const TransitionToProdTeamScreen();
       case 'contract_close_out':
         return const ContractCloseOutScreen();
+      case 'fat_mechanical_completion':
+        return const FatMechanicalCompletionScreen();
+      case 'financial_closeout':
+        return const FinancialCloseoutScreen();
+      case 'benefits_realization':
+        return const BenefitsRealizationScreen();
       case 'vendor_account_close_out':
         return const VendorAccountCloseOutScreen();
       case 'summarize_account_risks':
@@ -544,8 +564,19 @@ class NavigationRouteResolver {
   /// Returns the go_router URL for a project checkpoint so every page opened
   /// through the checkpoint resolver has a unique, shareable URL.
   static String resolveCheckpointToUrl(String? checkpoint) {
+    return tryResolveCheckpointToUrl(checkpoint) ??
+        '/${AppRoutes.initiationPhase}';
+  }
+
+  /// Same lookup as [resolveCheckpointToUrl] but returns null for an unknown
+  /// checkpoint instead of falling back to the initiation phase. Callers that
+  /// link to a user-supplied checkpoint (e.g. an activity's `sourceSection`)
+  /// use this so an unmapped value does not silently navigate somewhere
+  /// unrelated.
+  static String? tryResolveCheckpointToUrl(String? checkpoint) {
     final normalized = _normalizeCheckpoint(checkpoint ?? '');
-    return _checkpointUrls[normalized] ?? '/${AppRoutes.initiationPhase}';
+    if (normalized.isEmpty) return null;
+    return _checkpointUrls[normalized];
   }
 
   /// Checkpoint → deep-link URL map (mirrors [resolveCheckpointToScreen]).
@@ -589,6 +620,9 @@ class NavigationRouteResolver {
     'execution_plan_details': '/${AppRoutes.executionPlanDetails}',
     'execution_early_works': '/${AppRoutes.executionPlanDetails}',
     'execution_enabling_work_plan': '/${AppRoutes.executionEnablingWorkPlan}',
+    'execution_work_packages': '/${AppRoutes.executionWorkPackages}',
+    'execution_quality_tracking': '/${AppRoutes.executionQualityTracking}',
+    'integration_dashboard': '/${AppRoutes.integrationDashboard}',
     'execution_issue_management': '/${AppRoutes.executionIssueManagement}',
     'execution_plan_lessons_learned': '/${AppRoutes.executionPlanLessonsLearned}',
     'execution_plan_best_practices': '/${AppRoutes.executionPlanBestPractices}',
@@ -675,6 +709,9 @@ class NavigationRouteResolver {
     'deliver_project_closure': '/${AppRoutes.deliverProjectClosure}',
     'transition_to_prod_team': '/${AppRoutes.transitionToProdTeam}',
     'contract_close_out': '/${AppRoutes.contractCloseOut}',
+    'fat_mechanical_completion': '/${AppRoutes.fatMechanicalCompletion}',
+    'financial_closeout': '/${AppRoutes.financialCloseout}',
+    'benefits_realization': '/${AppRoutes.benefitsRealization}',
     'vendor_account_close_out': '/${AppRoutes.vendorAccountCloseOut}',
     'summarize_account_risks': '/${AppRoutes.summarizeAccountRisks}',
     'commerce_viability': '/${AppRoutes.commerceViability}',

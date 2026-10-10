@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/ssher_components.dart';
 import 'package:ndu_project/screens/ssher_add_safety_item_dialog.dart';
@@ -72,7 +73,7 @@ class _SafetyFullViewScreenState extends State<SafetyFullViewScreen> {
  }
 
  Future<void> _addItem() async {
- final result = await showDialog<SsherItemInput>(
+ final result = await showAppDialog<SsherItemInput>(
  context: context,
  builder: (ctx) => AddSsherItemDialog(
  accentColor: widget.accentColor,
@@ -95,7 +96,7 @@ class _SafetyFullViewScreenState extends State<SafetyFullViewScreen> {
  backgroundColor: Colors.grey[50],
  appBar: AppBar(
  elevation: 0,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  leading: IconButton(icon: const Icon(Icons.arrow_back_ios, size: 16), onPressed: () => Navigator.pop(context)),
  title: const Text('Safety - Full View', style: TextStyle(fontWeight: FontWeight.w700)),
  ),

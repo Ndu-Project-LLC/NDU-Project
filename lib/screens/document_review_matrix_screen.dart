@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/document_review_models.dart';
 import 'package:ndu_project/services/document_review_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -14,8 +15,8 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
-const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
 const Color _kMuted = Color(0xFF6B7280);
 const Color _kCardBorder = Color(0xFFE4E7EC);
@@ -138,8 +139,8 @@ class _DocumentReviewMatrixScreenState
               ],
             ),
           ),
-          MobileSidebarHamburger(
-            sidebar: const InitiationLikeSidebar(
+          const MobileSidebarHamburger(
+            sidebar: InitiationLikeSidebar(
               activeItemLabel: 'Document Review Matrix',
             ),
           ),
@@ -204,22 +205,22 @@ class _DocumentReviewMatrixScreenState
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Document Review Matrix',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: _kHeadline,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Track and approve all project documents',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         color: _kMuted,
                       ),
@@ -246,7 +247,7 @@ class _DocumentReviewMatrixScreenState
       ),
       child: Row(
         children: [
-          _buildStatChip('Total', stats.total.toString(), Colors.blue),
+          _buildStatChip('Total', stats.total.toString(), const Color(0xFFFFC812)),
           const SizedBox(width: 12),
           _buildStatChip('Pending', stats.pending.toString(), Colors.orange),
           const SizedBox(width: 12),
@@ -255,7 +256,7 @@ class _DocumentReviewMatrixScreenState
           _buildStatChip('Overdue', stats.overdue.toString(), Colors.red),
           const SizedBox(width: 12),
           _buildStatChip(
-              'Needs Re-review', stats.needsRereview.toString(), Colors.purple),
+              'Needs Re-review', stats.needsRereview.toString(), const Color(0xFFB8860B)),
           const Spacer(),
           Text(
             '${stats.completionPercent.toStringAsFixed(0)}% Complete',
@@ -307,12 +308,12 @@ class _DocumentReviewMatrixScreenState
           child: VoiceTextField(
             decoration: InputDecoration(
               hintText: 'Search documents...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: _kCardBorder),
+                borderSide: const BorderSide(color: _kCardBorder),
               ),
-              contentPadding: EdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,
               ),
@@ -496,18 +497,18 @@ class _DocumentReviewMatrixScreenState
           Icon(Icons.description_outlined,
               size: 64, color: _kMuted.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'No documents found',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
               color: _kMuted,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Try adjusting your filters or search terms',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               color: _kMuted,
             ),
@@ -687,40 +688,6 @@ class _DocumentReviewMatrixScreenState
     );
   }
 
-  Widget _buildStatusIcon(ReviewStatus status) {
-    IconData icon;
-    Color color;
-
-    switch (status) {
-      case ReviewStatus.approved:
-        icon = Icons.check_circle;
-        color = Colors.green;
-        break;
-      case ReviewStatus.underReview:
-        icon = Icons.rate_review;
-        color = Colors.blue;
-        break;
-      case ReviewStatus.pendingReview:
-        icon = Icons.pending;
-        color = Colors.orange;
-        break;
-      case ReviewStatus.changesRequested:
-        icon = Icons.edit_note;
-        color = Colors.orange;
-        break;
-      case ReviewStatus.rejected:
-        icon = Icons.cancel;
-        color = Colors.red;
-        break;
-      case ReviewStatus.notStarted:
-        icon = Icons.circle_outlined;
-        color = Colors.grey;
-        break;
-    }
-
-    return Icon(icon, color: color, size: 18);
-  }
-
   Widget _buildStatusChip(ReviewStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -744,7 +711,7 @@ class _DocumentReviewMatrixScreenState
       case ReviewStatus.approved:
         return Colors.green;
       case ReviewStatus.underReview:
-        return Colors.blue;
+        return const Color(0xFFFFC812);
       case ReviewStatus.pendingReview:
         return Colors.orange;
       case ReviewStatus.changesRequested:
@@ -774,7 +741,7 @@ class _DocumentReviewMatrixScreenState
   }
 
   void _showDocumentPreview(DocumentReviewItem doc) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _DocumentPreviewDialog(
         document: doc,
@@ -808,7 +775,7 @@ class _DocumentReviewMatrixScreenState
   }
 
   void _assignReviewer(DocumentReviewItem doc) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => _AssignReviewerDialog(
         document: doc,
@@ -826,7 +793,7 @@ class _DocumentReviewMatrixScreenState
 
           if (success) {
             _loadData();
-            if (mounted) Navigator.of(context).pop();
+            if (context.mounted) Navigator.of(context).pop();
           }
         },
       ),
@@ -910,9 +877,9 @@ class _DocumentReviewMatrixScreenState
     Color color,
     Future<bool> Function(String?) onSubmit,
   ) {
-    final controller = TextEditingController();
+    final controller = SpellCheckTextEditingController();
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
@@ -947,7 +914,7 @@ class _DocumentReviewMatrixScreenState
             onPressed: () async {
               final success = await onSubmit(
                   controller.text.isEmpty ? null : controller.text);
-              if (success && mounted) {
+              if (success && context.mounted) {
                 _loadData();
                 Navigator.of(context).pop();
               }
@@ -979,8 +946,8 @@ class _DocumentReviewMatrixScreenState
       screenTitle: 'Document Review Matrix',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -1036,7 +1003,7 @@ class _DocumentPreviewDialog extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.05),
-        border: Border(bottom: BorderSide(color: _kCardBorder)),
+        border: const Border(bottom: BorderSide(color: _kCardBorder)),
       ),
       child: Row(
         children: [
@@ -1219,7 +1186,7 @@ class _DocumentPreviewDialog extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.05),
-        border: Border(top: BorderSide(color: _kCardBorder)),
+        border: const Border(top: BorderSide(color: _kCardBorder)),
       ),
       child: Row(
         children: [
@@ -1263,7 +1230,7 @@ class _DocumentPreviewDialog extends StatelessWidget {
       case ReviewStatus.approved:
         return Colors.green;
       case ReviewStatus.underReview:
-        return Colors.blue;
+        return const Color(0xFFFFC812);
       case ReviewStatus.pendingReview:
         return Colors.orange;
       case ReviewStatus.changesRequested:
@@ -1310,7 +1277,7 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<ReviewerRole>(
-            value: _selectedRole,
+            initialValue: _selectedRole,
             decoration: const InputDecoration(
               labelText: 'Role',
               border: OutlineInputBorder(),
@@ -1325,7 +1292,7 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedUserId.isEmpty ? null : _selectedUserId,
+            initialValue: _selectedUserId.isEmpty ? null : _selectedUserId,
             decoration: const InputDecoration(
               labelText: 'Team Member',
               border: OutlineInputBorder(),
@@ -1339,8 +1306,9 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
             onChanged: (v) {
               setState(() {
                 _selectedUserId = v!;
-                _selectedUserName =
-                    _teamMembers.firstWhere((m) => m['id'] == v)['name']!;
+                final member =
+                    _teamMembers.where((m) => m['id'] == v).firstOrNull;
+                _selectedUserName = member?['name'] ?? '';
               });
             },
           ),
@@ -1382,7 +1350,7 @@ class _NavCircleBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),

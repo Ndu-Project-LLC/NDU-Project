@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert' show jsonDecode, jsonEncode;
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -21,6 +24,8 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
+import 'package:ndu_project/models/procurement_log.dart';
+import 'package:ndu_project/models/procurement_cycle.dart';
 import 'package:ndu_project/services/procurement_service.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/services/user_service.dart';
@@ -30,20 +35,18 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/procurement/procurement_common_widgets.dart';
 import 'package:ndu_project/widgets/procurement/procurement_items_list_view.dart';
+import 'package:ndu_project/widgets/procurement/procurement_section_error_card.dart';
 import 'package:ndu_project/widgets/procurement/procurement_vendor_management.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/charter_lock_banner.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 enum ProcurementScreenMode { fep, planning }
-
-enum _MissingProcurementAction {
- manual,
- autoFill,
- skip,
-}
 
 /// Front End Planning â€“ Procurement screen
 /// Recreates the provided procurement workspace mock with strategies and vendor table.
@@ -72,6 +75,19 @@ class _FrontEndPlanningProcurementScreenState
  static const int _streamLimitStep = 40;
  static const String _procurementNotesKey = 'planning_procurement_notes';
  static const String _procurementPlanNoteKey = 'planning_procurement_plan';
+
+ /// The limited procurement cycle, stored as JSON in planningNotes.
+ static const String _procurementCycleNoteKey = 'planning_procurement_cycle';
+
+ /// The project's saved procurement cycle, or the default template.
+ ProcurementCycle _procurementCycleFrom(ProjectDataModel data) {
+ final raw = data.planningNotes[_procurementCycleNoteKey];
+ if (raw == null || raw.trim().isEmpty) {
+ return ProcurementCycle.withDefaults(DateTime.now());
+ }
+ return ProcurementCycle.fromMap(jsonDecode(raw)) ??
+ ProcurementCycle.withDefaults(DateTime.now());
+ }
  static const String _procurementSeededKey =
  'planning_procurement_seeded_from_initiation';
  static const String _workflowCollectionName = 'procurement_workflows';
@@ -192,6 +208,18 @@ class _FrontEndPlanningProcurementScreenState
  StreamSubscription<List<PurchaseOrderModel>>? _purchaseOrdersSub;
  bool _isAutoAssigningVendors = false;
  bool _isEnsuringPurchaseOrders = false;
+
+ /// The parts of the old procurement dashboard the 2026-09-28 review took off
+ /// the page: the contract-scope block ("contracting work is not going to be
+ /// here"), the procurement-strategies table ("strategy name, category status,
+ /// I don't know what that is"), the second copy of the item list ("Procurement
+ /// Scope") and "What to procure" ("this what-to-procure I don't understand
+ /// that. So we need to take that out.").
+ ///
+ /// Hidden rather than deleted, so nothing is lost if the strategy rows want
+ /// re-homing elsewhere; the models, services and seeded data behind them are
+ /// untouched either way. Set to true to bring the old dashboard back.
+ bool get _showLegacyProcurementSections => false;
 
  bool get _canCommenceContractingActivities => AdminEditToggle.isAdmin();
 
@@ -524,13 +552,13 @@ class _FrontEndPlanningProcurementScreenState
  Future<_ProcurementWorkflowStep?> _showWorkflowStepDialog({
  _ProcurementWorkflowStep? initialStep,
  }) async {
- final nameController = TextEditingController(text: initialStep?.name ?? '');
- final durationController = TextEditingController(
+ final nameController = SpellCheckTextEditingController(text: initialStep?.name ?? '');
+ final durationController = SpellCheckTextEditingController(
  text: (initialStep?.duration ?? 1).toString(),
  );
  var unit = initialStep?.unit == 'month' ? 'month' : 'week';
 
- final result = await showDialog<_ProcurementWorkflowStep>(
+ final result = await showAppDialog<_ProcurementWorkflowStep>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -602,7 +630,7 @@ class _FrontEndPlanningProcurementScreenState
  Navigator.of(dialogContext).pop(
  _ProcurementWorkflowStep(
  id: initialStep?.id ??
- 'wf_${DateTime.now().microsecondsSinceEpoch}',
+ newId('wf_'),
  name: name,
  duration: duration,
  unit: unit,
@@ -756,7 +784,7 @@ class _FrontEndPlanningProcurementScreenState
  /// On narrow viewports the strip scrolls horizontally so all 7 tabs
  /// remain reachable.
  Widget _buildProcurementTabStrip() {
- final tabs = _ProcurementTab.values;
+ const tabs = _ProcurementTab.values;
  final restricted = _tabsWithRestrictedAccess;
 
  return Container(
@@ -789,7 +817,7 @@ class _FrontEndPlanningProcurementScreenState
  _ProcurementTab tab, Set<_ProcurementTab> restricted) {
  final isSelected = _selectedTab == tab;
  final isRestricted = restricted.contains(tab);
- final accent = const Color(0xFF1E3A8A);
+ const accent = Color(0xFFB8860B);
 
  VoidCallback? onTap = () => _handleTabSelected(tab);
  if (isRestricted) onTap = null;
@@ -813,7 +841,7 @@ class _FrontEndPlanningProcurementScreenState
  ? accent
  : (isRestricted
  ? const Color(0xFFCBD5E1)
- : const Color(0xFFBFDBFE)),
+ : const Color(0xFFFDE68A)),
  ),
  ),
  child: Row(
@@ -906,9 +934,20 @@ class _FrontEndPlanningProcurementScreenState
  screenTitle: 'Procurement',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
+ // The Procurement Log itself, from the same rows the on-screen table
+ // draws (Lusaka 27), with vendors resolved the same way.
+ if (_items.isNotEmpty)
+ PdfSection.table(
+ 'Procurement Log',
+ headers: procurementLogExportHeaders(),
+ rows: procurementLogExportRows(
+ _items,
+ vendorNames: {for (final vendor in _vendors) vendor.id: vendor.name},
+ ),
+ ),
  ],
  );
  }
@@ -1513,10 +1552,10 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  final palette = <Color>[
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  const Color(0xFF10B981),
  const Color(0xFFF59E0B),
- const Color(0xFF6D28D9),
+ const Color(0xFFB8860B),
  const Color(0xFFEF4444),
  ];
  final categoryEntries = categoryTotals.entries.toList()
@@ -2289,10 +2328,10 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openInviteVendorDialog() async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
 
- final sent = await showDialog<bool>(
+ final sent = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Invite Vendor'),
@@ -2374,7 +2413,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -3109,20 +3148,6 @@ class _FrontEndPlanningProcurementScreenState
  });
  }
 
- Future<void> _focusFirstProcurementIssue(
- FormValidationResult validation) async {
- final issue = validation.firstIssue;
- if (issue == null) return;
-
- final targetTab = _tabForFieldId(issue.id);
- if (targetTab != null && targetTab != _selectedTab) {
- setState(() => _selectedTab = targetTab);
- await Future<void>.delayed(const Duration(milliseconds: 80));
- }
-
- await FormValidationEngine.scrollToFirstIssue(validation);
- }
-
  bool _hasValidationIssue(FormValidationResult validation, String fieldId) {
  return validation.issues.any((issue) => issue.id == fieldId);
  }
@@ -3152,148 +3177,6 @@ class _FrontEndPlanningProcurementScreenState
  });
  } catch (e) {
  debugPrint('Unable to sync procurement validation sources: $e');
- }
- }
-
- Future<_MissingProcurementAction?> _showMissingRequirementsDialog(
- FormValidationResult validation,
- ) {
- final summaries = _pendingIssueSummaries(validation.issues);
- final visible = summaries.take(6).toList(growable: false);
- final hiddenCount = summaries.length - visible.length;
-
- return showDialog<_MissingProcurementAction>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: const Row(
- children: [
- Icon(Icons.warning_amber_rounded, color: Color(0xFFB45309)),
- SizedBox(width: 10),
- Text('Procurement Requirements Missing'),
- ],
- ),
- content: SizedBox(
- width: 560,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'You still have missing procurement details. You can add them now, auto-fill them, or continue and update later.',
- style: TextStyle(fontSize: 13, height: 1.35),
- ),
- const SizedBox(height: 10),
- for (final item in visible)
- Padding(
- padding: const EdgeInsets.only(bottom: 6),
- child: Text(
- '- $item',
- style: const TextStyle(
- fontSize: 12.5,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151),
- ),
- ),
- ),
- if (hiddenCount > 0)
- Text(
- '- +$hiddenCount more',
- style: const TextStyle(
- fontSize: 12.5,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151),
- ),
- ),
- const SizedBox(height: 12),
- const Text(
- 'Choose one option:',
- style: TextStyle(
- fontSize: 12,
- color: Color(0xFF6B7280),
- fontWeight: FontWeight.w600,
- ),
- ),
- ],
- ),
- ),
- actions: [
- TextButton(
- onPressed: () =>
- Navigator.of(dialogContext).pop(_MissingProcurementAction.skip),
- child: const Text('Skip for now'),
- ),
- OutlinedButton(
- onPressed: () => Navigator.of(dialogContext)
- .pop(_MissingProcurementAction.manual),
- child: const Text('Add Missing Info'),
- ),
- ElevatedButton.icon(
- onPressed: () => Navigator.of(dialogContext)
- .pop(_MissingProcurementAction.autoFill),
- icon: const Icon(Icons.auto_awesome, size: 16),
- label: const Text('Auto-fill with AI'),
- ),
- ],
- ),
- );
- }
-
- Future<void> _openManualCompletionForIssues(
- FormValidationResult validation,
- ) async {
- final issue = validation.firstIssue;
- if (issue == null) return;
-
- switch (issue.id) {
- case 'item_list':
- setState(() => _selectedTab = _ProcurementTab.itemsList);
- await Future<void>.delayed(const Duration(milliseconds: 80));
- await _openAddItemDialog();
- return;
- case 'project_budget':
- case 'expected_delivery_date':
- setState(() => _selectedTab = _ProcurementTab.itemsList);
- await Future<void>.delayed(const Duration(milliseconds: 80));
- ProcurementItemModel? target;
- if (issue.id == 'project_budget') {
- for (final item in _items) {
- if (item.budget <= 0) {
- target = item;
- break;
- }
- }
- } else {
- for (final item in _items) {
- if (item.estimatedDelivery == null) {
- target = item;
- break;
- }
- }
- }
- target ??= _items.isNotEmpty ? _items.first : null;
- if (target == null) {
- await _openAddItemDialog();
- } else {
- await _openEditItemDialog(target);
- }
- return;
- case 'vendor_selection':
- setState(() => _selectedTab = _ProcurementTab.vendorManagement);
- await Future<void>.delayed(const Duration(milliseconds: 80));
- if (_vendors.isEmpty) {
- await _openAddVendorDialog();
- } else if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Select at least one vendor checkbox to continue to Security.',
- ),
- ),
- );
- }
- return;
- default:
- await _focusFirstProcurementIssue(validation);
  }
  }
 
@@ -3553,7 +3436,8 @@ class _FrontEndPlanningProcurementScreenState
  await _ensurePurchaseOrdersSeeded();
 
  final validation = _validateProcurementForNavigation();
- if (!validation.isValid) {
+if (!mounted) return;
+  if (!validation.isValid) {
  final tabErrors = validation.issues
  .map((issue) => _tabForFieldId(issue.id))
  .whereType<_ProcurementTab>()
@@ -3585,15 +3469,6 @@ class _FrontEndPlanningProcurementScreenState
  await _saveAndNavigateToSecurity();
  }
 
- void _goToPreviousSection() {
- _clearNavigationValidationState();
- if (_isPlanningMode) {
- PlanningPhaseNavigation.navigateToPrevious(context, 'procurement');
- return;
- }
- FrontEndPlanningNavigation.goToPrevious(context, _checkpointId);
- }
-
  Widget _buildTabContent() {
  switch (_selectedTab) {
  case _ProcurementTab.procurementDashboard:
@@ -3601,18 +3476,20 @@ class _FrontEndPlanningProcurementScreenState
  case _ProcurementTab.itemsList:
  return _withSectionValidation(
  sectionKey: _itemsSectionKey,
- errorText: _itemsSectionErrorText(),
- child: ProcurementItemsListView(
- key: const ValueKey('procurement_items_list'),
- items: _items,
- trackableItems: _trackableItems,
- selectedIndex: _selectedTrackableIndex,
- onSelectTrackable: _handleTrackableSelected,
- currencyFormat: _currencyFormat,
- onAddItem: _openAddItemDialog,
- onEditItem: _openEditItemDialog,
- onDeleteItem: _removeItem,
- ),
+ errorText: _itemsSectionErrorText(),            child: ProcurementItemsListView(
+              key: const ValueKey('procurement_items_list'),
+              items: _items,
+              trackableItems: _trackableItems,
+              selectedIndex: _selectedTrackableIndex,
+              onSelectTrackable: _handleTrackableSelected,
+              currencyFormat: _currencyFormat,
+              onAddItem: _openAddItemDialog,
+              onEditItem: _openEditItemDialog,
+              onDeleteItem: _removeItem,
+              vendorNames: <String, String>{
+                for (final vendor in _vendors) vendor.id: vendor.name,
+              },
+            ),
  );
  case _ProcurementTab.vendorManagement:
  return _withSectionValidation(
@@ -3931,60 +3808,91 @@ class _FrontEndPlanningProcurementScreenState
  _skipMissingDataAndContinue();
  },
  );
- }
-
- Widget _buildDashboardSection({Key? key}) {
- return Column(
- key: key ?? const ValueKey('procurement_dashboard'),
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: _PlanHeader(onItemListTap: _handleItemListTap)),
- PageRegenerateAllButton(
- onRegenerateAll: () async {
- final confirmed = await showRegenerateAllConfirmation(context);
- if (confirmed && mounted) {
- await _regenerateAllProcurement();
- }
- },
- isLoading: _isGeneratingData,
- tooltip: 'Generate starter procurement data',
- ),
- ],
- ),
- const SizedBox(height: 10),
- const Text(
- 'Missing procurement records auto-generate on load, and you can regenerate manually anytime.',
- style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
- ),
- const SizedBox(height: 16),
- _ContractScopeManagementSection(
- scopes: _items,
- canStartProcess: _canCommenceContractingActivities,
- startedScopeCount: _items
- .where((item) => item.status != ProcurementItemStatus.planning)
- .length,
- onStartProcessForScope: _startProcessForScope,
- ),
- const SizedBox(height: 16),
- _ProcurementStrategiesSection(
- strategies: _strategies,
- onAddStrategy: _openAddStrategyDialog,
- onEditStrategy: _openEditStrategyDialog,
- onDeleteStrategy: _deleteStrategy,
- ),
- const SizedBox(height: 20),
- _StrategiesSection(
- items: _items,
- currencyFormat: _currencyFormat,
- onAddScope: _openAddItemDialog,
- ),
- const SizedBox(height: 20),
- _buildWhatToProcureSection(),
- const SizedBox(height: 32),
- _VendorsSection(
+ }  /// The overview tab (Lusaka 27).
+  ///
+  /// The owner's shape for this section: a short overview at the top carrying
+  /// the plan note, then the log — "this procurement [log] to be at the top …
+  /// The dashboard … there should be a dashboard that could be the procurement
+  /// overview … the overview could include a plan section that just gives you
+  /// the spot to put in that information … in the overview at the top".
+  ///
+  /// Everything that was here before but is not procurement is gone: the
+  /// contract scope management block ("contracting work is not going to be
+  /// here"), the procurement-strategies table ("strategy name, category status,
+  /// I don't know what that is"), the second copy of the item list
+  /// ("Procurement Scope"), and "What to procure" ("this what-to-procure I don't
+  /// understand that. So we need to take that out.").
+  Widget _buildDashboardSection({Key? key}) {
+    final projectData = ProjectDataHelper.getData(context);
+    return Column(
+      key: key ?? const ValueKey('procurement_dashboard'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _PlanHeader(onItemListTap: _handleItemListTap)),
+            PageRegenerateAllButton(
+              onRegenerateAll: () async {
+                final confirmed = await showRegenerateAllConfirmation(context);
+                if (confirmed && mounted) {
+                  await _regenerateAllProcurement();
+                }
+              },
+              isLoading: _isGeneratingData,
+              tooltip: 'Generate starter procurement data',
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'Missing procurement records auto-generate on load, and you can regenerate manually anytime.',
+          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+        ),
+        const SizedBox(height: 16),
+        _ProcurementPlanCard(
+          initialText: projectData.planningNotes[_procurementPlanNoteKey],
+          checkpointId: _checkpointId,
+        ),
+        const SizedBox(height: 16),
+        _ProcurementCycleCard(
+          cycle: _procurementCycleFrom(projectData),
+          checkpointId: _checkpointId,
+        ),
+        const SizedBox(height: 20),
+        _ProcurementStatusDashboard(
+          summary: ProcurementStatusSummary.fromItems(_items),
+          currencyFormat: _currencyFormat,
+          onOpenLog: _handleItemListTap,
+        ),
+        if (_showLegacyProcurementSections) ...[
+          const SizedBox(height: 16),
+          _ContractScopeManagementSection(
+            scopes: _items,
+            canStartProcess: _canCommenceContractingActivities,
+            startedScopeCount: _items
+                .where((item) => item.status != ProcurementItemStatus.planning)
+                .length,
+            onStartProcessForScope: _startProcessForScope,
+          ),
+          const SizedBox(height: 16),
+          _ProcurementStrategiesSection(
+            strategies: _strategies,
+            onAddStrategy: _openAddStrategyDialog,
+            onEditStrategy: _openEditStrategyDialog,
+            onDeleteStrategy: _deleteStrategy,
+          ),
+          const SizedBox(height: 20),
+          _StrategiesSection(
+            items: _items,
+            currencyFormat: _currencyFormat,
+            onAddScope: _openAddItemDialog,
+          ),
+          const SizedBox(height: 20),
+          _buildWhatToProcureSection(),
+        ],
+        const SizedBox(height: 28),
+        _VendorsSection(
  vendors: _filteredVendors,
  allVendorsCount: _vendors.length,
  selectedVendorIds: _selectedVendorIds,
@@ -4158,22 +4066,37 @@ class _FrontEndPlanningProcurementScreenState
  final psa = data.preferredSolutionAnalysis;
  SolutionAnalysisItem? selectedSolution;
  if (psa != null && psa.isSelectionFinalized) {
+ // Null-safe resolution: the stored selection (id/index/title) may
+ // reference an analyses list that is empty or has been re-synced.
+ // Every lookup below must tolerate a missing/empty list — throwing
+ // here used to surface "Bad state: No element" on the Procurement
+ // page error screen (the analyses list lives in a separate document
+ // section that can legitimately be empty while the selection flags
+ // are already persisted).
  final byId = psa.selectedSolutionId;
  final byIndex = psa.selectedSolutionIndex;
  final byTitle = psa.selectedSolutionTitle;
+ final analyses = psa.solutionAnalyses;
  if (byId != null && byId.isNotEmpty) {
- selectedSolution = psa.solutionAnalyses.firstWhere(
- (s) => s.solutionTitle == byTitle,
- orElse: () => psa.solutionAnalyses.first,
+ selectedSolution = analyses
+ .cast<SolutionAnalysisItem?>()
+ .firstWhere(
+ (s) => s != null &&
+ (byTitle != null &&
+ byTitle.isNotEmpty &&
+ s.solutionTitle == byTitle),
+ orElse: () => null,
  );
  } else if (byIndex != null &&
  byIndex >= 0 &&
- byIndex < psa.solutionAnalyses.length) {
- selectedSolution = psa.solutionAnalyses[byIndex];
+ byIndex < analyses.length) {
+ selectedSolution = analyses[byIndex];
  } else if (byTitle != null && byTitle.isNotEmpty) {
- selectedSolution = psa.solutionAnalyses.firstWhere(
- (s) => s.solutionTitle == byTitle,
- orElse: () => psa.solutionAnalyses.first,
+ selectedSolution = analyses
+ .cast<SolutionAnalysisItem?>()
+ .firstWhere(
+ (s) => s != null && s.solutionTitle == byTitle,
+ orElse: () => null,
  );
  }
  }
@@ -4313,15 +4236,15 @@ class _FrontEndPlanningProcurementScreenState
  Future<ProcurementStrategyModel?> _showStrategyDialog({
  ProcurementStrategyModel? existing,
  }) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
  final categoryController =
- TextEditingController(text: existing?.category ?? '');
- final itemCountController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.category ?? '');
+ final itemCountController = SpellCheckTextEditingController(
  text: (existing?.itemCount ?? 0).toString(),
  );
  var selectedStatus = existing?.status ?? StrategyStatus.draft;
 
- final result = await showDialog<ProcurementStrategyModel>(
+ final result = await showAppDialog<ProcurementStrategyModel>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -4485,7 +4408,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _deleteStrategy(ProcurementStrategyModel strategy) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete strategy?'),
@@ -4526,6 +4449,25 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openAddItemDialog() async {
+ // Defense-in-depth: capture the charter lock state at the moment
+ // the dialog is opened. The dialog also re-checks the lock state
+ // inside its own build, but this ensures the modal is locked even
+ // if the dialog's BuildContext somehow cannot reach the project
+ // data provider.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: false);
+ if (charterLocked) {
+ // Block opening the modal entirely when the charter is approved.
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Project Charter is approved — procurement items are locked from editing. Open the Project Charter page to request changes.'),
+ backgroundColor: Color(0xFFB8860B),
+ duration: Duration(seconds: 4),
+ ),
+ );
+ return;
+ }
  const categoryOptions = [
  'Materials',
  'Equipment',
@@ -4538,7 +4480,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4549,6 +4491,7 @@ class _FrontEndPlanningProcurementScreenState
  responsibleOptions: _assignableMembers,
  showAiGenerateButton: false,
  itemDomainLabel: 'Procurement',
+ locked: charterLocked,
  );
  },
  );
@@ -4585,6 +4528,24 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openEditItemDialog(ProcurementItemModel item) async {
+ // Defense-in-depth: capture the charter lock state at the moment
+ // the dialog is opened. The dialog also re-checks the lock state
+ // inside its own build, but this ensures the modal is locked even
+ // if the dialog's BuildContext somehow cannot reach the project
+ // data provider.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: false);
+ if (charterLocked) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Project Charter is approved — procurement items are locked from editing. Open the Project Charter page to request changes.'),
+ backgroundColor: Color(0xFFB8860B),
+ duration: Duration(seconds: 4),
+ ),
+ );
+ return;
+ }
  const categoryOptions = [
  'Materials',
  'Equipment',
@@ -4597,7 +4558,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4609,6 +4570,7 @@ class _FrontEndPlanningProcurementScreenState
  initialItem: item,
  showAiGenerateButton: false,
  itemDomainLabel: 'Procurement',
+ locked: charterLocked,
  );
  },
  );
@@ -4660,7 +4622,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _removeItem(ProcurementItemModel item) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -4727,7 +4689,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4824,7 +4786,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<RfqModel>(
+ final result = await showAppDialog<RfqModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4890,7 +4852,7 @@ class _FrontEndPlanningProcurementScreenState
  'Other',
  ];
 
- final result = await showDialog<RfqModel>(
+ final result = await showAppDialog<RfqModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -4948,7 +4910,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _deleteRfq(RfqModel rfq) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -5016,12 +4978,12 @@ class _FrontEndPlanningProcurementScreenState
 
  if (!mounted) return;
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Row(
  children: [
- Icon(Icons.fact_check_outlined, color: Color(0xFF2563EB)),
+ Icon(Icons.fact_check_outlined, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('Approved Vendor List'),
  ],
@@ -5037,6 +4999,7 @@ class _FrontEndPlanningProcurementScreenState
  constraints: const BoxConstraints(maxHeight: 360),
  child: ListView.separated(
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: approvedVendors.length,
  separatorBuilder: (_, __) =>
  const Divider(height: 12, thickness: 0.5),
@@ -5049,13 +5012,13 @@ class _FrontEndPlanningProcurementScreenState
  const EdgeInsets.symmetric(horizontal: 0),
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFEFF6FF),
+ backgroundColor: const Color(0xFFFFF8E1),
  child: Text(
  name.isEmpty ? '?' : name[0].toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -5104,7 +5067,7 @@ class _FrontEndPlanningProcurementScreenState
  ? _vitalLleItems
  : _items;
 
- final result = await showDialog<PurchaseOrderModel>(
+ final result = await showAppDialog<PurchaseOrderModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -5175,7 +5138,7 @@ class _FrontEndPlanningProcurementScreenState
  'Services'
  ];
 
- final result = await showDialog<PurchaseOrderModel>(
+ final result = await showAppDialog<PurchaseOrderModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -5234,7 +5197,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _deletePo(PurchaseOrderModel order) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -5455,7 +5418,7 @@ class _FrontEndPlanningProcurementScreenState
  ListTile(
  title: Text(status.label),
  trailing: status == item.status
- ? const Icon(Icons.check_circle, color: Color(0xFF2563EB))
+ ? const Icon(Icons.check_circle, color: Color(0xFFFFC812))
  : null,
  onTap: () => Navigator.of(sheetContext).pop(status),
  ),
@@ -5534,10 +5497,31 @@ class _FrontEndPlanningProcurementScreenState
  );
  }
 
+ /// Build-path safety net: if a data-driven section throws (e.g. a
+ /// "Bad state: No element" from unexpected Firestore data), isolate the
+ /// failure to that section instead of blanking the entire page.
+ Widget _safeSection(String label, Widget Function() builder) {
+ try {
+ return builder();
+ } catch (err, stack) {
+ debugPrint('Procurement section "$label" build error: $err\n$stack');
+ return ProcurementSectionErrorCard(
+ label: label,
+ message: err.toString(),
+ onRetry: () async => setState(() {}),
+ );
+ }
+ }
+
  @override
  Widget build(BuildContext context) {
- final projectData = ProjectDataHelper.getData(context);
  final isMobile = AppBreakpoints.isMobile(context);
+ // Task 14: Once the Project Charter is approved, lock this section
+ // from editing. The user can still view the data and scroll through
+ // it, but every editable control is wrapped in an AbsorbPointer so
+ // taps are silently ignored.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: true);
  final content = Stack(
  children: [
  const AdminEditToggle(),
@@ -5559,10 +5543,20 @@ class _FrontEndPlanningProcurementScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ CharterLockBanner(visible: charterLocked),
+ // The charter lock stops *editing*, not reading or navigating. It used to
+ // wrap the whole column below, which also swallowed the tab strip and the
+ // "Next:" button — so once the charter was approved every tab (Scope
+ // Details, Procurement Workflow, ...) stopped responding and the page
+ // looked completely dead (voice note, 2026-09-10). Navigation now sits
+ // outside the lock, each editable block is wrapped on its own, and the
+ // item/vendor dialogs keep their own defense-in-depth lock checks.
  // Removed duplicate top bar to avoid a second app header.
  _buildStreamErrorBanner(),
  const SizedBox(height: 24),
- PlanningAiNotesCard(
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Procurement',
  noteKey: _procurementNotesKey,
@@ -5575,6 +5569,7 @@ class _FrontEndPlanningProcurementScreenState
  .procurement,
  description:
  'Capture procurement priorities, vendors, and approval constraints.',
+ ),
  ),
  const SizedBox(height: 16),
  // ── Tab strip (clickable navigation across all procurement tabs) ────────
@@ -5589,9 +5584,9 @@ class _FrontEndPlanningProcurementScreenState
  child: OutlinedButton.icon(
  onPressed: _openApprovedVendorList,
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF1E3A8A),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
- backgroundColor: const Color(0xFFEFF6FF),
+ foregroundColor: const Color(0xFFB8860B),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
+ backgroundColor: const Color(0xFFFFF8E1),
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
  shape: RoundedRectangleBorder(
@@ -5604,20 +5599,20 @@ class _FrontEndPlanningProcurementScreenState
  label: const Text(
  'Approved Vendor List'),
  ),
- ),
- if (_isPlanningMode) ...[
- const SizedBox(height: 20),
- _ProcurementPlanCard(
- initialText: projectData
- .planningNotes[_procurementPlanNoteKey],
- checkpointId: _checkpointId,
- ),
- ],
- const SizedBox(height: 32),
+ ),                // The plan note lives in the overview tab (see
+                // [_buildDashboardSection]) so it sits at the top of the
+                // section in one place, in both FEP and planning modes.
+                const SizedBox(height: 32),
  const SizedBox(height: 24),
- AnimatedSwitcher(
+ // The tab body holds the editable forms for the selected tab, so it stays
+ // behind the lock. The tab strip above and the "Next:" button below are
+ // navigation and remain live even while the charter is approved.
+ CharterLockBanner.applyLock(
+ locked: charterLocked,
+ child: AnimatedSwitcher(
  duration: const Duration(milliseconds: 250),
- child: _buildTabContent(),
+ child: _safeSection('Procurement tabs', _buildTabContent),
+ ),
  ),
  const SizedBox(height: 12),
  Align(
@@ -5641,7 +5636,7 @@ class _FrontEndPlanningProcurementScreenState
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: isMobile
  ? Drawer(
  child: InitiationLikeSidebar(
@@ -5671,53 +5666,6 @@ class _FrontEndPlanningProcurementScreenState
  Expanded(child: content),
  ],
  ),
- ),
- );
- }
-}
-
-class _ProcurementTopBar extends StatelessWidget {
- const _ProcurementTopBar({required this.onBack, required this.onForward});
-
- final VoidCallback onBack;
- final VoidCallback onForward;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(20),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- child: Row(
- children: [
- _circleButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 12),
- _circleButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const SizedBox(width: 20),
- const Spacer(),
- const _UserBadge(),
- ],
- ),
- );
- }
-
- Widget _circleButton({required IconData icon, required VoidCallback onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(999),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
  ),
  );
  }
@@ -5828,43 +5776,383 @@ class _PendingSecurityPromptBar extends StatelessWidget {
  }
 }
 
-class _UserBadge extends StatelessWidget {
- const _UserBadge();
+/// The procurement overview: the key status of the items being bought and what
+/// they cost — "it's gonna be a dashboard that kind of shows the key status of
+/// the procured items and the cost and all of that. It can sort of blank and
+/// then fill up as they get the work done." The numbers come from
+/// [ProcurementStatusSummary], the same module the log rows come from.
+class _ProcurementStatusDashboard extends StatelessWidget {
+ const _ProcurementStatusDashboard({
+  required this.summary,
+  required this.currencyFormat,
+  required this.onOpenLog,
+ });
+
+ final ProcurementStatusSummary summary;
+ final NumberFormat currencyFormat;
+ final VoidCallback onOpenLog;
 
  @override
  Widget build(BuildContext context) {
- final projectName = ProjectDataHelper.getData(context).projectName.trim();
- final displayName = projectName.isEmpty ? 'Procurement Team' : projectName;
- final roleLabel = projectName.isEmpty ? 'Procurement' : 'Procurement Plan';
+  return Column(
+   crossAxisAlignment: CrossAxisAlignment.start,
+   children: [
+    Row(
+     children: [
+      const Expanded(
+       child: Text(
+        'Procurement Overview',
+        style: TextStyle(
+         fontSize: 18,
+         fontWeight: FontWeight.w700,
+         color: Color(0xFF0F172A),
+        ),
+       ),
+      ),
+      OutlinedButton.icon(
+       onPressed: onOpenLog,
+       icon: const Icon(Icons.table_chart_outlined, size: 16),
+       label: const Text('Procurement Log'),
+       style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF0F172A),
+        side: const BorderSide(color: Color(0xFFCBD5E1)),
+       ),
+      ),
+     ],
+    ),
+    const SizedBox(height: 6),
+    const Text(
+     'The key status of the items you plan to buy, and their cost. It fills up as the work gets done.',
+     style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+    ),
+    const SizedBox(height: 14),
+    if (summary.isEmpty)
+     buildNduTableEmptyState(
+      context,
+      message:
+       'No procurement items yet. Add the equipment and long-lead items you plan to buy.',
+     )
+    else
+     _buildCards(context),
+   ],
+  );
+ }
 
+ Widget _buildCards(BuildContext context) {
+  final isMobile = AppBreakpoints.isMobile(context);
+  final cards = <Widget>[
+   ProcurementSummaryCard(
+    icon: Icons.inventory_2_outlined,
+    iconBackground: const Color(0xFFFFF8E1),
+    value: '${summary.totalItems}',
+    label: 'Items',
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.local_shipping_outlined,
+    iconBackground: const Color(0xFFFFF7ED),
+    value: '${summary.longLeadItems}',
+    label: 'Long Lead',
+    valueColor: const Color(0xFFC2410C),
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.shopping_cart_outlined,
+    iconBackground: const Color(0xFFF1F5F9),
+    value: '${summary.orderedItems}',
+    label: 'Ordered',
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.event_busy_outlined,
+    iconBackground: const Color(0xFFFEF2F2),
+    value: '${summary.overdueItems}',
+    label: 'Overdue',
+    valueColor: const Color(0xFFDC2626),
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.attach_money,
+    iconBackground: const Color(0xFFFFF8E1),
+    value: currencyFormat.format(summary.totalBudget),
+    label: 'Total Budget',
+    valueColor: const Color(0xFF047857),
+   ),
+   ProcurementSummaryCard(
+    icon: Icons.pie_chart_outline,
+    iconBackground: const Color(0xFFFFF8E1),
+    value: '${summary.committedRate}%',
+    label: 'Committed',
+   ),
+  ];
+  if (isMobile) {
+   return Column(
+    children: [
+     for (var i = 0; i < cards.length; i++) ...[
+      cards[i],
+      if (i != cards.length - 1) const SizedBox(height: 12),
+     ],
+    ],
+   );
+  }
+  return Wrap(
+   spacing: 16,
+   runSpacing: 16,
+   children: [
+    for (final card in cards) SizedBox(width: 240, child: card),
+   ],
+  );
+ }
+}
+
+/// The limited procurement cycle (Lusaka 27 follow-up: "we will identify a
+/// few … items, and we will get their quotes, and then we will buy it"). A
+/// compact card beside the plan note: the stage durations, the dated walk and
+/// the purchase date, editable through [showProcurementCycleDialog].
+class _ProcurementCycleCard extends StatelessWidget {
+ const _ProcurementCycleCard({
+ required this.cycle,
+ required this.checkpointId,
+ });
+
+ final ProcurementCycle cycle;
+ final String checkpointId;
+
+ @override
+ Widget build(BuildContext context) {
+ final windows = cycle.windows();
  return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ width: double.infinity,
+ padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.circular(999),
+ borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Expanded(
+ child: Text(
+ 'Procurement Cycle',
+ style: TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827)),
+ ),
+ ),
+ IconButton(
+ tooltip: 'Edit procurement cycle',
+ onPressed: () => showProcurementCycleDialog(
+ context: context,
+ cycle: cycle,
+ checkpointId: checkpointId,
+ ),
+ icon: const Icon(Icons.edit_outlined, size: 18),
+ visualDensity: VisualDensity.compact,
+ ),
+ ],
+ ),
+ const SizedBox(height: 6),
+ const Text(
+ 'A limited cycle, not the whole contracting process: identify the '
+ 'items, get quotes, buy.',
+ style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ const SizedBox(height: 12),
+ Wrap(
+ spacing: 8,
+ runSpacing: 8,
+ crossAxisAlignment: WrapCrossAlignment.center,
+ children: [
+ for (var i = 0; i < windows.length; i++) ...[
+ if (i > 0)
+ const Icon(Icons.chevron_right,
+ size: 16, color: Color(0xFF9CA3AF)),
+ _ProcurementCycleStageChip(window: windows[i]),
+ ],
+ ],
+ ),
+ const SizedBox(height: 10),
+ Text(
+ cycle.summary,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF0F172A)),
+ ),
+ ],
+ ),
+ );
+ }
+}
+
+/// Edit the limited procurement cycle: a start date plus week steppers per
+/// stage — the same interaction as the contract's RFP cycle popup, scaled/// down to three stages. Persists into `planningNotes` under
+/// [_procurementCycleNoteKey] as JSON.
+Future<void> showProcurementCycleDialog({
+ required BuildContext context,
+ required ProcurementCycle cycle,
+ required String checkpointId,
+}) async {
+ var working = cycle;
+ final result = await showAppDialog<ProcurementCycle>(
+ context: context,
+ barrierDismissible: true,
+ builder: (dialogContext) => StatefulBuilder(
+ builder: (dialogContext, setDialogState) => AlertDialog(
+ title: const Text('Procurement Cycle'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text(
+ 'Identify the items, get quotes, buy — not the whole '
+ 'contracting process.',
+ style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ const SizedBox(height: 12),
+ Row(
+ children: [
+ const Text('Starts',
+ style: TextStyle(
+ fontSize: 13, fontWeight: FontWeight.w600)),
+ const Spacer(),
+ TextButton.icon(
+ onPressed: () async {
+ final picked = await showDatePicker(
+ context: dialogContext,
+ initialDate: working.startDate,
+ firstDate: DateTime(2020),
+ lastDate: DateTime(2100),
+ );
+ if (picked != null) {
+ setDialogState(
+ () => working = working.withStartDate(picked));
+ }
+ },
+ icon: const Icon(Icons.calendar_today, size: 16),
+ label: Text(formatProcurementCycleDate(working.startDate)),
+ ),
+ ],
+ ),
+ for (final stage in ProcurementCycle.adjustableStages) ...[
+ const SizedBox(height: 8),
+ Row(
+ children: [
+ Expanded(child: Text(stage.label,
+ style: const TextStyle(fontSize: 13))),
+ IconButton(
+ visualDensity: VisualDensity.compact,
+ onPressed: () => setDialogState(
+ () => working = working.withStageWeeks(
+ stage,
+ working.weeksFor(stage) - 1),
+ ),
+ icon: const Icon(Icons.remove_circle_outline, size: 18),
+ ),
+ Text('${working.weeksFor(stage)} wk',
+ style: const TextStyle(
+ fontSize: 13, fontWeight: FontWeight.w600)),
+ IconButton(
+ visualDensity: VisualDensity.compact,
+ onPressed: () => setDialogState(
+ () => working = working.withStageWeeks(
+ stage,
+ working.weeksFor(stage) + 1),
+ ),
+ icon: const Icon(Icons.add_circle_outline, size: 18),
+ ),
+ ],
+ ),
+ ],
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ child: const Text('Cancel'),
+ ),
+ FilledButton(
+ onPressed: () {
+ if (working.validate() != null) return;
+ Navigator.of(dialogContext).pop(working);
+ },
+ child: const Text('Save cycle'),
+ ),
+ ],
+ ),
+ ),
+ );
+ if (result == null) return;
+ if (!context.mounted) return;
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: checkpointId,
+ dataUpdater: (data) => data.copyWith(
+ planningNotes: {
+ ...data.planningNotes,
+ _FrontEndPlanningProcurementScreenState._procurementCycleNoteKey:
+ jsonEncode(result.toMap()),
+ },
+ ),
+ showSnackbar: false,
+ );
+ if (context.mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Procurement cycle saved.'),
+ duration: Duration(seconds: 2),
+ ),
+ );
+ }
+}
+
+class _ProcurementCycleStageChip extends StatelessWidget {
+ const _ProcurementCycleStageChip({required this.window});
+
+ final ProcurementCycleWindow window;
+
+ @override
+ Widget build(BuildContext context) {
+ final stage = window.stage;
+ final weeks = window.isMilestone ? 0 : stage.defaultWeeks;
+ final label = window.isMilestone
+ ? stage.label
+ : '${stage.label} · ${weeks == 1 ? '1 wk' : '$weeks wks'}';
+ final date = formatProcurementCycleDate(window.start);
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ decoration: BoxDecoration(
+ color: window.isMilestone
+ ? const Color(0xFFE8FFF4)
+ : const Color(0xFFF8FAFC),
+ borderRadius: BorderRadius.circular(999),
+ border: Border.all(
+ color: window.isMilestone
+ ? const Color(0xFFA7F3D0)
+ : const Color(0xFFE5E7EB),
+ ),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const CircleAvatar(
- radius: 16,
- backgroundColor: Color(0xFFD1D5DB),
- child: Icon(Icons.person, size: 18, color: Color(0xFF374151)),
- ),
- const SizedBox(width: 10),
- Text(
- displayName,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
+ Icon(
+ window.isMilestone
+ ? Icons.shopping_cart_checkout
+ : Icons.circle_outlined,
+ size: 13,
+ color: window.isMilestone
+ ? const Color(0xFF047857)
+ : const Color(0xFF64748B),
  ),
  const SizedBox(width: 6),
- Text(
- roleLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
- ),
+ Text('$label · $date',
+ style: const TextStyle(
+ fontSize: 11.5,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151))),
  ],
  ),
  );
@@ -6049,7 +6337,7 @@ class _ContractScopeManagementSection extends StatelessWidget {
  '$startedScopeCount of ${scopes.length} scopes started',
  style: const TextStyle(
  fontSize: 12,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  fontWeight: FontWeight.w600,
  ),
  ),
@@ -6295,150 +6583,8 @@ class _PlanHeader extends StatelessWidget {
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
  shape:
  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ ),          child: const Text('Procurement Log'),
  ),
- child: const Text('Scope Details'),
- ),
- ],
- );
- }
-}
-
-class _ItemsListView extends StatelessWidget {
- const _ItemsListView({
- required this.items,
- required this.trackableItems,
- required this.selectedIndex,
- required this.onSelectTrackable,
- required this.currencyFormat,
- required this.onAddItem,
- required this.onEditItem,
- required this.onDeleteItem,
- });
-
- final List<ProcurementItemModel> items;
- final List<ProcurementItemModel> trackableItems;
- final int selectedIndex;
- final ValueChanged<int> onSelectTrackable;
- final NumberFormat currencyFormat;
- final VoidCallback onAddItem;
- final ValueChanged<ProcurementItemModel> onEditItem;
- final ValueChanged<ProcurementItemModel> onDeleteItem;
-
- @override
- Widget build(BuildContext context) {
- final totalItems = items.length;
- final criticalItems = items
- .where((item) => item.priority == ProcurementPriority.critical)
- .length;
- final pendingApprovals = items
- .where((item) =>
- item.status == ProcurementItemStatus.vendorSelection &&
- item.priority == ProcurementPriority.critical)
- .length;
- final totalBudget =
- items.fold<int>(0, (value, item) => value + item.budget.toInt());
- final selectedTrackable =
- (selectedIndex >= 0 && selectedIndex < trackableItems.length)
- ? trackableItems[selectedIndex]
- : null;
-
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _SummaryMetricsRow(
- totalItems: totalItems,
- criticalItems: criticalItems,
- pendingApprovals: pendingApprovals,
- totalBudgetLabel: currencyFormat.format(totalBudget),
- ),
- const SizedBox(height: 24),
- _ItemsToolbar(onAddItem: onAddItem),
- const SizedBox(height: 20),
- _ItemsGrid(
- items: items,
- currencyFormat: currencyFormat,
- onAddItem: onAddItem,
- onEditItem: onEditItem,
- onDeleteItem: onDeleteItem,
- ),
- const SizedBox(height: 28),
- _TrackableAndTimeline(
- trackableItems: trackableItems,
- selectedIndex: selectedIndex,
- onSelectTrackable: onSelectTrackable,
- selectedItem: selectedTrackable,
- ),
- ],
- );
- }
-}
-
-class _SummaryMetricsRow extends StatelessWidget {
- const _SummaryMetricsRow({
- required this.totalItems,
- required this.criticalItems,
- required this.pendingApprovals,
- required this.totalBudgetLabel,
- });
-
- final int totalItems;
- final int criticalItems;
- final int pendingApprovals;
- final String totalBudgetLabel;
-
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- final cards = [
- _SummaryCard(
- icon: Icons.inventory_2_outlined,
- iconBackground: const Color(0xFFEFF6FF),
- value: '$totalItems',
- label: 'Total Items',
- ),
- _SummaryCard(
- icon: Icons.warning_amber_rounded,
- iconBackground: const Color(0xFFFFF7ED),
- value: '$criticalItems',
- label: 'Critical Items',
- valueColor: const Color(0xFFDC2626),
- ),
- _SummaryCard(
- icon: Icons.access_time,
- iconBackground: const Color(0xFFF5F3FF),
- value: '$pendingApprovals',
- label: 'Pending Approvals',
- valueColor: const Color(0xFF1F2937),
- ),
- _SummaryCard(
- icon: Icons.attach_money,
- iconBackground: const Color(0xFFECFEFF),
- value: totalBudgetLabel,
- label: 'Total Budget',
- valueColor: const Color(0xFF047857),
- ),
- ];
-
- if (isMobile) {
- return Column(
- children: [
- cards[0],
- const SizedBox(height: 12),
- cards[1],
- const SizedBox(height: 12),
- cards[2],
- const SizedBox(height: 12),
- cards[3],
- ],
- );
- }
-
- return Row(
- children: [
- for (var i = 0; i < cards.length; i++) ...[
- Expanded(child: cards[i]),
- if (i != cards.length - 1) const SizedBox(width: 16),
- ],
  ],
  );
  }
@@ -6475,7 +6621,7 @@ class _SummaryCard extends StatelessWidget {
  height: 44,
  decoration: BoxDecoration(
  color: iconBackground, borderRadius: BorderRadius.circular(12)),
- child: Icon(icon, color: const Color(0xFF1D4ED8)),
+ child: Icon(icon, color: const Color(0xFFFFC812)),
  ),
  const SizedBox(width: 16),
  Column(
@@ -6496,406 +6642,6 @@ class _SummaryCard extends StatelessWidget {
  ),
  ],
  ),
- );
- }
-}
-
-class _ItemsToolbar extends StatelessWidget {
- const _ItemsToolbar({required this.onAddItem});
-
- final VoidCallback onAddItem;
-
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
-
- if (isMobile) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const _SearchField(),
- const SizedBox(height: 12),
- const Row(
- children: [
- Expanded(child: _DropdownField(label: 'All Categories')),
- SizedBox(width: 12),
- Expanded(child: _DropdownField(label: 'All Statuses')),
- ],
- ),
- const SizedBox(height: 12),
- Align(
- alignment: Alignment.centerRight,
- child: _AddItemButton(onPressed: onAddItem),
- ),
- ],
- );
- }
-
- return Row(
- children: [
- const SizedBox(width: 320, child: _SearchField()),
- const SizedBox(width: 16),
- const SizedBox(
- width: 190, child: _DropdownField(label: 'All Categories')),
- const SizedBox(width: 16),
- const SizedBox(
- width: 190, child: _DropdownField(label: 'All Statuses')),
- const Spacer(),
- _AddItemButton(onPressed: onAddItem),
- ],
- );
- }
-}
-
-class _SearchField extends StatelessWidget {
- const _SearchField();
-
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- padding: const EdgeInsets.symmetric(horizontal: 16),
- child: const VoiceTextField(
- decoration: InputDecoration(
- border: InputBorder.none,
- icon: Icon(Icons.search, color: Color(0xFF94A3B8)),
- hintText: 'Search items...',
- hintStyle: TextStyle(color: Color(0xFF94A3B8)),
- ),
- ),
- );
- }
-}
-
-class _DropdownField extends StatelessWidget {
- const _DropdownField({required this.label});
-
- final String label;
-
- @override
- Widget build(BuildContext context) {
- final options = label == 'All Categories'
- ? const ['All Categories', 'Materials', 'Equipment', 'Services']
- : const [
- 'All Statuses',
- 'Planning',
- 'RFQ Review',
- 'Vendor Selection',
- 'Ordered',
- 'Delivered'
- ];
-
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- padding: const EdgeInsets.symmetric(horizontal: 12),
- child: DropdownButtonHideUnderline(
- child: DropdownButton<String>(
- value: label,
- icon: const Icon(Icons.keyboard_arrow_down_rounded,
- color: Color(0xFF64748B)),
- items: options
- .map(
- (option) => DropdownMenuItem<String>(
- value: option,
- child: Text(option,
- style: const TextStyle(
- fontSize: 13, color: Color(0xFF334155))),
- ),
- )
- .toList(),
- onChanged: (_) {},
- ),
- ),
- );
- }
-}
-
-class _AddItemButton extends StatelessWidget {
- const _AddItemButton({required this.onPressed});
-
- final VoidCallback onPressed;
-
- @override
- Widget build(BuildContext context) {
- return ElevatedButton.icon(
- onPressed: onPressed,
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
- foregroundColor: Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
- elevation: 0,
- ),
- icon: const Icon(Icons.add_rounded),
- label:
- const Text('Add Item', style: TextStyle(fontWeight: FontWeight.w600)),
- );
- }
-}
-
-class _ItemsGrid extends StatelessWidget {
- const _ItemsGrid(
- {required this.items,
- required this.currencyFormat,
- required this.onAddItem,
- required this.onEditItem,
- required this.onDeleteItem});
-
- final List<ProcurementItemModel> items;
- final NumberFormat currencyFormat;
- final VoidCallback onAddItem;
- final ValueChanged<ProcurementItemModel> onEditItem;
- final ValueChanged<ProcurementItemModel> onDeleteItem;
-
- @override
- Widget build(BuildContext context) {
- if (items.isEmpty) {
- return _EmptyStateCard(
- icon: Icons.inventory_2_outlined,
- title: 'No procurement items yet',
- message:
- 'Add items to track budgets, approvals, and delivery timelines.',
- actionLabel: 'Add Item',
- onAction: onAddItem,
- );
- }
-
- return LayoutBuilder(builder: (context, constraints) {
- final double width = constraints.maxWidth;
- int columns = 1;
- if (width > 1200) {
- columns = 3;
- } else if (width > 800) {
- columns = 2;
- }
-
- final double cardWidth = (width - ((columns - 1) * 24)) / columns;
-
- return Wrap(
- spacing: 24,
- runSpacing: 24,
- children: List<Widget>.generate(items.length, (index) {
- final item = items[index];
- return SizedBox(
- width: cardWidth,
- child: _ProcurementItemCard(
- item: item,
- itemNumberLabel: 'ITM-${(index + 1).toString().padLeft(3, '0')}',
- currencyFormat: currencyFormat,
- onEdit: () => onEditItem(item),
- onDelete: () => onDeleteItem(item),
- ),
- );
- }),
- );
- });
- }
-}
-
-class _ProcurementItemCard extends StatelessWidget {
- const _ProcurementItemCard({
- required this.item,
- required this.itemNumberLabel,
- required this.currencyFormat,
- required this.onEdit,
- required this.onDelete,
- });
-
- final ProcurementItemModel item;
- final String itemNumberLabel;
- final NumberFormat currencyFormat;
- final VoidCallback onEdit;
- final VoidCallback onDelete;
-
- @override
- Widget build(BuildContext context) {
- final dateLabel = item.estimatedDelivery != null
- ? DateFormat('MMM d, yyyy').format(item.estimatedDelivery!)
- : 'TBD';
- final progressLabel = '${(item.progress * 100).round()}%';
-
- Color progressColor;
- if (item.progress >= 1.0) {
- progressColor = const Color(0xFF10B981);
- } else if (item.progress >= 0.5) {
- progressColor = const Color(0xFF2563EB);
- } else if (item.progress == 0) {
- progressColor = const Color(0xFFD1D5DB);
- } else {
- progressColor = const Color(0xFF38BDF8);
- }
-
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x08000000), blurRadius: 12, offset: Offset(0, 4)),
- ],
- ),
- padding: const EdgeInsets.all(20),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- itemNumberLabel,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
- ),
- ),
- const SizedBox(height: 4),
- Text(
- item.name,
- style: const TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- const SizedBox(height: 4),
- Text(
- item.category,
- style: const TextStyle(
- fontSize: 13, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- ),
- _BadgePill(
- label: item.status.label,
- background: item.status.backgroundColor,
- border: item.status.borderColor,
- foreground: item.status.textColor,
- ),
- ],
- ),
- const SizedBox(height: 16),
- Text(
- item.description,
- style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- ),
- const SizedBox(height: 16),
- Row(
- children: [
- _MetricItem(
- label: 'Budget',
- value: currencyFormat.format(item.budget),
- ),
- const SizedBox(width: 24),
- _MetricItem(label: 'Delivery', value: dateLabel),
- ],
- ),
- const SizedBox(height: 16),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- const Text('Progress',
- style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
- Text(progressLabel,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: progressColor)),
- ],
- ),
- const SizedBox(height: 6),
- ClipRRect(
- borderRadius: BorderRadius.circular(999),
- child: LinearProgressIndicator(
- value: item.progress.clamp(0, 1).toDouble(),
- minHeight: 6,
- backgroundColor: Colors.white,
- valueColor: AlwaysStoppedAnimation<Color>(progressColor),
- ),
- ),
- ],
- ),
- const SizedBox(height: 18),
- const Divider(height: 1, color: Color(0xFFE5E7EB)),
- const SizedBox(height: 14),
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- _BadgePill(
- label: item.priority.label,
- background: item.priority.backgroundColor,
- border: item.priority.borderColor,
- foreground: item.priority.textColor,
- ),
- Row(
- children: [
- _ActionIcon(icon: Icons.edit_outlined, onTap: onEdit),
- const SizedBox(width: 8),
- PopupMenuButton<String>(
- onSelected: (value) {
- if (value == 'edit') {
- onEdit();
- } else if (value == 'delete') {
- onDelete();
- }
- },
- itemBuilder: (_) => const [
- PopupMenuItem(value: 'edit', child: Text('Edit item')),
- PopupMenuItem(
- value: 'delete', child: Text('Remove item')),
- ],
- child: const _ActionIcon(icon: Icons.more_horiz_rounded),
- ),
- ],
- ),
- ],
- ),
- ],
- ),
- );
- }
-}
-
-class _MetricItem extends StatelessWidget {
- const _MetricItem({required this.label, required this.value});
-
- final String label;
- final String value;
-
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(label,
- style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
- const SizedBox(height: 2),
- Text(value,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF334155))),
- ],
  );
  }
 }
@@ -6927,82 +6673,6 @@ class _BadgePill extends StatelessWidget {
  style: TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600, color: foreground),
  ),
- );
- }
-}
-
-class _ActionIcon extends StatelessWidget {
- const _ActionIcon({required this.icon, this.onTap});
-
- final IconData icon;
- final VoidCallback? onTap;
-
- @override
- Widget build(BuildContext context) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding: const EdgeInsets.all(8),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Icon(icon, size: 18, color: const Color(0xFF475569)),
- ),
- );
- }
-}
-
-class _TrackableAndTimeline extends StatelessWidget {
- const _TrackableAndTimeline({
- required this.trackableItems,
- required this.selectedIndex,
- required this.onSelectTrackable,
- required this.selectedItem,
- });
-
- final List<ProcurementItemModel> trackableItems;
- final int selectedIndex;
- final ValueChanged<int> onSelectTrackable;
- final ProcurementItemModel? selectedItem;
-
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
-
- if (isMobile) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _TrackableItemsCard(
- trackableItems: trackableItems,
- selectedIndex: selectedIndex,
- onSelectTrackable: onSelectTrackable,
- ),
- const SizedBox(height: 20),
- _TrackingTimelineCard(item: selectedItem),
- ],
- );
- }
-
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- flex: 3,
- child: _TrackableItemsCard(
- trackableItems: trackableItems,
- selectedIndex: selectedIndex,
- onSelectTrackable: onSelectTrackable,
- ),
- ),
- const SizedBox(width: 24),
- Expanded(
- flex: 2,
- child: _TrackingTimelineCard(item: selectedItem),
- ),
- ],
  );
  }
 }
@@ -7104,7 +6774,7 @@ class _TrackableRow extends StatelessWidget {
  Row(
  children: [
  const Icon(Icons.inventory_2_outlined,
- size: 20, color: Color(0xFF2563EB)),
+ size: 20, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -7182,7 +6852,7 @@ class _UpdateButton extends StatelessWidget {
  );
  },
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFF1F2937),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -7272,11 +6942,11 @@ class _TimelineEntry extends StatelessWidget {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: const Icon(Icons.local_shipping_outlined,
- size: 18, color: Color(0xFF2563EB)),
+ size: 18, color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 12),
  Expanded(
@@ -7298,7 +6968,7 @@ class _TimelineEntry extends StatelessWidget {
  const SizedBox(height: 6),
  Text(
  event.subtext,
- style: const TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
+ style: const TextStyle(fontSize: 12, color: Color(0xFFFFC812)),
  ),
  const SizedBox(height: 6),
  Text(
@@ -7342,7 +7012,7 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  case StrategyStatus.draft:
  return const Color(0xFFF1F5F9);
  case StrategyStatus.active:
- return const Color(0xFFEFF6FF);
+ return const Color(0xFFFFF8E1);
  case StrategyStatus.complete:
  return const Color(0xFFE8FFF4);
  }
@@ -7353,7 +7023,7 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  case StrategyStatus.draft:
  return const Color(0xFF64748B);
  case StrategyStatus.active:
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case StrategyStatus.complete:
  return const Color(0xFF047857);
  }
@@ -7844,10 +7514,10 @@ class _VendorsSection extends StatelessWidget {
  ),
  ],
  ),
- const SizedBox(height: 16),
+ const SizedBox(height: 10),
  Wrap(
- spacing: 12,
- runSpacing: 12,
+ spacing: 10,
+ runSpacing: 10,
  crossAxisAlignment: WrapCrossAlignment.center,
  children: [
  OutlinedButton.icon(
@@ -7875,11 +7545,11 @@ class _VendorsSection extends StatelessWidget {
  label: const Text('Approved Only'),
  selected: approvedOnly,
  onSelected: onApprovedChanged,
- selectedColor: const Color(0xFFEFF6FF),
+ selectedColor: const Color(0xFFFFF8E1),
  showCheckmark: false,
  labelStyle: TextStyle(
  color: approvedOnly
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF475569),
  fontWeight: FontWeight.w600,
  ),
@@ -7892,7 +7562,7 @@ class _VendorsSection extends StatelessWidget {
  showCheckmark: false,
  labelStyle: TextStyle(
  color: preferredOnly
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF475569),
  fontWeight: FontWeight.w600,
  ),
@@ -7945,7 +7615,7 @@ class _VendorsSection extends StatelessWidget {
  ),
  ],
  ),
- const SizedBox(height: 20),
+ const SizedBox(height: 12),
  if (vendors.isEmpty)
  _EmptyStateCard(
  icon: Icons.storefront_outlined,
@@ -7977,118 +7647,6 @@ class _VendorsSection extends StatelessWidget {
  }
 }
 
-class _ApprovedVendorsSection extends StatelessWidget {
- const _ApprovedVendorsSection({required this.approvedVendors});
-
- final List<VendorModel> approvedVendors;
-
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- const Expanded(
- child: Text(
- 'Approved Vendors',
- style: TextStyle(
- fontSize: 18,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A)),
- ),
- ),
- Text(
- '${approvedVendors.length}',
- style: const TextStyle(
- fontSize: 13,
- color: Color(0xFF6B7280),
- fontWeight: FontWeight.w600,
- ),
- ),
- ],
- ),
- const SizedBox(height: 12),
- if (approvedVendors.isEmpty)
- const _EmptyStateCard(
- icon: Icons.verified_user_outlined,
- title: 'No approved vendors yet',
- message:
- 'Approved vendors appear here once vendor status is set to Active or Approved.',
- compact: true,
- )
- else
- Container(
- width: double.infinity,
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- children: [
- for (var i = 0; i < approvedVendors.length; i++) ...[
- Padding(
- padding: const EdgeInsets.symmetric(
- horizontal: 16,
- vertical: 14,
- ),
- child: Row(
- children: [
- Expanded(
- flex: 3,
- child: Text(
- approvedVendors[i].name,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF0F172A),
- ),
- ),
- ),
- Expanded(
- flex: 2,
- child: Text(
- approvedVendors[i].category,
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF64748B),
- ),
- ),
- ),
- Expanded(
- flex: 2,
- child: _RatingStars(
- rating: approvedVendors[i].ratingScore,
- ),
- ),
- Expanded(
- flex: 2,
- child: Text(
- approvedVendors[i].nextReview.trim().isEmpty
- ? 'Review date N/A'
- : approvedVendors[i].nextReview,
- textAlign: TextAlign.end,
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF475569),
- ),
- ),
- ),
- ],
- ),
- ),
- if (i != approvedVendors.length - 1)
- const Divider(height: 1, color: Color(0xFFE5E7EB)),
- ],
- ],
- ),
- ),
- ],
- );
- }
-}
-
 class _VendorDataTable extends StatelessWidget {
  const _VendorDataTable({
  required this.vendors,
@@ -8106,6 +7664,59 @@ class _VendorDataTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ // Standard, compact row heights so every vendor row has the same
+ // footprint and the table no longer shows large vertical gaps.
+ // The Vendor Name cell stacks name + email vertically (~44px), so a
+ // row height of 56–72 fits it cleanly without whitespace.
+ const double headingRowHeight = 44;
+ const double dataRowMinHeight = 56;
+ const double dataRowMaxHeight = 72;
+ const double columnSpacing = 16;
+ const double horizontalMargin = 16;
+ const TextStyle headingStyle = TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF475569),
+ letterSpacing: 0.2);
+ const TextStyle dataStyle =
+ TextStyle(fontSize: 13, color: Color(0xFF111827), height: 1.35);
+
+ // The "Contact" column was removed because the email is already
+ // shown inside the Vendor Name cell (name + email stacked).
+ List<DataColumn> buildColumns() => const [
+ DataColumn(label: Center(child: SizedBox(width: 24))),
+ DataColumn(label: Text('Vendor Name')),
+ DataColumn(label: Text('Category')),
+ DataColumn(label: Text('Status')),
+ DataColumn(label: Text('Rating')),
+ DataColumn(label: Center(child: Text('Actions'))),
+ ];
+
+ List<DataRow> buildRows() => vendors
+ .map(
+ (vendor) => DataRow(
+ cells: [
+ DataCell(
+ Checkbox(
+ value: selectedVendorIds.contains(vendor.id),
+ onChanged: (value) =>
+ onToggleSelected(vendor.id, value ?? false),
+ ),
+ ),
+ DataCell(_VendorNameCell(vendor: vendor)),
+ DataCell(Text(vendor.category)),
+ DataCell(_VendorStatusPill(status: vendor.status)),
+ DataCell(_RatingStars(rating: vendor.ratingScore)),
+ DataCell(_VendorActionsMenu(
+ vendor: vendor,
+ onEdit: () => onEditVendor(vendor),
+ onDelete: () => onDeleteVendor(vendor.id),
+ )),
+ ],
+ ),
+ )
+ .toList();
+
  return LayoutBuilder(
  builder: (context, constraints) {
  return Container(
@@ -8119,98 +7730,32 @@ class _VendorDataTable extends StatelessWidget {
  title: 'Vendor Directory',
  tableBuilder: (fsContext) => buildNduDataTable(
  context: fsContext,
- columnSpacing: 18,
- horizontalMargin: 24,
- headingTextStyle: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569)),
- dataTextStyle:
- const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+ columnSpacing: columnSpacing,
+ horizontalMargin: horizontalMargin,
+ headingRowHeight: headingRowHeight,
+ dataRowMinHeight: dataRowMinHeight,
+ dataRowMaxHeight: dataRowMaxHeight,
+ headingTextStyle: headingStyle,
+ dataTextStyle: dataStyle,
  showCheckboxColumn: false,
- columns: const [
- DataColumn(label: Center(child: SizedBox(width: 24))),
- DataColumn(label: Center(child: Text('Vendor Name'))),
- DataColumn(label: Center(child: Text('Category'))),
- DataColumn(label: Center(child: Text('Status'))),
- DataColumn(label: Center(child: Text('Contact'))),
- DataColumn(label: Center(child: Text('Rating'))),
- DataColumn(label: Center(child: Text('Actions'))),
- ],
- rows: vendors
- .map(
- (vendor) => DataRow(
- cells: [
- DataCell(
- Checkbox(
- value: selectedVendorIds.contains(vendor.id),
- onChanged: (value) =>
- onToggleSelected(vendor.id, value ?? false),
- ),
- ),
- DataCell(_VendorNameCell(vendor: vendor)),
- DataCell(Text(vendor.category)),
- DataCell(_VendorStatusPill(status: vendor.status)),
- DataCell(Text(vendor.contactLabel)),
- DataCell(_RatingStars(rating: vendor.ratingScore)),
- DataCell(_VendorActionsMenu(
- vendor: vendor,
- onEdit: () => onEditVendor(vendor),
- onDelete: () => onDeleteVendor(vendor.id),
- )),
- ],
- ),
- )
- .toList(),
+ columns: buildColumns(),
+ rows: buildRows(),
  ),
  child: ResponsiveDataTableWrapper(
  minWidth: constraints.maxWidth,
  maxHeight: 600,
  child: buildNduDataTable(
  context: context,
- columnSpacing: 18,
- horizontalMargin: 24,
- headingTextStyle: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569)),
- dataTextStyle:
- const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+ columnSpacing: columnSpacing,
+ horizontalMargin: horizontalMargin,
+ headingRowHeight: headingRowHeight,
+ dataRowMinHeight: dataRowMinHeight,
+ dataRowMaxHeight: dataRowMaxHeight,
+ headingTextStyle: headingStyle,
+ dataTextStyle: dataStyle,
  showCheckboxColumn: false,
- columns: const [
- DataColumn(label: Center(child: SizedBox(width: 24))),
- DataColumn(label: Center(child: Text('Vendor Name'))),
- DataColumn(label: Center(child: Text('Category'))),
- DataColumn(label: Center(child: Text('Status'))),
- DataColumn(label: Center(child: Text('Contact'))),
- DataColumn(label: Center(child: Text('Rating'))),
- DataColumn(label: Center(child: Text('Actions'))),
- ],
- rows: vendors
- .map(
- (vendor) => DataRow(
- cells: [
- DataCell(
- Checkbox(
- value: selectedVendorIds.contains(vendor.id),
- onChanged: (value) =>
- onToggleSelected(vendor.id, value ?? false),
- ),
- ),
- DataCell(_VendorNameCell(vendor: vendor)),
- DataCell(Text(vendor.category)),
- DataCell(_VendorStatusPill(status: vendor.status)),
- DataCell(Text(vendor.contactLabel)),
- DataCell(_RatingStars(rating: vendor.ratingScore)),
- DataCell(_VendorActionsMenu(
- vendor: vendor,
- onEdit: () => onEditVendor(vendor),
- onDelete: () => onDeleteVendor(vendor.id),
- )),
- ],
- ),
- )
- .toList(),
+ columns: buildColumns(),
+ rows: buildRows(),
  ),
  ),
  ),
@@ -8235,83 +7780,72 @@ class _VendorGrid extends StatelessWidget {
  final ValueChanged<VendorModel> onEditVendor;
  final ValueChanged<String> onDeleteVendor;
 
- @override
+  @override
  Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- // Use LayoutBuilder to compute a responsive cross-axis count so cards
- // are never too narrow on wide screens nor too wide on tablets.
+ // Auto-height card grid: column count adapts to width, but there is NO
+ // fixed aspect ratio — each card grows vertically to fit its content,
+ // so long vendor names/emails/rows wrap instead of overflowing (the old
+ // GridView childAspectRatio 3.6 clipped every card by ~54px).
  return LayoutBuilder(
  builder: (context, constraints) {
- final double maxCardWidth = isMobile ? 180 : 320;
- final int crossAxisCount =
- (constraints.maxWidth / maxCardWidth).floor().clamp(1, 4);
- const double crossAxisSpacing = 16;
- const double mainAxisSpacing = 16;
- // Each card sizes its own height based on content. We provide a
- // generous mainAxisExtent ceiling so cards don't clip the rating
- // stars / actions menu on vendors that have full status + rating.
- final double mainAxisExtent = isMobile ? 220 : 240;
-
- return GridView.builder(
- shrinkWrap: true,
- physics: const NeverScrollableScrollPhysics(),
- gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
- crossAxisCount: crossAxisCount,
- crossAxisSpacing: crossAxisSpacing,
- mainAxisSpacing: mainAxisSpacing,
- // Fixed height ensures the checkbox, name, category, status,
- // rating, contact, and actions menu all fit inside the card
- // border without clipping.
- mainAxisExtent: mainAxisExtent,
- ),
- itemCount: vendors.length,
- itemBuilder: (_, index) {
- final vendor = vendors[index];
- return Container(
+ final double width = constraints.maxWidth;
+ final int columns = width > 980 ? 3 : (width > 640 ? 2 : 1);
+ final double cardWidth = (width - ((columns - 1) * 12)) / columns;
+ return Wrap(
+ spacing: 12,
+ runSpacing: 12,
+ children: vendors.map((vendor) {
+ return SizedBox(
+ width: cardWidth,
+ child: Container(
  decoration: BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.circular(16),
+ borderRadius: BorderRadius.circular(14),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 12),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisSize: MainAxisSize.min,
  children: [
- // Top row: checkbox right-aligned (compact)
- Align(
- alignment: Alignment.centerRight,
- child: SizedBox(
- height: 28,
- width: 28,
- child: Checkbox(
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(child: _VendorNameCell(vendor: vendor)),
+ Checkbox(
  value: selectedVendorIds.contains(vendor.id),
  onChanged: (value) =>
  onToggleSelected(vendor.id, value ?? false),
+ visualDensity: VisualDensity.compact,
  ),
+ ],
  ),
- ),
- // Name + contact cell
- _VendorNameCell(vendor: vendor),
  const SizedBox(height: 6),
+ Wrap(
+ spacing: 8,
+ runSpacing: 6,
+ crossAxisAlignment: WrapCrossAlignment.center,
+ children: [
+ _VendorStatusPill(status: vendor.status),
  Text(vendor.category,
  style: const TextStyle(
- fontSize: 13, color: Color(0xFF6B7280))),
- const SizedBox(height: 6),
- _VendorStatusPill(status: vendor.status),
- const SizedBox(height: 6),
- Text(
- vendor.contactLabel,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B)),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
+ fontSize: 12, color: Color(0xFF6B7280))),
+ _RatingStars(rating: vendor.ratingScore),
+ ],
  ),
  const SizedBox(height: 6),
- _RatingStars(rating: vendor.ratingScore),
- const Spacer(),
  Row(
  children: [
- const Spacer(),
+ Expanded(
+ child: Text(
+ vendor.contactLabel,
+ style: const TextStyle(
+ fontSize: 11, color: Color(0xFF64748B)),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
  _VendorActionsMenu(
  vendor: vendor,
  onEdit: () => onEditVendor(vendor),
@@ -8321,14 +7855,14 @@ class _VendorGrid extends StatelessWidget {
  ),
  ],
  ),
+ ),
  );
- },
+ }).toList(),
  );
  },
  );
  }
 }
-
 class _VendorActionsMenu extends StatelessWidget {
  const _VendorActionsMenu({
  required this.vendor,
@@ -8366,35 +7900,53 @@ class _VendorNameCell extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ final safeName = vendor.name.trim();
+ final initials = safeName.isEmpty
+ ? '??'
+ : safeName
+ .split(RegExp(r'\s+'))
+ .where((part) => part.isNotEmpty)
+ .take(2)
+ .map((part) => part[0].toUpperCase())
+ .join();
  return Row(
  children: [
  CircleAvatar(
- radius: 16,
+ radius: 14,
  backgroundColor: const Color(0xFFE2E8F0),
  child: Text(
- vendor.name.substring(0, 2).toUpperCase(),
+ initials,
  style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
+ fontSize: 11,
+ fontWeight: FontWeight.w700,
  color: Color(0xFF0F172A)),
  ),
  ),
- const SizedBox(width: 12),
+ const SizedBox(width: 10),
  Flexible(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisSize: MainAxisSize.min,
  children: [
  Text(
  vendor.name,
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
  style: const TextStyle(
- fontSize: 14,
+ fontSize: 13,
  fontWeight: FontWeight.w600,
- color: Color(0xFF0F172A)),
+ color: Color(0xFF0F172A),
+ height: 1.25),
  ),
- const SizedBox(height: 2),
+ const SizedBox(height: 1),
  Text(
  vendor.contactLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: const TextStyle(
+ fontSize: 11,
+ color: Color(0xFF64748B),
+ height: 1.2),
  ),
  ],
  ),
@@ -8412,52 +7964,14 @@ class _RatingStars extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  return Row(
+ mainAxisSize: MainAxisSize.min,
  children: List.generate(
  5,
  (index) => Icon(
  index < rating ? Icons.star_rounded : Icons.star_border_rounded,
  color: const Color(0xFFFACC15),
- size: 18,
+ size: 14,
  ),
- ),
- );
- }
-}
-
-class _YesNoBadge extends StatelessWidget {
- const _YesNoBadge({required this.value}) : showStar = false;
-
- final bool value;
- final bool showStar;
-
- @override
- Widget build(BuildContext context) {
- final Color background =
- value ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC);
- final Color foreground =
- value ? const Color(0xFF2563EB) : const Color(0xFF64748B);
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: background,
- borderRadius: BorderRadius.circular(999),
- border: Border.all(
- color: value ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(value ? 'Yes' : 'No',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: foreground)),
- if (showStar) ...[
- const SizedBox(width: 6),
- Icon(value ? Icons.star_rounded : Icons.star_border_rounded,
- size: 16, color: foreground),
- ],
- ],
  ),
  );
  }
@@ -8520,7 +8034,7 @@ class _PriorityPill extends StatelessWidget {
  } else if (normalized.contains('low')) {
  tone = const Color(0xFF64748B);
  } else {
- tone = const Color(0xFF2563EB);
+ tone = const Color(0xFFFFC812);
  }
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -8536,499 +8050,6 @@ class _PriorityPill extends StatelessWidget {
  fontWeight: FontWeight.w600,
  color: tone,
  ),
- ),
- );
- }
-}
-
-class _VendorManagementView extends StatelessWidget {
- const _VendorManagementView({
- required this.vendors,
- required this.allVendors,
- required this.selectedVendorIds,
- required this.approvedOnly,
- required this.preferredOnly,
- required this.listView,
- required this.categoryFilter,
- required this.categoryOptions,
- required this.healthMetrics,
- required this.onboardingTasks,
- required this.riskItems,
- required this.onAddVendor,
- required this.onInviteVendor,
- required this.onApprovedChanged,
- required this.onPreferredChanged,
- required this.onCategoryChanged,
- required this.onViewModeChanged,
- required this.onToggleVendorSelected,
- required this.onEditVendor,
- required this.onDeleteVendor,
- required this.onOpenApprovedVendorList,
- });
-
- final List<VendorModel> vendors;
- final List<VendorModel> allVendors;
- final Set<String> selectedVendorIds;
- final bool approvedOnly;
- final bool preferredOnly;
- final bool listView;
- final String categoryFilter;
- final List<String> categoryOptions;
- final List<_VendorHealthMetric> healthMetrics;
- final List<_VendorOnboardingTask> onboardingTasks;
- final List<_VendorRiskItem> riskItems;
- final VoidCallback onAddVendor;
- final VoidCallback onInviteVendor;
- final ValueChanged<bool> onApprovedChanged;
- final ValueChanged<bool> onPreferredChanged;
- final ValueChanged<String> onCategoryChanged;
- final ValueChanged<bool> onViewModeChanged;
- final void Function(String vendorId, bool selected) onToggleVendorSelected;
- final ValueChanged<VendorModel> onEditVendor;
- final ValueChanged<String> onDeleteVendor;
- final VoidCallback onOpenApprovedVendorList;
-
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- final totalVendors = allVendors.length;
- final preferredCount =
- allVendors.where((vendor) => vendor.isPreferred).length;
- final avgRating = totalVendors == 0
- ? 0
- : allVendors.fold<int>(
- 0, (total, vendor) => total + vendor.ratingScore) /
- totalVendors;
- final preferredRate =
- totalVendors == 0 ? 0 : (preferredCount / totalVendors * 100).round();
-
- final metricCards = [
- _SummaryCard(
- icon: Icons.inventory_2_outlined,
- iconBackground: const Color(0xFFEFF6FF),
- value: '$totalVendors',
- label: 'Active Vendors',
- ),
- _SummaryCard(
- icon: Icons.star_outline,
- iconBackground: const Color(0xFFFFF7ED),
- value: '$preferredRate%',
- label: 'Preferred Coverage',
- valueColor: const Color(0xFFF97316),
- ),
- _SummaryCard(
- icon: Icons.thumb_up_alt_outlined,
- iconBackground: const Color(0xFFF1F5F9),
- value: avgRating.toStringAsFixed(1),
- label: 'Avg Rating',
- ),
- _SummaryCard(
- icon: Icons.shield_outlined,
- iconBackground: const Color(0xFFFFF1F2),
- value: '${riskItems.length}',
- label: 'Compliance Actions',
- valueColor: const Color(0xFFDC2626),
- ),
- ];
-
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- const Expanded(
- child: Text(
- 'Vendor Management',
- style: TextStyle(
- fontSize: 20,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A)),
- ),
- ),
- Wrap(
- spacing: 12,
- runSpacing: 8,
- children: [
- OutlinedButton.icon(
- onPressed: onInviteVendor,
- icon: const Icon(Icons.send_outlined, size: 18),
- label: const Text('Invite Vendor'),
- style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF0F172A),
- side: const BorderSide(color: Color(0xFFCBD5E1)),
- padding: const EdgeInsets.symmetric(
- horizontal: 16, vertical: 12),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- ),
- ElevatedButton.icon(
- onPressed: onAddVendor,
- icon: const Icon(Icons.add_rounded, size: 18),
- label: const Text('Add Vendor'),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
- foregroundColor: Colors.white,
- padding: const EdgeInsets.symmetric(
- horizontal: 16, vertical: 12),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- elevation: 0,
- ),
- ),
- ],
- ),
- ],
- ),
- const SizedBox(height: 16),
- if (isMobile)
- Column(
- children: [
- metricCards[0],
- const SizedBox(height: 12),
- metricCards[1],
- const SizedBox(height: 12),
- metricCards[2],
- const SizedBox(height: 12),
- metricCards[3],
- ],
- )
- else
- Row(
- children: [
- for (var i = 0; i < metricCards.length; i++) ...[
- Expanded(child: metricCards[i]),
- if (i != metricCards.length - 1) const SizedBox(width: 16),
- ],
- ],
- ),
- const SizedBox(height: 24),
- if (isMobile)
- Column(
- children: [
- _VendorHealthCard(metrics: healthMetrics),
- const SizedBox(height: 16),
- _VendorOnboardingCard(tasks: onboardingTasks),
- const SizedBox(height: 16),
- _VendorRiskCard(riskItems: riskItems),
- ],
- )
- else
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: _VendorHealthCard(metrics: healthMetrics)),
- const SizedBox(width: 16),
- Expanded(child: _VendorOnboardingCard(tasks: onboardingTasks)),
- const SizedBox(width: 16),
- Expanded(child: _VendorRiskCard(riskItems: riskItems)),
- ],
- ),
- const SizedBox(height: 24),
- _VendorsSection(
- vendors: vendors,
- allVendorsCount: allVendors.length,
- selectedVendorIds: selectedVendorIds,
- approvedOnly: approvedOnly,
- preferredOnly: preferredOnly,
- listView: listView,
- categoryFilter: categoryFilter,
- categoryOptions: categoryOptions,
- onAddVendor: onAddVendor,
- onApprovedChanged: onApprovedChanged,
- onPreferredChanged: onPreferredChanged,
- onCategoryChanged: onCategoryChanged,
- onViewModeChanged: onViewModeChanged,
- onToggleVendorSelected: onToggleVendorSelected,
- onEditVendor: onEditVendor,
- onDeleteVendor: onDeleteVendor,
- onOpenApprovedVendorList: onOpenApprovedVendorList,
- ),
- const SizedBox(height: 24),
- _ApprovedVendorsSection(
- approvedVendors:
- allVendors.where((vendor) => vendor.isApproved).toList(),
- ),
- ],
- );
- }
-}
-
-class _VendorHealthCard extends StatelessWidget {
- const _VendorHealthCard({required this.metrics});
-
- final List<_VendorHealthMetric> metrics;
-
- Color _scoreColor(double score) {
- if (score >= 0.85) return const Color(0xFF10B981);
- if (score >= 0.7) return const Color(0xFF2563EB);
- return const Color(0xFFF97316);
- }
-
- @override
- Widget build(BuildContext context) {
- if (metrics.isEmpty) {
- return const _EmptyStateCard(
- icon: Icons.health_and_safety_outlined,
- title: 'Vendor health by category',
- message:
- 'Health metrics will appear once vendor performance is tracked.',
- compact: true,
- );
- }
-
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- padding: const EdgeInsets.all(20),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Vendor health by category',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A)),
- ),
- const SizedBox(height: 12),
- for (var i = 0; i < metrics.length; i++) ...[
- Row(
- children: [
- Expanded(
- child: Text(
- metrics[i].category,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF1F2937)),
- ),
- ),
- Text(
- '${(metrics[i].score * 100).round()}%',
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF1F2937)),
- ),
- ],
- ),
- const SizedBox(height: 6),
- ClipRRect(
- borderRadius: BorderRadius.circular(999),
- child: LinearProgressIndicator(
- value: metrics[i].score,
- minHeight: 8,
- backgroundColor: const Color(0xFFE2E8F0),
- valueColor: AlwaysStoppedAnimation<Color>(
- _scoreColor(metrics[i].score)),
- ),
- ),
- const SizedBox(height: 6),
- Text(
- metrics[i].change,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
- ),
- if (i != metrics.length - 1) const SizedBox(height: 12),
- ],
- ],
- ),
- );
- }
-}
-
-class _VendorOnboardingCard extends StatelessWidget {
- const _VendorOnboardingCard({required this.tasks});
-
- final List<_VendorOnboardingTask> tasks;
-
- @override
- Widget build(BuildContext context) {
- if (tasks.isEmpty) {
- return const _EmptyStateCard(
- icon: Icons.assignment_turned_in_outlined,
- title: 'Onboarding pipeline',
- message: 'No onboarding tasks yet. Add vendors to start the pipeline.',
- compact: true,
- );
- }
-
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- padding: const EdgeInsets.all(20),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Onboarding pipeline',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A)),
- ),
- const SizedBox(height: 12),
- for (var i = 0; i < tasks.length; i++) ...[
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- tasks[i].title,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF1F2937)),
- ),
- const SizedBox(height: 4),
- Text(
- 'Owner: ${tasks[i].owner} Â· Due ${DateFormat('M/d').format(DateTime.parse(tasks[i].dueDate))}',
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B)),
- ),
- ],
- ),
- ),
- const SizedBox(width: 12),
- _VendorTaskStatusPill(status: tasks[i].status),
- ],
- ),
- if (i != tasks.length - 1) const SizedBox(height: 12),
- ],
- ],
- ),
- );
- }
-}
-
-class _VendorRiskCard extends StatelessWidget {
- const _VendorRiskCard({required this.riskItems});
-
- final List<_VendorRiskItem> riskItems;
-
- @override
- Widget build(BuildContext context) {
- if (riskItems.isEmpty) {
- return const _EmptyStateCard(
- icon: Icons.shield_outlined,
- title: 'Risk watchlist',
- message: 'Risk items will appear once vendors are assessed.',
- compact: true,
- );
- }
-
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- padding: const EdgeInsets.all(20),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Risk watchlist',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A)),
- ),
- const SizedBox(height: 12),
- for (var i = 0; i < riskItems.length; i++) ...[
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- riskItems[i].vendor,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF1F2937)),
- ),
- const SizedBox(height: 4),
- Text(
- riskItems[i].risk,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B)),
- ),
- const SizedBox(height: 4),
- Text(
- 'Last incident: ${DateFormat('M/d').format(DateTime.parse(riskItems[i].lastIncident))}',
- style: const TextStyle(
- fontSize: 11, color: Color(0xFF94A3B8)),
- ),
- ],
- ),
- ),
- const SizedBox(width: 12),
- _RiskSeverityPill(severity: riskItems[i].severity),
- ],
- ),
- if (i != riskItems.length - 1) const SizedBox(height: 12),
- ],
- ],
- ),
- );
- }
-}
-
-class _VendorTaskStatusPill extends StatelessWidget {
- const _VendorTaskStatusPill({required this.status});
-
- final _VendorTaskStatus status;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: status.backgroundColor,
- borderRadius: BorderRadius.circular(999),
- border: Border.all(color: status.borderColor),
- ),
- child: Text(
- status.label,
- style: TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600, color: status.textColor),
- ),
- );
- }
-}
-
-class _RiskSeverityPill extends StatelessWidget {
- const _RiskSeverityPill({required this.severity});
-
- final _RiskSeverity severity;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: severity.backgroundColor,
- borderRadius: BorderRadius.circular(999),
- border: Border.all(color: severity.borderColor),
- ),
- child: Text(
- severity.label,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: severity.textColor),
  ),
  );
  }
@@ -9115,7 +8136,7 @@ class _RfqWorkflowView extends StatelessWidget {
  final metrics = [
  _SummaryCard(
  icon: Icons.assignment_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '${rfqs.length}',
  label: 'Open RFQs',
  ),
@@ -9134,7 +8155,7 @@ class _RfqWorkflowView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.account_balance_wallet_outlined,
- iconBackground: const Color(0xFFECFEFF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: currencyFormat.format(pipelineValue),
  label: 'Pipeline Value',
  valueColor: const Color(0xFF047857),
@@ -9176,7 +8197,7 @@ class _RfqWorkflowView extends StatelessWidget {
  icon: const Icon(Icons.add_rounded, size: 18),
  label: const Text('Create RFQ'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -9545,7 +8566,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
  height: 26,
  alignment: Alignment.center,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -9553,7 +8574,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -9801,7 +8822,7 @@ class _RfqItemCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8)),
+ color: Color(0xFFFFC812)),
  ),
  ],
  ),
@@ -9813,7 +8834,7 @@ class _RfqItemCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF1D4ED8)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  ],
@@ -9933,7 +8954,7 @@ class _RfqSidebarCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor: const AlwaysStoppedAnimation<Color>(
- Color(0xFF2563EB)),
+ Color(0xFFFFC812)),
  ),
  ),
  if (i != criteria.length - 1) const SizedBox(height: 12),
@@ -10076,7 +9097,7 @@ class _PurchaseOrdersView extends StatelessWidget {
  final metrics = [
  _SummaryCard(
  icon: Icons.receipt_long_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$openOrders',
  label: 'Open Orders',
  ),
@@ -10095,7 +9116,7 @@ class _PurchaseOrdersView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.attach_money,
- iconBackground: const Color(0xFFECFEFF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: currencyFormat.format(totalSpend),
  label: 'Total Spend',
  valueColor: const Color(0xFF047857),
@@ -10125,7 +9146,7 @@ class _PurchaseOrdersView extends StatelessWidget {
  icon: const Icon(Icons.add_rounded, size: 18),
  label: const Text('Create PO'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -10440,7 +9461,7 @@ class _PurchaseOrderRow extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8))),
+ color: Color(0xFFFFC812))),
  const SizedBox(height: 6),
  ClipRRect(
  borderRadius: BorderRadius.circular(999),
@@ -10449,7 +9470,7 @@ class _PurchaseOrderRow extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF1D4ED8)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  ],
@@ -10588,7 +9609,7 @@ class _PurchaseOrderCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF1D4ED8)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  const SizedBox(height: 12),
@@ -10809,7 +9830,7 @@ class _ItemTrackingView extends StatelessWidget {
  final metrics = [
  _SummaryCard(
  icon: Icons.local_shipping_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$inTransit',
  label: 'In Transit',
  ),
@@ -10822,7 +9843,7 @@ class _ItemTrackingView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.warning_amber_rounded,
- iconBackground: const Color(0xFFFFF1F2),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$highAlerts',
  label: 'High Priority Alerts',
  valueColor: const Color(0xFFDC2626),
@@ -10855,7 +9876,7 @@ class _ItemTrackingView extends StatelessWidget {
  icon: const Icon(Icons.sync_rounded, size: 18),
  label: const Text('Update Status'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding:
  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -11098,7 +10119,7 @@ class _CarrierPerformanceCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 12),
  Text(
@@ -11116,7 +10137,7 @@ class _CarrierPerformanceCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  if (i != carriers.length - 1) const SizedBox(height: 12),
@@ -11333,7 +10354,7 @@ class _PurchaseOrdersInitiationLockedView extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(width: 8),
@@ -11450,7 +10471,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.auto_awesome, size: 18),
  label: const Text('Generate Data'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11476,7 +10497,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.file_download_outlined, size: 18),
  label: const Text('Export PDF'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11523,7 +10544,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.auto_awesome, size: 18),
  label: const Text('Generate Data'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11549,7 +10570,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.file_download_outlined, size: 18),
  label: const Text('Export PDF'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11829,7 +10850,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
  minHeight: 8,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  if (i != metrics.length - 1) const SizedBox(height: 12),
@@ -12014,11 +11035,11 @@ class _EmptyStateBody extends StatelessWidget {
  width: iconSize,
  height: iconSize,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Icon(icon,
- color: const Color(0xFF2563EB), size: compact ? 20 : 24),
+ color: const Color(0xFFFFC812), size: compact ? 20 : 24),
  ),
  SizedBox(height: compact ? 10 : 14),
  Text(
@@ -12041,7 +11062,7 @@ class _EmptyStateBody extends StatelessWidget {
  ElevatedButton(
  onPressed: onAction,
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
  shape: RoundedRectangleBorder(
@@ -12150,7 +11171,7 @@ class _ProcurementWorkflowStep {
  final parsedUnit = rawUnit == 'month' ? 'month' : 'week';
 
  return _ProcurementWorkflowStep(
- id: rawId.isEmpty ? 'wf_${DateTime.now().microsecondsSinceEpoch}' : rawId,
+ id: rawId.isEmpty ? newId('wf_') : rawId,
  name: rawName.isEmpty ? 'Untitled Step' : rawName,
  duration: parsedDuration,
  unit: parsedUnit,
@@ -12174,9 +11195,8 @@ extension _ProcurementTabExtension on _ProcurementTab {
  String get label {
  switch (this) {
  case _ProcurementTab.procurementDashboard:
- return 'Procurement';
- case _ProcurementTab.itemsList:
- return 'Scope Details';
+ return 'Procurement';    case _ProcurementTab.itemsList:
+      return 'Procurement Log';
  case _ProcurementTab.rfqWorkflow:
  return 'Procurement Workflow';
  case _ProcurementTab.contractingWorkflow:
@@ -12191,139 +11211,6 @@ extension _ProcurementTabExtension on _ProcurementTab {
  return 'Procurement Templates';
  case _ProcurementTab.reports:
  return 'Reports';
- }
- }
-}
-
-class _VendorHealthMetric {
- const _VendorHealthMetric(
- {required this.category, required this.score, required this.change});
-
- final String category;
- final double score;
- final String change;
-}
-
-class _VendorOnboardingTask {
- const _VendorOnboardingTask({
- required this.title,
- required this.owner,
- required this.dueDate,
- required this.status,
- });
-
- final String title;
- final String owner;
- final String dueDate;
- final _VendorTaskStatus status;
-}
-
-enum _VendorTaskStatus { pending, inReview, complete }
-
-extension _VendorTaskStatusExtension on _VendorTaskStatus {
- String get label {
- switch (this) {
- case _VendorTaskStatus.pending:
- return 'Pending';
- case _VendorTaskStatus.inReview:
- return 'In Review';
- case _VendorTaskStatus.complete:
- return 'Complete';
- }
- }
-
- Color get backgroundColor {
- switch (this) {
- case _VendorTaskStatus.pending:
- return const Color(0xFFF1F5F9);
- case _VendorTaskStatus.inReview:
- return const Color(0xFFFFF7ED);
- case _VendorTaskStatus.complete:
- return const Color(0xFFE8FFF4);
- }
- }
-
- Color get textColor {
- switch (this) {
- case _VendorTaskStatus.pending:
- return const Color(0xFF64748B);
- case _VendorTaskStatus.inReview:
- return const Color(0xFFF97316);
- case _VendorTaskStatus.complete:
- return const Color(0xFF047857);
- }
- }
-
- Color get borderColor {
- switch (this) {
- case _VendorTaskStatus.pending:
- return const Color(0xFFE2E8F0);
- case _VendorTaskStatus.inReview:
- return const Color(0xFFFED7AA);
- case _VendorTaskStatus.complete:
- return const Color(0xFFBBF7D0);
- }
- }
-}
-
-class _VendorRiskItem {
- const _VendorRiskItem({
- required this.vendor,
- required this.risk,
- required this.severity,
- required this.lastIncident,
- });
-
- final String vendor;
- final String risk;
- final _RiskSeverity severity;
- final String lastIncident;
-}
-
-enum _RiskSeverity { low, medium, high }
-
-extension _RiskSeverityExtension on _RiskSeverity {
- String get label {
- switch (this) {
- case _RiskSeverity.low:
- return 'Low';
- case _RiskSeverity.medium:
- return 'Medium';
- case _RiskSeverity.high:
- return 'High';
- }
- }
-
- Color get backgroundColor {
- switch (this) {
- case _RiskSeverity.low:
- return const Color(0xFFF1F5F9);
- case _RiskSeverity.medium:
- return const Color(0xFFFFF7ED);
- case _RiskSeverity.high:
- return const Color(0xFFFFF1F2);
- }
- }
-
- Color get textColor {
- switch (this) {
- case _RiskSeverity.low:
- return const Color(0xFF64748B);
- case _RiskSeverity.medium:
- return const Color(0xFFF97316);
- case _RiskSeverity.high:
- return const Color(0xFFDC2626);
- }
- }
-
- Color get borderColor {
- switch (this) {
- case _RiskSeverity.low:
- return const Color(0xFFE2E8F0);
- case _RiskSeverity.medium:
- return const Color(0xFFFED7AA);
- case _RiskSeverity.high:
- return const Color(0xFFFECACA);
  }
  }
 }
@@ -12370,7 +11257,7 @@ extension _AlertSeverityExtension on _AlertSeverity {
  case _AlertSeverity.medium:
  return const Color(0xFFFFF7ED);
  case _AlertSeverity.high:
- return const Color(0xFFFFF1F2);
+ return const Color(0xFFFFF8E1);
  }
  }
 
@@ -12643,7 +11530,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  );
  }
 
- final accent = const Color(0xFF1E3A8A);
+ const accent = Color(0xFFB8860B);
  final nextStage = _nextPendingStage;
 
  return Column(
@@ -12664,7 +11551,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -12676,8 +11563,8 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  color: accent,
  ),
  ),
- const SizedBox(height: 4),
- const Text(
+ SizedBox(height: 4),
+ Text(
  'Walk through each stage in order. Mark each one '
  'complete to advance. Use the Vendor Evaluation tab '
  'to score bids during the Review Bids stage.',
@@ -12696,7 +11583,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  label: const Text('Reset'),
  style: OutlinedButton.styleFrom(
  foregroundColor: accent,
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  ),
  ),
  ],
@@ -12712,14 +11599,14 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  value: _progressPercent,
  minHeight: 10,
  backgroundColor: const Color(0xFFE2E8F0),
- valueColor: AlwaysStoppedAnimation<Color>(accent),
+ valueColor: const AlwaysStoppedAnimation<Color>(accent),
  ),
  ),
  ),
  const SizedBox(width: 12),
  Text(
  '$_completedCount / $_totalStages',
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
  color: accent,
@@ -12793,9 +11680,9 @@ class _ContractingStageCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final accent = const Color(0xFF1E3A8A);
- final successGreen = const Color(0xFF16A34A);
- final amber = const Color(0xFFF59E0B);
+ const accent = Color(0xFFB8860B);
+ const successGreen = Color(0xFF16A34A);
+ const amber = Color(0xFFF59E0B);
 
  Color badgeColor = isComplete
  ? successGreen
@@ -12845,7 +11732,7 @@ class _ContractingStageCard extends StatelessWidget {
  children: [
  Text(
  stage.label,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 15,
  fontWeight: FontWeight.w600,
  color: accent,
@@ -12853,16 +11740,16 @@ class _ContractingStageCard extends StatelessWidget {
  ),
  const SizedBox(width: 8),
  if (isComplete)
- _StageChip(
+ const _StageChip(
  text: 'COMPLETE',
  color: successGreen,
- bgColor: const Color(0xFFE8FFF4),
+ bgColor: Color(0xFFE8FFF4),
  )
  else if (isNext)
- _StageChip(
+ const _StageChip(
  text: 'NEXT',
- color: const Color(0xFFB45309),
- bgColor: const Color(0xFFFEF3C7),
+ color: Color(0xFFB45309),
+ bgColor: Color(0xFFFEF3C7),
  ),
  ],
  ),
@@ -12887,7 +11774,7 @@ class _ContractingStageCard extends StatelessWidget {
  side: BorderSide(
  color: isComplete
  ? const Color(0xFFBBF7D0)
- : const Color(0xFFBFDBFE),
+ : const Color(0xFFFDE68A),
  ),
  padding:
  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -12995,7 +11882,7 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
 
  @override
  Widget build(BuildContext context) {
- final accent = const Color(0xFF1E3A8A);
+ const accent = Color(0xFFB8860B);
  final vendors = widget.vendors;
 
  if (vendors.isEmpty) {
@@ -13028,10 +11915,10 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.grading_outlined, color: Color(0xFF1E3A8A)),
- const SizedBox(width: 10),
+ Icon(Icons.grading_outlined, color: Color(0xFFB8860B)),
+ SizedBox(width: 10),
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -13044,8 +11931,8 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
  color: accent,
  ),
  ),
- const SizedBox(height: 4),
- const Text(
+ SizedBox(height: 4),
+ Text(
  'Score each vendor on three pillars. The weighted '
  'total drives the ranking. Adjust the weights below '
  'to match your project priorities.',
@@ -13211,7 +12098,7 @@ class _WeightSlider extends StatelessWidget {
  padding: const EdgeInsets.only(bottom: 8),
  child: Row(
  children: [
- Icon(pillar.icon, size: 18, color: const Color(0xFF1E3A8A)),
+ Icon(pillar.icon, size: 18, color: const Color(0xFFB8860B)),
  const SizedBox(width: 8),
  Text(
  pillar.label,
@@ -13231,7 +12118,7 @@ class _WeightSlider extends StatelessWidget {
  divisions: 20,
  label: '${(weight * 100).round()}%',
  onChanged: onChanged,
- activeColor: const Color(0xFF1E3A8A),
+ activeColor: const Color(0xFFB8860B),
  ),
  ),
  SizedBox(
@@ -13241,7 +12128,7 @@ class _WeightSlider extends StatelessWidget {
  style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  textAlign: TextAlign.right,
  ),
@@ -13269,10 +12156,10 @@ class _EvaluationMatrix extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final headerStyle = TextStyle(
+ const headerStyle = TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF1E293B),
+ color: Color(0xFF1E293B),
  );
 
  return Scrollbar(
@@ -13285,19 +12172,19 @@ class _EvaluationMatrix extends StatelessWidget {
  columnSpacing: 24,
  horizontalMargin: 8,
  columns: [
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 40,
  child: Text('#', style: headerStyle),
  ),
  ),
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 180,
  child: Text('Vendor', style: headerStyle),
  ),
  ),
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 120,
  child: Text('Category', style: headerStyle),
@@ -13313,7 +12200,7 @@ class _EvaluationMatrix extends StatelessWidget {
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(pillar.icon,
- size: 14, color: const Color(0xFF1E3A8A)),
+ size: 14, color: const Color(0xFFB8860B)),
  const SizedBox(width: 4),
  Text(
  '${pillar.label}\n(${(weights[pillar]! * 100).round()}%)',
@@ -13324,7 +12211,7 @@ class _EvaluationMatrix extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ const DataColumn(
  label: SizedBox(
  width: 140,
  child: Text('Weighted Total', style: headerStyle),
@@ -13371,7 +12258,7 @@ class _ScoreCell extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final controller =
- TextEditingController(text: value == 0 ? '' : value.toStringAsFixed(0));
+ SpellCheckTextEditingController(text: value == 0 ? '' : value.toStringAsFixed(0));
 
  return SizedBox(
  width: 100,
@@ -13394,7 +12281,7 @@ class _ScoreCell extends StatelessWidget {
  ),
  ),
  focusedBorder: const OutlineInputBorder(
- borderSide: BorderSide(color: Color(0xFF1E3A8A)),
+ borderSide: BorderSide(color: Color(0xFFB8860B)),
  ),
  ),
  onChanged: (text) {
@@ -13420,8 +12307,8 @@ class _WeightedTotalChip extends StatelessWidget {
  bg = const Color(0xFFE8FFF4);
  fg = const Color(0xFF16A34A);
  } else if (value >= 60) {
- bg = const Color(0xFFEFF6FF);
- fg = const Color(0xFF1E3A8A);
+ bg = const Color(0xFFFFF8E1);
+ fg = const Color(0xFFB8860B);
  } else if (value >= 30) {
  bg = const Color(0xFFFEF3C7);
  fg = const Color(0xFFB45309);

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/document_review_models.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,6 @@ import 'package:flutter/material.dart';
 class DocumentReviewService {
   DocumentReviewService._();
   static final DocumentReviewService instance = DocumentReviewService._();
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   /// Collection reference for document review items
@@ -124,7 +123,7 @@ class DocumentReviewService {
 
       // Add history entry
       final historyEntry = ReviewHistoryEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         reviewerId: _userId,
         reviewerName: reviewerName,
         reviewerRole: role.name,
@@ -203,7 +202,7 @@ class DocumentReviewService {
 
       // Add history entry
       final historyEntry = ReviewHistoryEntry(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: newId(),
         reviewerId: reviewerId,
         reviewerName: reviewerName,
         reviewerRole: reviewerRole,

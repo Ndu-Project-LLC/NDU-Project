@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:ndu_project/theme.dart';
 
 /// Brand-aligned colors for shimmer effects across the app.
 class ShimmerColors {
@@ -98,17 +97,17 @@ class PageShimmerSkeleton extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Header row (back + title) ──
-              Row(
+              const Row(
                 children: [
-                  const ShimmerCircle(size: 36),
-                  const SizedBox(width: 14),
+                  ShimmerCircle(size: 36),
+                  SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const ShimmerBone(width: 180, height: 20),
-                        const SizedBox(height: 8),
-                        const ShimmerBone(width: 240, height: 14),
+                        ShimmerBone(width: 180, height: 20),
+                        SizedBox(height: 8),
+                        ShimmerBone(width: 240, height: 14),
                       ],
                     ),
                   ),
@@ -133,15 +132,15 @@ class PageShimmerSkeleton extends StatelessWidget {
                             width: 0.5,
                           ),
                         ),
-                        child: Column(
+                        child: const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const ShimmerBone(
+                            ShimmerBone(
                                 width: 32, height: 32, borderRadius: 8),
-                            const SizedBox(height: 12),
-                            const ShimmerBone(width: 48, height: 22),
-                            const SizedBox(height: 6),
-                            const ShimmerBone(width: 80, height: 12),
+                            SizedBox(height: 12),
+                            ShimmerBone(width: 48, height: 22),
+                            SizedBox(height: 6),
+                            ShimmerBone(width: 80, height: 12),
                           ],
                         ),
                       ),
@@ -175,17 +174,17 @@ class PageShimmerSkeleton extends StatelessWidget {
                         const SizedBox(height: 16),
                         // Table-like rows
                         ...List.generate(4, (rowIndex) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
+                          return const Padding(
+                            padding: EdgeInsets.only(bottom: 10),
                             child: Row(
                               children: [
-                                const ShimmerBone(
+                                ShimmerBone(
                                     width: 80, height: 12, borderRadius: 4),
-                                const Spacer(),
-                                const ShimmerBone(
+                                Spacer(),
+                                ShimmerBone(
                                     width: 60, height: 12, borderRadius: 4),
-                                const Spacer(),
-                                const ShimmerBone(
+                                Spacer(),
+                                ShimmerBone(
                                     width: 90, height: 12, borderRadius: 4),
                               ],
                             ),
@@ -226,13 +225,13 @@ class SidebarShimmerSkeleton extends StatelessWidget {
             const SizedBox(height: 28),
             // Nav items
             ...List.generate(8, (_) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
-                    const ShimmerCircle(size: 20),
-                    const SizedBox(width: 12),
-                    const ShimmerBone(width: 100, height: 14, borderRadius: 4),
+                    ShimmerCircle(size: 20),
+                    SizedBox(width: 12),
+                    ShimmerBone(width: 100, height: 14, borderRadius: 4),
                   ],
                 ),
               );

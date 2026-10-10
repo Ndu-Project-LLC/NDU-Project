@@ -11,12 +11,15 @@ library;
 /// no Scaffold of its own.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/utils/cost_descriptor_text.dart';
 import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class VarianceScreen extends StatelessWidget {
   const VarianceScreen({super.key});
@@ -65,7 +68,7 @@ class VarianceScreen extends StatelessWidget {
                     actions: const [],
                   ),
                   const SizedBox(height: 22),
-                  TreasuryEmptyState(
+                  const TreasuryEmptyState(
                     icon: Icons.trending_flat_rounded,
                     title: 'No baseline to compare',
                     body:
@@ -160,7 +163,7 @@ class VarianceScreen extends StatelessWidget {
                           '$currencySymbol${treasuryFmt(variance.currentTotal)}',
                       sub: '${estimate.lines.length} live lines',
                       icon: Icons.trending_flat_rounded,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasuryKpiSpec(
@@ -189,7 +192,7 @@ class VarianceScreen extends StatelessWidget {
                       value: '${varianceLines.length}',
                       sub: 'Items with variance entries',
                       icon: Icons.list_alt_rounded,
-                      tint: const Color(0xFF8B5CF6),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFF4EEFF),
                     ),
                   ],
@@ -257,7 +260,7 @@ class VarianceScreen extends StatelessWidget {
                       label: 'Current Total',
                       value:
                           '$currencySymbol${treasuryFmt(variance.currentTotal)}',
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasurySpotlightColumn(
@@ -291,7 +294,7 @@ class VarianceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVarianceByCategory(variance, String currencySymbol) {
+  Widget _buildVarianceByCategory(VarianceSummary variance, String currencySymbol) {
     final cats = variance.byCategory
         .where((c) => c.baseline > 0 || c.current > 0 || c.delta != 0)
         .toList();
@@ -304,7 +307,7 @@ class VarianceScreen extends StatelessWidget {
       title: 'Variance by Category',
       subtitle: 'Baseline → Current delta, per category',
       child: cats.isEmpty
-          ? TreasuryEmptyState(
+          ? const TreasuryEmptyState(
               icon: Icons.bar_chart_rounded,
               title: 'No category variance yet',
               body: 'Categories with delta values will appear here.',
@@ -312,11 +315,11 @@ class VarianceScreen extends StatelessWidget {
           : Column(
               children: [
                 // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(
+                const Padding(
+                  padding: EdgeInsets.symmetric(
                       horizontal: 4, vertical: 6),
                   child: Row(
-                    children: const [
+                    children: [
                       Expanded(
                           flex: 4,
                           child: TreasuryTableHeader('CATEGORY')),
@@ -362,7 +365,7 @@ class VarianceScreen extends StatelessWidget {
       subtitle:
           '${varianceLines.length} ${varianceLines.length == 1 ? "entry" : "entries"}',
       child: varianceLines.isEmpty
-          ? TreasuryEmptyState(
+          ? const TreasuryEmptyState(
               icon: Icons.check_circle_outline_rounded,
               title: 'No variance entries',
               body:
@@ -385,10 +388,10 @@ class VarianceScreen extends StatelessWidget {
 
   void _showRebaselineDialog(BuildContext context,
       CostEstimateProvider provider, CostEstimate estimate, bool isWaterfall) {
-    final reasonCtrl = TextEditingController();
-    final mocCtrl = TextEditingController();
-    final agileCtrl = TextEditingController();
-    showDialog(
+    final reasonCtrl = SpellCheckTextEditingController();
+    final mocCtrl = SpellCheckTextEditingController();
+    final agileCtrl = SpellCheckTextEditingController();
+    showAppDialog(
       context: context,
       builder: (ctx) => _TreasuryRebaselineDialog(
         estimate: estimate,
@@ -450,7 +453,7 @@ class _RebaselineProgressCard extends StatelessWidget {
           Row(
             children: [
               Text('Re-baselines used: $rebaselinesUsed of 2',
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 12.5,
                       color: TreasuryTokens.inkSoft,
                       fontWeight: FontWeight.w600)),
@@ -466,7 +469,7 @@ class _RebaselineProgressCard extends StatelessWidget {
                         color: TreasuryTokens.danger
                             .withValues(alpha: 0.55)),
                   ),
-                  child: Text('MAX REACHED',
+                  child: const Text('MAX REACHED',
                       style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
@@ -486,11 +489,11 @@ class _RebaselineProgressCard extends StatelessWidget {
                   ),
                   child: Text(
                       '$rebaselinesRemaining REMAINING',
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.6,
-                          color: const Color(0xFFB45309))),
+                          color: Color(0xFFB45309))),
                 ),
             ],
           ),
@@ -522,11 +525,11 @@ class _RebaselineProgressCard extends StatelessWidget {
                     color: TreasuryTokens.danger
                         .withValues(alpha: 0.35)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.warning_amber_rounded,
                       size: 16, color: TreasuryTokens.danger),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Max 2 re-baselines consumed. Further changes require a new estimate version.',
@@ -545,7 +548,7 @@ class _RebaselineProgressCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Lock v$nextVersion — this consumes one re-baseline.',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: TreasuryTokens.muted, fontSize: 12),
                   ),
                 ),
@@ -558,7 +561,7 @@ class _RebaselineProgressCard extends StatelessWidget {
               ],
             )
           else
-            Text(
+            const Text(
               'No variance to re-baseline — current estimate matches the baseline.',
               style: TextStyle(
                   color: TreasuryTokens.muted, fontSize: 12),
@@ -742,7 +745,10 @@ class _VarianceLineRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(line.description,
+            child: Text(
+                // Same normalisation as the builder's line row, so a doubled
+                // dash cannot survive on the variance surface either.
+                costDescriptorForDisplay(line.description),
                 style: const TextStyle(
                     color: TreasuryTokens.ink,
                     fontSize: 12.5,
@@ -801,7 +807,7 @@ class _TreasuryRebaselineDialog extends StatelessWidget {
               color: TreasuryTokens.brandSoft,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.refresh_rounded,
+            child: const Icon(Icons.refresh_rounded,
                 size: 16, color: TreasuryTokens.brandDeep),
           ),
           const SizedBox(width: 10),
@@ -830,7 +836,7 @@ class _TreasuryRebaselineDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
+                  const Icon(Icons.warning_amber_rounded,
                       size: 14, color: TreasuryTokens.warning),
                   const SizedBox(width: 8),
                   Expanded(
@@ -838,7 +844,7 @@ class _TreasuryRebaselineDialog extends StatelessWidget {
                       isWaterfall
                           ? 'This will consume one re-baseline. A Management of Change (MoC) ID is required.'
                           : 'This will consume one re-baseline. An information note is required in lieu of formal MoC.',
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: TreasuryTokens.inkSoft,
                           fontSize: 12,
                           height: 1.45),
@@ -876,7 +882,7 @@ class _TreasuryRebaselineDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Cancel',
+          child: const Text('Cancel',
               style: TextStyle(
                   color: TreasuryTokens.muted, fontSize: 13)),
         ),
@@ -897,8 +903,7 @@ class _TreasuryField extends StatelessWidget {
     required this.label,
     required this.hint,
     this.minLines = 1,
-    this.maxLines,
-  });
+  }) : maxLines = null;
   final TextEditingController controller;
   final String label;
   final String hint;
@@ -913,10 +918,10 @@ class _TreasuryField extends StatelessWidget {
       maxLines: maxLines ?? (minLines > 1 ? null : 1),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: TreasuryTokens.muted, fontSize: 12),
+        labelStyle: const TextStyle(color: TreasuryTokens.muted, fontSize: 12),
         hintText: hint,
         hintStyle:
-            TextStyle(color: TreasuryTokens.mutedSoft, fontSize: 12.5),
+            const TextStyle(color: TreasuryTokens.mutedSoft, fontSize: 12.5),
         filled: true,
         fillColor: TreasuryTokens.surface,
         contentPadding: const EdgeInsets.symmetric(
@@ -927,7 +932,7 @@ class _TreasuryField extends StatelessWidget {
                 const BorderSide(color: TreasuryTokens.hairline)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
+            borderSide: const BorderSide(
                 color: TreasuryTokens.brandDeep, width: 1.6)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),

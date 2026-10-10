@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/app_logo.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class MobileForgotPasswordScreen extends StatefulWidget {
   const MobileForgotPasswordScreen({super.key});
 
@@ -14,7 +16,7 @@ class MobileForgotPasswordScreen extends StatefulWidget {
 class _MobileForgotPasswordScreenState
     extends State<MobileForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailController = SpellCheckTextEditingController();
   bool _isLoading = false;
 
   Future<void> _resetPassword() async {
@@ -70,9 +72,9 @@ class _MobileForgotPasswordScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -87,23 +89,12 @@ class _MobileForgotPasswordScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Logo
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Text(
-                      'NDU',
-                      style: TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                // Logo — canonical NDU squircle brand asset
+                const Center(
+                  child: AppLogo(
+                    height: 64,
+                    enableTapToDashboard: false,
+                    semanticLabel: 'NDU Project',
                   ),
                 ),
 

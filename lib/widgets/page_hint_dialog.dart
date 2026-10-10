@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/page_hint_model.dart';
 import 'package:ndu_project/services/hint_content_service.dart';
 import 'package:ndu_project/services/hint_service.dart';
@@ -34,7 +35,7 @@ class PageHintDialog {
 
     bool disableViewed = disableViewedInitially;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.4),
@@ -56,7 +57,7 @@ class PageHintDialog {
                     Row(
                       children: [
                         const Icon(Icons.info_outline,
-                            color: Colors.blue, size: 22),
+                            color: Color(0xFFFFC812), size: 22),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -77,9 +78,9 @@ class PageHintDialog {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Color(0xFFF3F4F6),
+                        color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Color(0xFFE5E7EB)),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
                       child: Row(
                         children: [

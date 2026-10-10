@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/business_system_integrations_screen.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
+import 'package:ndu_project/services/program_service.dart';
 
 /// Card shown on the program dashboard that aggregates data from all
 /// connected CRM / ERP / Accounting integrations.
+///
+/// The roll-up covers two scopes, because the app connects systems in two
+/// places: the program's own connect screen writes
+/// `programs/{programId}/businessIntegrations`, while the module connectors
+/// (the Cost Estimate's QuickBooks / Xero / Sage / SAP accounting providers)
+/// write `projects/{projectId}/businessIntegrations` for one of the program's
+/// projects. Both are merged here, one row per provider.
 ///
 /// Shows:
 /// - A row of category chips (CRM / ERP / Accounting) with per-category
@@ -16,10 +24,17 @@ class AggregatedBusinessSystemsCard extends StatefulWidget {
     super.key,
     required this.programId,
     this.programName,
+    this.projectIds,
   });
 
   final String programId;
   final String? programName;
+
+  /// Projects whose module-scoped connections are rolled in.
+  ///
+  /// Defaults to the projects listed on the program
+  /// ([ProgramModel.projectIds]).
+  final List<String>? projectIds;
 
   @override
   State<AggregatedBusinessSystemsCard> createState() =>
@@ -45,13 +60,17 @@ class _AggregatedBusinessSystemsCardState
       _error = null;
     });
     try {
-      final integrations =
+      final programIntegrations =
           await BusinessSystemIntegrationService.loadAll(widget.programId);
+      final projectIds = widget.projectIds ?? await _projectIds();
+      final moduleIntegrations = await BusinessSystemIntegrationService
+          .loadAllForProjects(projectIds);
       final snapshots = await BusinessSystemIntegrationService.loadSnapshots(
           widget.programId);
       if (mounted) {
         setState(() {
-          _integrations = integrations;
+          _integrations = BusinessSystemIntegrationService.mergeByProvider(
+              programIntegrations, moduleIntegrations);
           _snapshots = snapshots;
         });
       }
@@ -59,6 +78,18 @@ class _AggregatedBusinessSystemsCardState
       if (mounted) setState(() => _error = 'Failed to load: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// The projects that belong to this program, used to find connections made
+  /// from inside a module.
+  Future<List<String>> _projectIds() async {
+    try {
+      final program = await ProgramService.getProgram(widget.programId);
+      return program?.projectIds ?? const [];
+    } catch (e) {
+      debugPrint('[AggregatedBusinessSystemsCard] project lookup failed: $e');
+      return const [];
     }
   }
 
@@ -142,10 +173,10 @@ class _AggregatedBusinessSystemsCardState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
+            color: const Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
       ),
       child: Column(
         children: [
@@ -241,13 +272,13 @@ class _AggregatedBusinessSystemsCardState
       childAspectRatio: 2.6,
       children: [
         _statTile('Customers', '$totalCustomers', Icons.people_outline,
-            const Color(0xFF3B82F6)),
+            const Color(0xFFFFC812)),
         _statTile('Open pipeline', _money(totalPipeline), Icons.trending_up,
             const Color(0xFF10B981)),
         _statTile('Outstanding', _money(totalOutstanding), Icons.receipt_long,
             const Color(0xFFF59E0B)),
         _statTile('Open orders', '$totalOrders · ${_money(totalOrderValue)}',
-            Icons.shopping_cart_outlined, const Color(0xFF8B5CF6)),
+            Icons.shopping_cart_outlined, const Color(0xFFB8860B)),
       ],
     );
   }
@@ -314,7 +345,9 @@ class _AggregatedBusinessSystemsCardState
             ),
             child: Center(
               child: Text(
-                i.provider.label.substring(0, 1),
+                i.provider.label.isNotEmpty
+                    ? i.provider.label.substring(0, 1)
+                    : '?',
                 style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,

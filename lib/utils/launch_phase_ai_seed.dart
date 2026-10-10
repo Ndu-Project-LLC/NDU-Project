@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -179,6 +180,15 @@ class LaunchPhaseAiSeed {
       buf.writeln(stakeholdersSummary);
     }
 
+    // Latest-version overlay: topics repeated across phases are read from
+    // their most recent phase (e.g. planning supersedes initiation) — never
+    // re-anchor an AI prompt on a stale earlier copy.
+    final overlay = ProjectDataHelper.buildLatestTopicOverlay(projectData);
+    if (overlay.trim().isNotEmpty) {
+      buf.writeln();
+      buf.write(overlay);
+    }
+
     return buf.toString().trim();
   }
 
@@ -201,8 +211,8 @@ class LaunchPhaseAiSeed {
     final missingAreas = <String>[];
 
     // Check base project data
-    final projectName = projectData.projectName ?? '';
-    final projectDescription = projectData.projectDescription ?? '';
+    final projectName = projectData.projectName;
+    final projectDescription = projectData.projectDescription;
     if (projectName.isEmpty && projectDescription.isEmpty) {
       missingAreas.add('Project name and description');
     }
@@ -320,6 +330,13 @@ class LaunchPhaseAiSeed {
       sectionLabel: sectionLabel,
     );
 
+    if (!context.mounted) {
+      return const LaunchAiResult(
+        entries: {},
+        isContextSufficient: false,
+        missingAreas: [],
+      );
+    }
     final contextText = await buildFullPhaseDependencyContext(
       context,
       sectionLabel: sectionLabel,
@@ -355,7 +372,7 @@ class LaunchPhaseAiSeed {
     BuildContext context, {
     required List<String> missingAreas,
   }) async {
-    return showDialog(
+    return showAppDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -413,7 +430,7 @@ class LaunchPhaseAiSeed {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF005BB3),
+              foregroundColor: const Color(0xFFFFC812),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             child: const Text('Understood',

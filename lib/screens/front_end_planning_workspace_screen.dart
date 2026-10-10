@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
@@ -17,7 +18,6 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -152,7 +152,7 @@ class _FrontEndPlanningWorkspaceScreenState
 
   Future<void> _showAiGeneratedNotice() async {
     if (!mounted) return;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('KAZ AI Suggestions Added'),
@@ -269,9 +269,9 @@ class _FrontEndPlanningWorkspaceScreenState
       screenTitle: 'Front End Planning Workspace',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
-        PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+        PdfSection.text('Notes', fep.requirementsNotes),
       ],
     );
   }
@@ -333,7 +333,7 @@ class _FrontEndPlanningWorkspaceScreenState
     final currentList = List<String>.from(_listForType(type));
 
     if (currentList.isNotEmpty) {
-      final confirm = await showDialog<bool>(
+      final confirm = await showAppDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Generate additional items?'),
@@ -430,7 +430,7 @@ class _FrontEndPlanningWorkspaceScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           const AdminEditToggle(),
@@ -775,8 +775,6 @@ class _ListEditorCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.05),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(
                 bottom: BorderSide(color: color.withValues(alpha: 0.1)),
               ),
@@ -840,8 +838,8 @@ class _ListEditorCard extends StatelessWidget {
           else
             ReorderableListView.builder(
               shrinkWrap: true,
-              buildDefaultDragHandles: false,
               physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
               padding: const EdgeInsets.all(8),
               itemCount: items.length,
               onReorder: onReorder ?? (oldIndex, newIndex) {},
@@ -913,7 +911,7 @@ class _ListEditorCard extends StatelessWidget {
 
   void _showAddDialog(BuildContext context) {
     final controller = RichTextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Add to $title'),
@@ -958,7 +956,7 @@ class _ListEditorCard extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, int index, String current) {
     final controller = RichTextEditingController(text: current);
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Edit item in $title'),

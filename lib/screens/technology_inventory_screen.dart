@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -13,6 +14,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class TechnologyInventoryScreen extends StatefulWidget {
  const TechnologyInventoryScreen({super.key});
 
@@ -128,10 +130,10 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  }
 
  void _openAddDialog() {
- final name = TextEditingController();
- final category = TextEditingController();
- final notes = TextEditingController();
- showDialog(
+ final name = SpellCheckTextEditingController();
+ final category = SpellCheckTextEditingController();
+ final notes = SpellCheckTextEditingController();
+ showAppDialog(
  context: context,
  builder: (c) => AlertDialog(
  title: const Text('Add technology'),
@@ -187,7 +189,7 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  const SizedBox(width: 8),
  CsvTableImportButton(
  tableTitle: 'Technology Inventory',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'Technology Name', required: true),
  CsvColumnSpec(key: 'category', label: 'Category', required: true, allowedValues: ['Language', 'Framework', 'Database', 'Tool', 'Platform', 'Service']),
  CsvColumnSpec(key: 'version', label: 'Version'),
@@ -223,7 +225,7 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  const SizedBox(width: 8),
  CsvTableImportButton(
  tableTitle: 'Technology Inventory',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'Technology Name', required: true),
  CsvColumnSpec(key: 'category', label: 'Category', required: true, allowedValues: ['Language', 'Framework', 'Database', 'Tool', 'Platform', 'Service']),
  CsvColumnSpec(key: 'version', label: 'Version'),

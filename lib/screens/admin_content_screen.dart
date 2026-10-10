@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/app_content_model.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/services/app_content_service.dart';
@@ -9,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AdminContentScreen extends StatefulWidget {
  const AdminContentScreen({super.key});
@@ -34,7 +36,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  appBar: PreferredSize(
  preferredSize: const Size.fromHeight(84),
  child: SafeArea(
@@ -256,7 +258,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  Future<void> _showAddContentDialog() async {
  // Capture before await to avoid use_build_context_synchronously.
  final messenger = ScaffoldMessenger.of(context);
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (context) => _ContentEditorDialog(
  onSave: (key, value, category, description) async {
@@ -287,7 +289,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  Future<void> _showEditContentDialog(AppContent content) async {
  // Capture before await to avoid use_build_context_synchronously.
  final messenger = ScaffoldMessenger.of(context);
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (context) => _ContentEditorDialog(
  existingContent: content,
@@ -316,7 +318,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  }
 
  Future<void> _deleteContent(AppContent content) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete Content'),
@@ -575,13 +577,13 @@ class _ContentEditorDialogState extends State<_ContentEditorDialog> {
  void initState() {
  super.initState();
  _keyController =
- TextEditingController(text: widget.existingContent?.key ?? '');
+ SpellCheckTextEditingController(text: widget.existingContent?.key ?? '');
  _valueController =
- TextEditingController(text: widget.existingContent?.value ?? '');
- _categoryController = TextEditingController(
+ SpellCheckTextEditingController(text: widget.existingContent?.value ?? '');
+ _categoryController = SpellCheckTextEditingController(
  text: widget.existingContent?.category ?? 'general');
  _descriptionController =
- TextEditingController(text: widget.existingContent?.description ?? '');
+ SpellCheckTextEditingController(text: widget.existingContent?.description ?? '');
  }
 
  @override

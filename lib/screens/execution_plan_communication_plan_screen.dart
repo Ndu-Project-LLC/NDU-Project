@@ -1,5 +1,6 @@
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -15,6 +16,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -23,7 +25,7 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Communication Plan',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
       ]),
       PdfSection.text(
           'Notes',
@@ -48,7 +50,7 @@ class ExecutionPlanCommunicationPlanScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Plan - Communication Plan',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -109,7 +111,7 @@ class _CommunicationPlanSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Communication Plan',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'stakeholder',
                       label: 'Stakeholder',
@@ -216,7 +218,7 @@ class _CommunicationPlanSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileCommunicationPlanActions()
+          const _MobileCommunicationPlanActions()
         else
           const _DesktopCommunicationPlanActions(),
       ],
@@ -281,7 +283,7 @@ class _CommunicationPlanTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Communication Entry'),
@@ -328,15 +330,15 @@ class _CommunicationPlanTable extends StatelessWidget {
       BuildContext context, CommunicationPlanModel? entry, String projectId) {
     final isEdit = entry != null;
     final stakeholderController =
-        TextEditingController(text: entry?.stakeholder ?? '');
+        SpellCheckTextEditingController(text: entry?.stakeholder ?? '');
     final infoTypeController =
-        TextEditingController(text: entry?.infoType ?? '');
+        SpellCheckTextEditingController(text: entry?.infoType ?? '');
     String frequency = entry?.frequency ?? 'Weekly';
     String channel = entry?.channel ?? 'Email';
-    final ownerController = TextEditingController(text: entry?.owner ?? '');
+    final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
     String status = entry?.status ?? 'Planned';
     final commentsController =
-        TextEditingController(text: entry?.comments ?? '');
+        SpellCheckTextEditingController(text: entry?.comments ?? '');
 
     const frequencies = [
       'Daily',
@@ -355,7 +357,7 @@ class _CommunicationPlanTable extends StatelessWidget {
     ];
     const statuses = ['Planned', 'Active', 'On Hold', 'Completed'];
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
@@ -377,7 +379,7 @@ class _CommunicationPlanTable extends StatelessWidget {
                         const InputDecoration(labelText: 'Info Type *')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: frequency,
+                  initialValue: frequency,
                   decoration: const InputDecoration(labelText: 'Frequency *'),
                   items: frequencies
                       .map((f) => DropdownMenuItem(value: f, child: Text(f)))
@@ -386,7 +388,7 @@ class _CommunicationPlanTable extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: channel,
+                  initialValue: channel,
                   decoration: const InputDecoration(labelText: 'Channel *'),
                   items: channels
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -399,7 +401,7 @@ class _CommunicationPlanTable extends StatelessWidget {
                     decoration: const InputDecoration(labelText: 'Owner *')),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: status,
+                  initialValue: status,
                   decoration: const InputDecoration(labelText: 'Status *'),
                   items: statuses
                       .map((s) => DropdownMenuItem(value: s, child: Text(s)))

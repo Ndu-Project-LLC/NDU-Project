@@ -144,6 +144,15 @@ class WrappedCell extends StatelessWidget {
 /// same widget tree, but [tableBuilder] typically uses wider column
 /// widths and a larger heading row height.
 ///
+/// **Scroll controllers must not be shared between the two.** Expanding pushes a
+/// non-opaque route, so the inline [child] stays mounted and stays attached to
+/// whatever it was given. A [Scrollbar] with `thumbVisibility: true` asserts when
+/// its controller holds more than one [ScrollPosition] ("The provided
+/// ScrollController is attached to more than one ScrollPosition"), which throws on
+/// every frame of the expanded table and takes the page down. Give each copy its
+/// own controller — see `planning_requirements_screen.dart` and
+/// `front_end_planning_requirements_screen.dart`.
+///
 /// The optional [title] is shown in the full-screen app bar.
 /// The optional [onFullscreenClose] is invoked when the user closes the
 /// full-screen dialog (e.g. to persist any edits).
@@ -337,11 +346,29 @@ class _FullScreenTablePage extends StatelessWidget {
               ),
             ),
             clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: tableBuilder(context),
-              ),
+            // Fill the body: the card spans the full screen with the table at
+            // the top-left, instead of hugging the table's intrinsic size.
+            alignment: Alignment.topLeft,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // The table must span the full viewport width: DataTable lays
+                // out at its intrinsic column widths unless forced wider, so
+                // without this floor the expanded view bunched every column
+                // on the left and left dead space across the rest of the
+                // screen. Wider-than-viewport tables still scroll horizontally.
+                final minWidth = constraints.maxWidth.isFinite
+                    ? constraints.maxWidth
+                    : 0.0;
+                return SingleChildScrollView(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: minWidth),
+                      child: tableBuilder(context),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -370,9 +397,9 @@ Widget buildWrappedDataTable({
   String? title,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   bool showCheckboxColumn = false,
@@ -424,9 +451,9 @@ Widget buildWrappedDataTable({
       rows: wrappedRows,
       columnSpacing: columnSpacing + 6,
       horizontalMargin: horizontalMargin + 6,
-      headingRowHeight: headingRowHeight + 8,
-      dataRowMinHeight: dataRowMinHeight + 8,
-      dataRowMaxHeight: dataRowMaxHeight + 80,
+      headingRowHeight: headingRowHeight + 4,
+      dataRowMinHeight: dataRowMinHeight + 4,
+      dataRowMaxHeight: dataRowMaxHeight + 40,
       border: border,
       zebra: zebra,
       showCheckboxColumn: showCheckboxColumn,

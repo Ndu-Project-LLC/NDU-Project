@@ -21,7 +21,7 @@ import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class PortfolioDashboardScreen extends StatefulWidget {
  final String? portfolioId;
@@ -51,7 +51,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  static const _muted = Color(0xFF64748B);
  static const _outline = Color(0xFFE2E8F0);
  static const _gold = Color(0xFFD97706);
- static const _blue = Color(0xFF6366F1);
+ static const _blue = Color(0xFFB8860B);
  static const _blueDeep = Color(0xFF4F46E5);
  static const _emerald = Color(0xFF059669);
  static const _amber = Color(0xFFD97706);
@@ -73,7 +73,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
   static const _loadTimeout = Duration(seconds: 8);
 
   // ── Search state ──
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
   List<ProjectRecord> get _filteredProjects {
@@ -276,7 +276,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                           : RefreshIndicator(
                               onRefresh: _loadData,
                               color: _blue,
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                               strokeWidth: 3,
                               child: SingleChildScrollView(
                                 physics: const AlwaysScrollableScrollPhysics(),
@@ -598,7 +598,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
 
  Future<void> _handleLogout() async {
  if (!mounted) return;
- final shouldLogout = await showDialog<bool>(
+ final shouldLogout = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1027,77 +1027,8 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
 
 
  // ── Helper: summary KPI chip ──
- Widget _summaryChip(String label, String value, Color color) {
-   return Container(
-     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-     decoration: BoxDecoration(
-       color: color.withValues(alpha: 0.08),
-       borderRadius: BorderRadius.circular(10),
-       border: Border.all(color: color.withValues(alpha: 0.15)),
-     ),
-     child: Row(
-       mainAxisSize: MainAxisSize.min,
-       children: [
-         Text(
-           value,
-           style: TextStyle(
-             fontWeight: FontWeight.w800,
-             fontSize: 14,
-             color: color,
-             fontFamily: appFontFamily,
-           ),
-         ),
-         const SizedBox(width: 6),
-         Text(
-           label,
-           style: TextStyle(
-             fontSize: 10,
-             fontWeight: FontWeight.w600,
-             color: color.withValues(alpha: 0.8),
-             fontFamily: appFontFamily,
-           ),
-         ),
-       ],
-     ),
-   );
- }
 
  // ── Helper: numeric cell with subtle ratio indicator ──
- Widget _cellMetric(String text, {required double ratio}) {
-   final numericColor = ratio >= 0.8
-       ? _emerald
-       : ratio >= 0.5
-           ? _amber
-           : ratio > 0
-               ? _crimson
-               : _muted;
-   return Center(
-     child: Column(
-       mainAxisSize: MainAxisSize.min,
-       children: [
-         Text(
-           text,
-           style: const TextStyle(
-             fontWeight: FontWeight.w700,
-             fontSize: 13,
-             color: _onSurface,
-             fontFamily: appFontFamily,
-           ),
-         ),
-         const SizedBox(height: 3),
-         ClipRRect(
-           borderRadius: BorderRadius.circular(2),
-           child: LinearProgressIndicator(
-             value: ratio,
-             minHeight: 3,
-             backgroundColor: _surfaceHighest.withValues(alpha: 0.4),
-             valueColor: AlwaysStoppedAnimation<Color>(numericColor),
-           ),
-         ),
-       ],
-     ),
-   );
- }
 
  // ── Portfolio Table — REAL PROJECTS ──
  Widget _portfolioTable() {
@@ -1789,7 +1720,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
   }
 
   Future<void> _openProject(ProjectRecord p) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -1855,14 +1786,6 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  ),
  );
  }
-
- Widget _dot(Color c, {double size = 8}) => Container(
- width: size,
- height: size,
- decoration: BoxDecoration(
- color: c,
- shape: BoxShape.circle,
- boxShadow: [BoxShadow(color: c.withValues(alpha: 0.5), blurRadius: 6)]));
 
  Widget _badge(String count, {bool high = false}) => Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),

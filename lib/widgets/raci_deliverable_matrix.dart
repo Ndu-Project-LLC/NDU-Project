@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/raci_assignment_service.dart';
 import 'package:ndu_project/services/raci_matrix_seeder.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/providers/user_role_provider.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Renders the new RACI Deliverable Matrix.
 ///
@@ -95,10 +99,6 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
     return out;
   }
 
-  String _personFor(ProjectDataModel data, String roleTitle) {
-    return RaciAssignmentService.personForRole(roleTitle, data.staffingRequirements);
-  }
-
   // ─── Mutations ─────────────────────────────────────────────────────
   Future<void> _seedMatrix(BuildContext context) async {
     setState(() => _isSeeding = true);
@@ -111,7 +111,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
         showSnackbar: false,
       );
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -137,13 +137,44 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
         showSnackbar: false,
       );
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
                 'Matrix synced with current Staffing Plan. New roles were '
                 'auto-distributed; removed roles were cleared.'),
             duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSeeding = false);
+    }
+  }
+
+  /// Auto-fill empty RACI cells using roles from both the Staffing Plan
+  /// and the Roles & Responsibilities page. Existing manual assignments
+  /// are preserved — only empty cells are filled.
+  Future<void> _prefillFromRoles(BuildContext context) async {
+    setState(() => _isSeeding = true);
+    try {
+      final data = _data(context);
+      final rows = RaciMatrixSeeder.syncRoles(data);
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'organization_raci_matrix',
+        dataUpdater: (d) => d.copyWith(raciDeliverableRows: rows),
+        showSnackbar: false,
+      );
+      if (context.mounted) {
+        final roleCount = _columns(data).length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'RACI auto-filled for $roleCount role${roleCount == 1 ? '' : 's'} '
+                'from Staffing Plan & Roles & Responsibilities. Existing '
+                'assignments were preserved.'),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -213,7 +244,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
   }
 
   Future<void> _clearRow(BuildContext context, RaciDeliverableRow row) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear row assignments?'),
@@ -233,13 +264,15 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       ),
     );
     if (confirmed != true) return;
-    final data = _data(context);
+if (!context.mounted) return;
+        final data = _data(context);
     final rows = List<RaciDeliverableRow>.from(data.raciDeliverableRows);
     final idx = rows.indexWhere((r) => r.id == row.id);
     if (idx == -1) return;
     rows[idx] = rows[idx].copyWith(assignments: <String, String>{});
     final approval = data.raciApprovalStatus.copyWith(isApproved: false);
-    await ProjectDataHelper.updateAndSave(
+if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'organization_raci_matrix',
       dataUpdater: (d) => d.copyWith(
@@ -255,13 +288,21 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
   Future<void> _openApprovalDialog(BuildContext context) async {
     final data = _data(context);
     final approval = data.raciApprovalStatus;
-    final approverNameController =
-        TextEditingController(text: approval.approverName);
-    final approverRoleController =
-        TextEditingController(text: approval.approverRole);
+    
+    // Auto-fill with authenticated user's details if fields are empty
+    final currentUserDisplayName = FirebaseAuthService.displayNameOrEmail(fallback: '');
+    final roleProvider = UserRoleInherited.of(context);
+    final currentUserRole = roleProvider.siteRole.displayName;
+    
+    final approverNameController = SpellCheckTextEditingController(
+      text: approval.approverName.isNotEmpty ? approval.approverName : currentUserDisplayName,
+    );
+    final approverRoleController = SpellCheckTextEditingController(
+      text: approval.approverRole.isNotEmpty ? approval.approverRole : currentUserRole,
+    );
     bool checked = false;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
@@ -271,11 +312,11 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
           titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
           contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.verified, color: Color(0xFF1D4ED8)),
-              const SizedBox(width: 10),
-              const Expanded(
+              Icon(Icons.verified, color: Color(0xFFFFC812)),
+              SizedBox(width: 10),
+              Expanded(
                 child: Text(
                   'Approve RACI Matrix',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -386,13 +427,14 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       approvedAt: DateTime.now(),
       confirmationText: approval.confirmationText,
     );
-    await ProjectDataHelper.updateAndSave(
+if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'organization_raci_matrix',
       dataUpdater: (d) => d.copyWith(raciApprovalStatus: newApproval),
       showSnackbar: false,
     );
-    if (mounted) {
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -406,7 +448,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
   }
 
   Future<void> _revokeApproval(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Revoke approval?'),
@@ -427,10 +469,12 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       ),
     );
     if (confirmed != true) return;
-    final data = _data(context);
+if (!context.mounted) return;
+        final data = _data(context);
     final newApproval =
         data.raciApprovalStatus.copyWith(isApproved: false);
-    await ProjectDataHelper.updateAndSave(
+if (!context.mounted) return;
+        await ProjectDataHelper.updateAndSave(
       context: context,
       checkpoint: 'organization_raci_matrix',
       dataUpdater: (d) => d.copyWith(raciApprovalStatus: newApproval),
@@ -536,6 +580,19 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFFC107),
             foregroundColor: const Color(0xFF1F2933),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        ElevatedButton.icon(
+          onPressed: _isSeeding ? null : () => _prefillFromRoles(context),
+          icon: const Icon(Icons.person_add_outlined, size: 16),
+          label: const Text('Auto-fill from Roles & Responsibilities'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(
@@ -765,7 +822,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       BuildContext context, RaciDeliverableRow row, String roleKey) async {
     final current = (row.assignments[roleKey] ?? '').toUpperCase();
     String? selected = current.isEmpty ? null : current;
-    final result = await showDialog<String>(
+    final result = await showAppDialog<String>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
@@ -850,7 +907,8 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
       ),
     );
     if (result == null) return;
-    await _setCell(context, row, roleKey, result);
+if (!context.mounted) return;
+        await _setCell(context, row, roleKey, result);
   }
 
   Future<void> _showRowMenu(
@@ -875,7 +933,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.edit, color: Color(0xFF2563EB)),
+              leading: const Icon(Icons.edit, color: Color(0xFFFFC812)),
               title: const Text('Bulk-fill empty cells'),
               subtitle: const Text(
                   'Apply one designation to every empty cell on this row.'),
@@ -897,9 +955,13 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
         ),
       ),
     );
-    if (action == 'bulk') {
+if (!mounted) return;
+    if (!mounted) return;
+    if (!context.mounted) return;
+        if (action == 'bulk') {
       final designation = await _pickDesignationForBulk(context);
       if (designation == null) return;
+      if (!context.mounted) return;
       await _setRowDesignation(context, row, designation);
     } else if (action == 'clear') {
       await _clearRow(context, row);
@@ -908,7 +970,7 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
 
   Future<String?> _pickDesignationForBulk(BuildContext context) async {
     String? picked;
-    return showDialog<String>(
+    return showAppDialog<String>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
@@ -974,7 +1036,7 @@ class _ApprovalBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1096,7 +1158,7 @@ class _RaciMatrixGrid extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderRow(),
-        ...rows.map((row) => _buildDataRow(row)).toList(growable: false),
+        ...rows.map((row) => _buildDataRow(row)),
       ],
     );
   }
@@ -1176,9 +1238,9 @@ class _RaciMatrixGrid extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFFBFDBFE)),
+                border: Border.all(color: const Color(0xFFFDE68A)),
               ),
               child: Text(
                 person,
@@ -1187,7 +1249,7 @@ class _RaciMatrixGrid extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1D4ED8),
+                  color: Color(0xFFFFC812),
                 ),
               ),
             )
@@ -1309,7 +1371,7 @@ class _PhaseChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: palette.bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: palette.fg.withOpacity(0.25)),
+        border: Border.all(color: palette.fg.withValues(alpha: 0.25)),
       ),
       child: Text(
         phase.replaceAll(' Phase', ''),
@@ -1326,9 +1388,9 @@ class _PhaseChip extends StatelessWidget {
   ({Color bg, Color fg}) _phasePalette(String p) {
     switch (p.toLowerCase()) {
       case 'planning phase':
-        return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+        return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFFFC812));
       case 'design phase':
-        return (bg: const Color(0xFFEDE9FE), fg: const Color(0xFF6D28D9));
+        return (bg: const Color(0xFFFFF8E1), fg: const Color(0xFFB8860B));
       case 'execution phase':
         return (bg: const Color(0xFFFFEDD5), fg: const Color(0xFFC2410C));
       case 'launch phase':
@@ -1364,9 +1426,9 @@ class _AssignmentCell extends StatelessWidget {
       child: Container(
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          border: const Border(
+          border: Border(
             bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
             right: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
           ),

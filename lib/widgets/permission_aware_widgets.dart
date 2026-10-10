@@ -396,7 +396,7 @@ class RoleDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<SiteRole>(
-      value: value,
+      initialValue: value,
       onChanged: enabled ? (v) => onChanged(v!) : null,
       decoration: InputDecoration(
         labelText: 'Role',
@@ -497,9 +497,9 @@ class RestrictedContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'Restricted Access',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF111827),

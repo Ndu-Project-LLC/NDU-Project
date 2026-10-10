@@ -24,6 +24,7 @@ import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -68,20 +69,17 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
   static const _surfaceAlt = Color(0xFFF3F4F8);
   static const _surfaceDeep = Color(0xFF241A00);
   static const _outline = Color(0xFFE2E8F0);
-  static const _outlineSoft = Color(0xFFEEF1F6);
   static const _ink = Color(0xFF0B1220);
   static const _inkSoft = Color(0xFF1E293B);
   static const _muted = Color(0xFF64748B);
   static const _mutedSoft = Color(0xFF94A3B8);
   static const _blue = Color(0xFFF4B400);
-  static const _blueDeep = Color(0xFFD97706);
   static const _blueSoft = Color(0xFFFEF3C7);
-  static const _indigo = Color(0xFFF59E0B);
-  static const _violet = Color(0xFF7C3AED);
+  static const _violet = Color(0xFFB8860B);
   static const _emerald = Color(0xFF059669);
   static const _amber = Color(0xFFD97706);
   static const _crimson = Color(0xFFDC2626);
-  static const _cyan = Color(0xFF0891B2);
+  static const _cyan = Color(0xFFD97706);
 
   @override
   void initState() {
@@ -125,7 +123,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
   }
 
   Future<void> _openProject(ProjectRecord project) async {
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -271,7 +269,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
                             ),
                           ),
                   ],
-                  SliverToBoxAnchor(child: const SizedBox(height: 120.0)),
+                  const SliverToBoxAnchor(child: SizedBox(height: 120.0)),
                 ],
               ),
             );
@@ -282,10 +280,10 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
         onPressed: _createNewProject,
         backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
-        child: const Icon(Icons.psychology_rounded, size: 30, color: Color(0xFF1C1C1C)),
         elevation: 4,
         shape: const CircleBorder(),
         tooltip: 'KAZ AI — New Workspace',
+        child: const Icon(Icons.psychology_rounded, size: 30, color: Color(0xFF1C1C1C)),
       ),
       ),
     );
@@ -813,9 +811,9 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Text(
+              Text(
                 'STATUS DISTRIBUTION',
                 style: TextStyle(
                   fontSize: 10,
@@ -824,7 +822,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
                   letterSpacing: 1.2,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               Icon(Icons.donut_small_outlined, size: 14, color: _muted),
             ],
           ),
@@ -987,7 +985,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
             child: Container(height: 1, color: _outline),
           ),
           const SizedBox(width: 8),
-          Icon(Icons.view_headline_rounded, size: 14, color: _muted),
+          const Icon(Icons.view_headline_rounded, size: 14, color: _muted),
         ],
       ),
     );
@@ -1009,7 +1007,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: _blueSoft,
                 shape: BoxShape.circle,
               ),
@@ -1053,7 +1051,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: _crimson, size: 20),
+            const Icon(Icons.error_outline_rounded, color: _crimson, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(message,
@@ -1162,10 +1160,10 @@ class _MetricCell extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF64748B),
+                  color: Color(0xFF64748B),
                   letterSpacing: 0.8,
                 ),
                 maxLines: 1,

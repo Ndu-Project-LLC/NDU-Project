@@ -7,11 +7,10 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 
@@ -20,6 +19,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectBaselineScreen extends StatefulWidget {
  const ProjectBaselineScreen({super.key});
 
@@ -37,7 +37,6 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  bool _isGenerating = false;
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  String _projectName = '';
  DateTime? _baselineStartDate;
@@ -74,14 +73,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(context, 'project_baseline');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('ProjectBaseline carried-context error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  void _loadData() {
@@ -440,11 +432,11 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  }
 
  Future<void> _handleUpdateBaseline() async {
- final approvedByController = TextEditingController();
- final descriptionController = TextEditingController();
+ final approvedByController = SpellCheckTextEditingController();
+ final descriptionController = SpellCheckTextEditingController();
 
  try {
- final payload = await showDialog<Map<String, String>>(
+ final payload = await showAppDialog<Map<String, String>>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Create Baseline Version'),
@@ -645,7 +637,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+ SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
  );
  } finally {
  if (mounted) setState(() => _isGenerating = false);
@@ -682,7 +674,7 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  final double horizontalPadding = isMobile ? 18 : 32;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Stack(
  children: [
@@ -711,16 +703,7 @@ onBack: () =>
  onForward: () => PlanningPhaseNavigation.goToNext(
  context, 'project_baseline'), onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'project_baseline',
- contextText: _carriedContext!,
- ),
- ),
+
  _buildHeader(context),
  const SizedBox(height: 24),
  _buildComparisonToggle(),
@@ -878,7 +861,7 @@ onBack: () =>
  'Duration',
  scheduleDuration > 0 ? '$scheduleDuration days' : '—',
  Icons.timelapse,
- const Color(0xFF6366F1),
+ const Color(0xFFB8860B),
  ),
  _buildStatChip(
  'Active Version',
@@ -1024,7 +1007,7 @@ onBack: () =>
  borderRadius: BorderRadius.circular(20),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.3),
  blurRadius: 20,
  offset: const Offset(0, 12),
  ),
@@ -1248,7 +1231,7 @@ onBack: () =>
  const Row(
  children: [
  Icon(Icons.dashboard_customize,
- color: Color(0xFF8B5CF6), size: 24),
+ color: Color(0xFFB8860B), size: 24),
  SizedBox(width: 12),
  Text(
  'Scope Baseline',
@@ -1523,7 +1506,7 @@ onBack: () =>
  textColor = Colors.white;
  break;
  case 'in progress':
- bgColor = const Color(0xFF3B82F6);
+ bgColor = const Color(0xFFFFC812);
  textColor = Colors.white;
  break;
  case 'overdue':
@@ -1576,11 +1559,11 @@ onBack: () =>
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFEEF2FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(Icons.layers,
- color: Color(0xFF6366F1), size: 20),
+ color: Color(0xFFB8860B), size: 20),
  ),
  const SizedBox(width: 12),
  const Text(
@@ -1726,7 +1709,7 @@ onBack: () =>
  AlwaysStoppedAnimation<Color>(
  progress >= 1.0
  ? const Color(0xFF10B981)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1966,7 +1949,7 @@ onBack: () =>
  icon: const Icon(
  Icons.visibility_outlined,
  size: 18),
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  tooltip: 'View Details',
  onPressed: () => _showVersionDetails(v),
  ),
@@ -1988,7 +1971,7 @@ onBack: () =>
  }
 
  void _showVersionDetails(_BaselineVersion version) {
- showDialog<void>(
+ showAppDialog<void>(
  context: context,
  builder: (dialogContext) => Dialog(
  insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -2007,7 +1990,7 @@ onBack: () =>
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: const Color(0xFFEEF2FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: const Icon(
@@ -2398,8 +2381,8 @@ onBack: () =>
  screenTitle: 'Project Baseline',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_project_baseline_notes'] ?? 'No data recorded.'),
  ],

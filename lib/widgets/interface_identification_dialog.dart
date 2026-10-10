@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> showInterfaceIdentificationDialog(BuildContext context) async {
   final alreadyShown = ProjectDataHelper.getData(context)
@@ -11,7 +13,7 @@ Future<void> showInterfaceIdentificationDialog(BuildContext context) async {
 
   var text = 'Not Applicable';
 
-  await showDialog<void>(
+  await showAppDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (context) {
@@ -36,7 +38,7 @@ Future<void> showInterfaceIdentificationDialog(BuildContext context) async {
             content: SizedBox(
               width: MediaQuery.of(context).size.width * 0.6,
               child: TextField(
-                controller: TextEditingController(text: text),
+                controller: SpellCheckTextEditingController(text: text),
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintText: 'Not Applicable',

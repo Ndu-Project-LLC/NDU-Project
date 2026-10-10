@@ -1,8 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// Responsive wrapper for data tables with horizontal scroll support
+/// Width a table falls back to when its parent gives it no width at all
+/// (an unbounded parent and no `minWidth`), so its columns still have
+/// something to divide up.
+const double _kFallbackTableWidth = 720;
+
 class ResponsiveDataTableWrapper extends StatefulWidget {
   final Widget child;
   final double? minWidth;
@@ -91,14 +98,36 @@ class _ResponsiveDataTableWrapperState
         final hasBoundedHeight =
             widget.maxHeight != null || constraints.maxHeight.isFinite;
 
+        // A horizontally scrolling viewport hands its child an *unbounded*
+        // width. Some of these tables divide their columns with `Expanded`, and
+        // a flexed child cannot resolve against infinity: layout throws
+        // `RenderFlex children have non-zero flex but incoming width
+        // constraints are unbounded`, which poisons the whole page's render
+        // subtree — the sidebar and header still draw, the body comes up
+        // empty, and nothing on screen explains why.
+        //
+        // `IntrinsicWidth` supplies the missing definite width without
+        // capping it: the child is laid out at its own intrinsic width (so a
+        // genuinely wide table still overflows and scrolls, never squashes or
+        // clips), lifted to the viewport width — or [minWidth], when the table
+        // must not shrink below it — by the ConstrainedBox around it.
+        final double minTableWidth;
+        if (constraints.maxWidth.isFinite) {
+          minTableWidth = math.max(widget.minWidth ?? 0, constraints.maxWidth);
+        } else if ((widget.minWidth ?? 0) > 0) {
+          minTableWidth = widget.minWidth!;
+        } else {
+          // Unbounded parent and no minimum: a table with nothing to divide
+          // between its columns would collapse, so give it a readable floor.
+          minTableWidth = _kFallbackTableWidth;
+        }
+
         final horizontalChild = SingleChildScrollView(
           controller: _horizontalController,
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: widget.minWidth ?? constraints.maxWidth,
-            ),
-            child: widget.child,
+            constraints: BoxConstraints(minWidth: minTableWidth),
+            child: IntrinsicWidth(child: widget.child),
           ),
         );
 
@@ -294,7 +323,7 @@ List<DataRow> nduZebraRows(
       color: row.color ??
           WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return isDark ? const Color(0xFF1F2937) : const Color(0xFFEFF6FF);
+              return isDark ? const Color(0xFF1F2937) : const Color(0xFFFFF8E1);
             }
             return index.isOdd ? resolvedOdd : resolvedEven;
           }),
@@ -309,9 +338,9 @@ DataTable buildNduDataTable({
   required List<DataRow> rows,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   Color? headingRowColor,
@@ -444,9 +473,9 @@ Widget buildNduTableWithExpand({
   String? title,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   bool showCheckboxColumn = false,
@@ -487,9 +516,9 @@ Widget buildNduTableWithExpand({
       rows: rows,
       columnSpacing: columnSpacing + 6,
       horizontalMargin: horizontalMargin + 6,
-      headingRowHeight: headingRowHeight + 8,
-      dataRowMinHeight: dataRowMinHeight + 8,
-      dataRowMaxHeight: dataRowMaxHeight + 80,
+      headingRowHeight: headingRowHeight + 4,
+      dataRowMinHeight: dataRowMinHeight + 4,
+      dataRowMaxHeight: dataRowMaxHeight + 40,
       border: border,
       zebra: zebra,
       showCheckboxColumn: showCheckboxColumn,

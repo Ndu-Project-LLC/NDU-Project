@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
+import 'package:ndu_project/models/issue_log.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/execution_service.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -18,6 +20,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -26,7 +29,10 @@ Future<void> _exportPdf(BuildContext context) async {
     screenTitle: 'Issue Management',
     sections: [
       PdfSection.keyValue('Project Info', [
-        {'Project Name': projectData.projectName ?? 'N/A'},
+        {
+          'Project Name':
+              projectData.projectName.isEmpty ? 'N/A' : projectData.projectName
+        },
       ]),
       PdfSection.text(
           'Notes',
@@ -50,7 +56,7 @@ class ExecutionIssueManagementScreen extends StatelessWidget {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Execution Issue Management',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding:
@@ -125,41 +131,44 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
 
     try {
       final existing = await ExecutionService.streamIssues(projectId).first;
-      if (existing.isNotEmpty) {
-        if (mounted) setState(() => _isAutoGenerating = false);
-        return;
-      }
       if (!mounted) return;
 
       final data = ProjectDataHelper.getData(context);
       final issueLog = data.issueLogItems;
 
-      if (issueLog.isNotEmpty) {
-        var count = 0;
-        for (final item in issueLog) {
-          await ExecutionService.createIssue(
-            projectId: projectId,
-            issueTopic: item.title,
-            description: item.description,
-            discipline: item.type,
-            raisedBy: item.assignee,
-            scheduleImpact: '',
-            costImpact: '',
-            approved: false,
-            comments: 'Severity: ${item.severity}, Status: ${item.status}',
-          );
-          count++;
+      // Sync planning → execution incrementally and idempotently: every
+      // planning issue gets exactly one linked execution copy (`plan_<id>`,
+      // see lib/models/issue_log.dart), skipped when it already exists.
+      // Planning issues added after the first visit reach this section too,
+      // which the old copy-once-when-empty behavior silently dropped.
+      final existingIds = <String>{for (final issue in existing) issue.id};
+      // Legacy copies (made before the deterministic `plan_` id existed) are
+      // recognized by their topic + description so they are not duplicated.
+      final legacyCopies = <String>{
+        for (final issue in existing)
+          '${issue.issueTopic}|${issue.description}',
+      };
+      var created = 0;
+      for (final item in issueLog) {
+        if (existingIds.contains(executionDocIdForPlanningItem(item.id)) ||
+            legacyCopies.contains('${item.title}|${item.description}')) {
+          continue;
         }
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content:
-                    Text('$count issue(s) auto-populated from planning phase')),
-          );
-        }
-        if (mounted) setState(() => _isAutoGenerating = false);
-        return;
+        await ExecutionService.upsertPlanningIssueLink(
+          projectId: projectId,
+          planningItemId: item.id,
+          item: item,
+        );
+        created++;
       }
+      if (created > 0 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('$created issue(s) synced from the planning issue log')),
+        );
+      }
+      if (existing.isNotEmpty || issueLog.isNotEmpty) return;
       if (!mounted) return;
 
       final ctx = ExecutionPhaseAiSeed.buildContext(context,
@@ -250,8 +259,8 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
             mainAxisSize: MainAxisSize.min,
             children: [
               CsvTableImportButton(
-                tableTitle: 'Issues',
-                columns: [
+                tableTitle: 'Issue Log',
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Issue Topic',
@@ -340,7 +349,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileIssueManagementActions()
+          const _MobileIssueManagementActions()
         else
           const _DesktopIssueManagementActions(),
       ],
@@ -404,7 +413,7 @@ class _IssuesManagementTable extends StatelessWidget {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Issue'),
@@ -447,22 +456,22 @@ class _IssuesManagementTable extends StatelessWidget {
       BuildContext context, ExecutionIssueModel? issue, String projectId) {
     final isEdit = issue != null;
     final topicController =
-        TextEditingController(text: issue?.issueTopic ?? '');
+        SpellCheckTextEditingController(text: issue?.issueTopic ?? '');
     final descriptionController =
-        TextEditingController(text: issue?.description ?? '');
+        SpellCheckTextEditingController(text: issue?.description ?? '');
     final disciplineController =
-        TextEditingController(text: issue?.discipline ?? '');
+        SpellCheckTextEditingController(text: issue?.discipline ?? '');
     final raisedByController =
-        TextEditingController(text: issue?.raisedBy ?? '');
+        SpellCheckTextEditingController(text: issue?.raisedBy ?? '');
     final scheduleImpactController =
-        TextEditingController(text: issue?.scheduleImpact ?? '');
+        SpellCheckTextEditingController(text: issue?.scheduleImpact ?? '');
     final costImpactController =
-        TextEditingController(text: issue?.costImpact ?? '');
+        SpellCheckTextEditingController(text: issue?.costImpact ?? '');
     final commentsController =
-        TextEditingController(text: issue?.comments ?? '');
+        SpellCheckTextEditingController(text: issue?.comments ?? '');
     bool approved = issue?.approved ?? false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
@@ -638,244 +647,246 @@ class _IssuesManagementTable extends StatelessWidget {
             height: 1.5,
           );
 
- Widget buildCell(String text,
- {bool isHeader = false,
- TextAlign align = TextAlign.left,
- TextStyle? style}) {
- return Container(
- color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
- child: WrappedText(
- text,
- textAlign: align,
- style: style ?? (isHeader ? headerStyle : cellStyle),
- ),
- );
- }
+          Widget buildCell(String text,
+              {bool isHeader = false,
+              TextAlign align = TextAlign.left,
+              TextStyle? style}) {
+            return Container(
+              color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: WrappedText(
+                text,
+                textAlign: align,
+                style: style ?? (isHeader ? headerStyle : cellStyle),
+              ),
+            );
+          }
 
- return FullScreenTableWrapper(
- title: 'Issues Management',
- child: Container(
- decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- clipBehavior: Clip.antiAlias,
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: Table(
- columnWidths: const {
- 0: FixedColumnWidth(70),
- 1: FixedColumnWidth(140),
- 2: FixedColumnWidth(160),
- 3: FixedColumnWidth(130),
- 4: FixedColumnWidth(130),
- 5: FixedColumnWidth(130),
- 6: FixedColumnWidth(130),
- 7: FixedColumnWidth(130),
- 8: FixedColumnWidth(150),
- 9: FixedColumnWidth(100),
- },
- border: const TableBorder(
- horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
- verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
- top: BorderSide(color: Color(0xFFE5E7EB)),
- bottom: BorderSide(color: Color(0xFFE5E7EB)),
- left: BorderSide(color: Color(0xFFE5E7EB)),
- right: BorderSide(color: Color(0xFFE5E7EB)),
- ),
- children: [
- TableRow(
- children: [
- buildCell('No', isHeader: true, align: TextAlign.center),
- buildCell('Issue Topic', isHeader: true),
- buildCell('Description', isHeader: true),
- buildCell('Discipline', isHeader: true),
- buildCell('Raised by', isHeader: true),
- buildCell('Schedule In', isHeader: true),
- buildCell('Cost Impact', isHeader: true),
- buildCell('Approved?', isHeader: true),
- buildCell('Comments', isHeader: true),
- buildCell('Actions',
- isHeader: true, align: TextAlign.center),
- ],
- ),
- if (issues.isEmpty)
- TableRow(
- children: [
- buildCell('', align: TextAlign.center),
- buildCell('No issues added yet',
- style: const TextStyle(
- color: Color(0xFF64748B),
- fontStyle: FontStyle.italic)),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- ],
- )
- else
- ...issues.asMap().entries.map((entry) {
- final index = entry.key;
- final issue = entry.value;
- return TableRow(
- children: [
- buildCell('${index + 1}', align: TextAlign.center),
- buildCell(issue.issueTopic),
- buildCell(issue.description),
- buildCell(issue.discipline),
- buildCell(issue.raisedBy),
- buildCell(issue.scheduleImpact),
- buildCell(issue.costImpact),
- buildCell(issue.approved ? 'Yes' : 'No'),
- buildCell(issue.comments),
- Container(
- color: Colors.white,
- padding: const EdgeInsets.symmetric(
- horizontal: 8, vertical: 18),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- icon: const Icon(Icons.edit,
- size: 18, color: Color(0xFF64748B)),
- onPressed: () => showEditDialog(context, issue),
- tooltip: 'Edit',
- ),
- IconButton(
- icon: const Icon(Icons.delete,
- size: 18, color: Color(0xFFEF4444)),
- onPressed: () =>
- showDeleteDialog(context, issue),
- tooltip: 'Delete',
- ),
- ],
- ),
- ),
- ],
- );
- }),
- ],
- ),
- ),
- ),
- tableBuilder: (fsContext) => Container(
- decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- clipBehavior: Clip.antiAlias,
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: Table(
- columnWidths: const {
- 0: FixedColumnWidth(70),
- 1: FixedColumnWidth(140),
- 2: FixedColumnWidth(160),
- 3: FixedColumnWidth(130),
- 4: FixedColumnWidth(130),
- 5: FixedColumnWidth(130),
- 6: FixedColumnWidth(130),
- 7: FixedColumnWidth(130),
- 8: FixedColumnWidth(150),
- 9: FixedColumnWidth(100),
- },
- border: const TableBorder(
- horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
- verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
- top: BorderSide(color: Color(0xFFE5E7EB)),
- bottom: BorderSide(color: Color(0xFFE5E7EB)),
- left: BorderSide(color: Color(0xFFE5E7EB)),
- right: BorderSide(color: Color(0xFFE5E7EB)),
- ),
- children: [
- TableRow(
- children: [
- buildCell('No', isHeader: true, align: TextAlign.center),
- buildCell('Issue Topic', isHeader: true),
- buildCell('Description', isHeader: true),
- buildCell('Discipline', isHeader: true),
- buildCell('Raised by', isHeader: true),
- buildCell('Schedule In', isHeader: true),
- buildCell('Cost Impact', isHeader: true),
- buildCell('Approved?', isHeader: true),
- buildCell('Comments', isHeader: true),
- buildCell('Actions',
- isHeader: true, align: TextAlign.center),
- ],
- ),
- if (issues.isEmpty)
- TableRow(
- children: [
- buildCell('', align: TextAlign.center),
- buildCell('No issues added yet',
- style: const TextStyle(
- color: Color(0xFF64748B),
- fontStyle: FontStyle.italic)),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- buildCell(''),
- ],
- )
- else
- ...issues.asMap().entries.map((entry) {
- final index = entry.key;
- final issue = entry.value;
- return TableRow(
- children: [
- buildCell('${index + 1}', align: TextAlign.center),
- buildCell(issue.issueTopic),
- buildCell(issue.description),
- buildCell(issue.discipline),
- buildCell(issue.raisedBy),
- buildCell(issue.scheduleImpact),
- buildCell(issue.costImpact),
- buildCell(issue.approved ? 'Yes' : 'No'),
- buildCell(issue.comments),
- Container(
- color: Colors.white,
- padding: const EdgeInsets.symmetric(
- horizontal: 8, vertical: 18),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- icon: const Icon(Icons.edit,
- size: 18, color: Color(0xFF64748B)),
- onPressed: () => showEditDialog(context, issue),
- tooltip: 'Edit',
- ),
- IconButton(
- icon: const Icon(Icons.delete,
- size: 18, color: Color(0xFFEF4444)),
- onPressed: () =>
- showDeleteDialog(context, issue),
- tooltip: 'Delete',
- ),
- ],
- ),
- ),
- ],
- );
- }),
- ],
- ),
- ),
- ),
- );
- },
- ),
- );
- }
+          return FullScreenTableWrapper(
+            title: 'Issue Log',
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Table(
+                  columnWidths: const {
+                    0: FixedColumnWidth(70),
+                    1: FixedColumnWidth(140),
+                    2: FixedColumnWidth(160),
+                    3: FixedColumnWidth(130),
+                    4: FixedColumnWidth(130),
+                    5: FixedColumnWidth(130),
+                    6: FixedColumnWidth(130),
+                    7: FixedColumnWidth(130),
+                    8: FixedColumnWidth(150),
+                    9: FixedColumnWidth(100),
+                  },
+                  border: const TableBorder(
+                    horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+                    verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+                    top: BorderSide(color: Color(0xFFE5E7EB)),
+                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                    left: BorderSide(color: Color(0xFFE5E7EB)),
+                    right: BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                  children: [
+                    TableRow(
+                      children: [
+                        buildCell('#', isHeader: true, align: TextAlign.center),
+                        buildCell('Issue Topic', isHeader: true),
+                        buildCell('Description', isHeader: true),
+                        buildCell('Discipline', isHeader: true),
+                        buildCell('Raised by', isHeader: true),
+                        buildCell('Schedule In', isHeader: true),
+                        buildCell('Cost Impact', isHeader: true),
+                        buildCell('Approved?', isHeader: true),
+                        buildCell('Comments', isHeader: true),
+                        buildCell('Actions',
+                            isHeader: true, align: TextAlign.center),
+                      ],
+                    ),
+                    if (issues.isEmpty)
+                      TableRow(
+                        children: [
+                          buildCell('', align: TextAlign.center),
+                          buildCell('No issues added yet',
+                              style: const TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontStyle: FontStyle.italic)),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                        ],
+                      )
+                    else
+                      ...issues.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final issue = entry.value;
+                        return TableRow(
+                          children: [
+                            buildCell('${index + 1}', align: TextAlign.center),
+                            buildCell(issue.issueTopic),
+                            buildCell(issue.description),
+                            buildCell(issue.discipline),
+                            buildCell(issue.raisedBy),
+                            buildCell(issue.scheduleImpact),
+                            buildCell(issue.costImpact),
+                            buildCell(issue.approved ? 'Yes' : 'No'),
+                            buildCell(issue.comments),
+                            Container(
+                              color: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 18),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit,
+                                        size: 18, color: Color(0xFF64748B)),
+                                    onPressed: () =>
+                                        showEditDialog(context, issue),
+                                    tooltip: 'Edit',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        size: 18, color: Color(0xFFEF4444)),
+                                    onPressed: () =>
+                                        showDeleteDialog(context, issue),
+                                    tooltip: 'Delete',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                  ],
+                ),
+              ),
+            ),
+            tableBuilder: (fsContext) => Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Table(
+                  columnWidths: const {
+                    0: FixedColumnWidth(70),
+                    1: FixedColumnWidth(140),
+                    2: FixedColumnWidth(160),
+                    3: FixedColumnWidth(130),
+                    4: FixedColumnWidth(130),
+                    5: FixedColumnWidth(130),
+                    6: FixedColumnWidth(130),
+                    7: FixedColumnWidth(130),
+                    8: FixedColumnWidth(150),
+                    9: FixedColumnWidth(100),
+                  },
+                  border: const TableBorder(
+                    horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+                    verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+                    top: BorderSide(color: Color(0xFFE5E7EB)),
+                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                    left: BorderSide(color: Color(0xFFE5E7EB)),
+                    right: BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                  children: [
+                    TableRow(
+                      children: [
+                        buildCell('#', isHeader: true, align: TextAlign.center),
+                        buildCell('Issue Topic', isHeader: true),
+                        buildCell('Description', isHeader: true),
+                        buildCell('Discipline', isHeader: true),
+                        buildCell('Raised by', isHeader: true),
+                        buildCell('Schedule In', isHeader: true),
+                        buildCell('Cost Impact', isHeader: true),
+                        buildCell('Approved?', isHeader: true),
+                        buildCell('Comments', isHeader: true),
+                        buildCell('Actions',
+                            isHeader: true, align: TextAlign.center),
+                      ],
+                    ),
+                    if (issues.isEmpty)
+                      TableRow(
+                        children: [
+                          buildCell('', align: TextAlign.center),
+                          buildCell('No issues added yet',
+                              style: const TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontStyle: FontStyle.italic)),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                          buildCell(''),
+                        ],
+                      )
+                    else
+                      ...issues.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final issue = entry.value;
+                        return TableRow(
+                          children: [
+                            buildCell('${index + 1}', align: TextAlign.center),
+                            buildCell(issue.issueTopic),
+                            buildCell(issue.description),
+                            buildCell(issue.discipline),
+                            buildCell(issue.raisedBy),
+                            buildCell(issue.scheduleImpact),
+                            buildCell(issue.costImpact),
+                            buildCell(issue.approved ? 'Yes' : 'No'),
+                            buildCell(issue.comments),
+                            Container(
+                              color: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 18),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit,
+                                        size: 18, color: Color(0xFF64748B)),
+                                    onPressed: () =>
+                                        showEditDialog(context, issue),
+                                    tooltip: 'Edit',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        size: 18, color: Color(0xFFEF4444)),
+                                    onPressed: () =>
+                                        showDeleteDialog(context, issue),
+                                    tooltip: 'Delete',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _DesktopIssueManagementActions extends StatelessWidget {

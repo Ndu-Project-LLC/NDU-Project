@@ -14,13 +14,13 @@ class SecureAPIConfig {
   static const String baseUrl =
       'https://us-central1-ndu-d3f60.cloudfunctions.net/openaiProxy';
 
-  // Default model — GPT-4o is OpenAI's smartest model with the best
-  // reasoning capabilities. It balances cost and performance excellently:
-  // - 2x better reasoning than GPT-4 Turbo
-  // - 50% cheaper than GPT-4 Turbo
-  // - Supports 128K context window
-  // - Multilingual, vision-capable, fast response times
-  static const String model = 'gpt-4o';
+  // Default model — GPT-5.6 Terra balances intelligence and cost, and is
+  // OpenAI's recommended workhorse for general-purpose text generation.
+  // (GPT-4o / GPT-4o mini were retired in February 2026.)
+  // - $2 / MTok input, $12 / MTok output
+  // - 1.05M context window
+  // - Supports reasoning effort levels none/low/medium/high/xhigh/max
+  static const String model = 'gpt-5.6-terra';
 
   /// OpenAI API version header value (not needed for OpenAI, kept for
   /// backward compatibility with code that reads this field).

@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class ContractAmendment {
   final String id;
   final String contractId;
@@ -31,7 +33,7 @@ class ContractAmendment {
     this.scopeDescription = '',
     this.approvedBy = '',
     DateTime? createdAt,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -60,7 +62,7 @@ class ContractAmendment {
 
     return ContractAmendment(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       contractId: json['contractId']?.toString() ?? '',
       amendmentNumber: json['amendmentNumber']?.toString() ?? '',
       title: json['title']?.toString() ?? '',

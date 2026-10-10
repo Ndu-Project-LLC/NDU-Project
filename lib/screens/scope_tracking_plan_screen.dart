@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -17,17 +16,14 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
-import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
 enum _ScopeTab { overview, registry, traceability, baseline }
 
 const List<String> _tabLabels = [
@@ -52,11 +48,15 @@ class ScopeTrackingPlanScreen extends StatefulWidget {
 }
 
 class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
+  /// The registry, traceability, and baseline tabs are change-control detail
+  /// that belongs to Project Controls. The planning page shows only the plan
+  /// summary; flip this to bring the tabs back.
+  static const bool _showChangeControlTabs = false;
+
  _ScopeTab _activeTab = _ScopeTab.overview;
  List<ScopeTrackingItem> _items = [];
  List<String> _availableRoles = [];
  bool _isLoading = false;
- bool _isAutoGenerating = false;
  bool _autoPopulated = false;
  Timer? _saveDebounce;
 
@@ -155,59 +155,6 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  _autoPopulated = true;
  }
 
- Future<void> _regenerateAllFromAi() async {
- final projectId = _projectId;
- if (projectId == null) return;
- if (!mounted) return;
-
- setState(() => _isAutoGenerating = true);
- try {
- final data = ProjectDataHelper.getData(context);
- final contextText = ProjectDataHelper.buildExecutivePlanContext(data);
-
- final openAiService = OpenAiServiceSecure();
- final generated = await openAiService.generateScopeTrackingItems(
- context: contextText,
- existingScopeItems:
- _items.map((i) => i.scopeItem).where((s) => s.isNotEmpty).toList(),
- );
-
- if (generated.isNotEmpty && mounted) {
- final newItems = generated.map((itemText) {
- return ScopeTrackingItem(
- scopeItem: itemText,
- isBaseline: true,
- );
- }).toList();
-
- setState(() => _items = newItems);
- await ExecutionPhaseService.saveScopeTrackingItems(
- projectId: projectId,
- items: newItems,
- );
-
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Generated ${newItems.length} scope items.'),
- behavior: SnackBarBehavior.floating,
- ),
- );
- }
- } catch (e) {
- debugPrint('ScopeTrackingPlanScreen._regenerateAll error: $e');
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('AI generation failed: $e'),
- behavior: SnackBarBehavior.floating,
- ),
- );
- }
- } finally {
- if (mounted) setState(() => _isAutoGenerating = false);
- }
- }
-
  Future<void> _saveItems() async {
  final projectId = _projectId;
  if (projectId == null) return;
@@ -253,7 +200,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final projectId = _projectId;
  if (projectId == null) return;
 
- final confirm = await showDialog<bool>(
+ final confirm = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Set Scope Baseline?'),
@@ -302,7 +249,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final double horizontalPadding = isMobile ? 20 : 24;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,38 +269,33 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Scope Tracking Plan', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _ScopeTrackingHeader(
- onBack: () =>
- PlanningPhaseNavigation.goToPrevious(
- context, 'scope_tracking_plan'),
- onForward: () =>
- PlanningPhaseNavigation.goToNext(
- context, 'scope_tracking_plan'),
- onRegenerateAll: _regenerateAllFromAi,
- isRegenerating: _isAutoGenerating,
- ),
- const SizedBox(height: 20),
- const PlanningAiNotesCard(
- title: 'Notes',
- sectionLabel: 'Scope Tracking Plan',
- noteKey: 'planning_scope_tracking_notes',
- checkpoint: 'scope_tracking_plan',
- description:
- 'Capture scope boundaries, governance decisions, and change thresholds.',
- ),
- const SizedBox(height: 20),
- _buildTabs(),
- const SizedBox(height: 20),
- if (_isLoading)
- const Center(
- child: Padding(
- padding: EdgeInsets.all(48),
- child: CircularProgressIndicator(),
- ),
- )
- else
- _buildTabContent(),
+ const SizedBox(height: 20),                                const PlanningAiNotesCard(
+                title: 'Notes',
+                sectionLabel: 'Scope Tracking Plan',
+                noteKey: 'planning_scope_tracking_notes',
+                checkpoint: 'scope_tracking_plan',
+                description:
+                    'Summarise how scope will be transferred into the project: '
+                    'what is in and out of scope, who owns each area, and how '
+                    'it maps to the WBS.',
+              ),
+              const SizedBox(height: 20),
+              _buildScopeTransferSummary(),
+              if (_showChangeControlTabs) ...[
+                const SizedBox(height: 20),
+                _buildTabs(),
+                const SizedBox(height: 20),
+                if (_isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(48),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else
+                  _buildTabContent(),
+              ],
+
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel(
@@ -370,8 +312,8 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Scope Tracking Plan',
  ),
  ),
@@ -383,9 +325,101 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ),
  ),
  );
- }
+ }  /// Lusaka 14: in Planning this page is a scope-transfer plan, not the
+  /// Execution scope tracking. It states how scope is handed into the project
+  /// and points change management to its own module rather than duplicating it.
+  Widget _buildScopeTransferSummary() {
+    const points = <(String, String)>[
+      (
+        'Scope the transfer',
+        'Confirm what is in scope and explicitly out of scope for this project, '
+            'and where each part came from (business case, charter, requirements).',
+      ),
+      (
+        'Assign ownership',
+        'Name the owner who accepts each scope area so nothing enters the '
+            'project unowned.',
+      ),
+      (
+        'Map to the WBS',
+        'Tie each scope area to a WBS goal (level 1) and element (level 2) so it '
+            'is traceable through design, work packages, cost and schedule.',
+      ),
+      (
+        'Plan the handover',
+        'Sequence when each scope area is taken on, and the evidence that shows '
+            'it has transferred.',
+      ),
+      (
+        'Route changes elsewhere',
+        'Changes to agreed scope are raised and approved in Change Management — '
+            'they are not tracked on this page.',
+      ),
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Scope Transfer Plan',
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827)),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'How the agreed scope is handed into this project during planning.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 14),
+          for (final point in points) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2, right: 10),
+                  child: Icon(Icons.check_circle_outline_rounded,
+                      size: 16, color: Color(0xFFF59E0B)),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        point.$1,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827)),
+                      ),
+                      Text(
+                        point.$2,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.35,
+                            color: Color(0xFF374151)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
 
- Widget _buildTabs() {
+  Widget _buildTabs() {
  final isCompact = MediaQuery.sizeOf(context).width < 900;
  return Container(
  padding: const EdgeInsets.all(8),
@@ -454,7 +488,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  children: [
  _buildMetricsStrip(
  metrics: [
- _ScopeMetricData('Total Items', total, const Color(0xFF2563EB),
+ _ScopeMetricData('Total Items', total, const Color(0xFFFFC812),
  'All scope items', Icons.list),
  _ScopeMetricData('Not Started', notStarted,
  const Color(0xFF9CA3AF), 'Awaiting work', Icons.schedule),
@@ -466,25 +500,23 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  'Items not in baseline', Icons.warning_amber),
  ],
  ),
- const SizedBox(height: 24),
- const _ScopeTrackingHero(),
  const SizedBox(height: 20),
  const _ScopeControlPlaybook(),
  const SizedBox(height: 20),
- Row(
+ const Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Expanded(
  child: Column(
- children: const [
+ children: [
  _GovernanceCadenceCard(),
  SizedBox(height: 20),
  _ChangeIntakeCard(),
  ],
  ),
  ),
- const SizedBox(width: 20),
- const Expanded(
+ SizedBox(width: 20),
+ Expanded(
  child: _DriftSignalsCard(),
  ),
  ],
@@ -519,7 +551,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  icon: const Icon(Icons.add, size: 18),
  label: const Text('Add Scope Item'),
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -611,7 +643,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  },
  selectedColor: const Color(0xFFFDE68A),
  checkmarkColor: const Color(0xFF92400E),
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  side: BorderSide(
  color: selected ? const Color(0xFFF59E0B) : const Color(0xFFE5E7EB),
  ),
@@ -712,20 +744,20 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  },
  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
  border: TableBorder(
- top: BorderSide(color: const Color(0xFFE2E8F0), width: 0.8),
- bottom: BorderSide(color: const Color(0xFFE2E8F0), width: 0.8),
+ top: const BorderSide(color: Color(0xFFE2E8F0), width: 0.8),
+ bottom: const BorderSide(color: Color(0xFFE2E8F0), width: 0.8),
  horizontalInside: BorderSide(
- color: const Color(0xFFE2E8F0).withOpacity(0.6),
+ color: const Color(0xFFE2E8F0).withValues(alpha: 0.6),
  width: 0.6),
  ),
  children: [
- TableRow(
- decoration: const BoxDecoration(
+ const TableRow(
+ decoration: BoxDecoration(
  color: Color(0xFFF5F8FC),
  borderRadius:
  BorderRadius.vertical(top: Radius.circular(12)),
  ),
- children: const [
+ children: [
  _TraceHeaderCell(label: 'Scope Item'),
  _TraceHeaderCell(label: 'WBS'),
  _TraceHeaderCell(label: 'Requirement'),
@@ -813,14 +845,14 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFFFEAD0)),
  ),
- child: Row(
+ child: const Row(
  children: [
- const Icon(Icons.info_outline, size: 18, color: Color(0xFF9A3412)),
- const SizedBox(width: 12),
+ Icon(Icons.info_outline, size: 18, color: Color(0xFF9A3412)),
+ SizedBox(width: 12),
  Expanded(
  child: Text(
  'To link scope items, edit them in the Scope Registry tab and set the WBS, Requirement, or Schedule Activity ID fields.',
- style: const TextStyle(fontSize: 12, color: Color(0xFF7C2D12)),
+ style: TextStyle(fontSize: 12, color: Color(0xFF7C2D12)),
  ),
  ),
  ],
@@ -870,7 +902,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  _BaselineStatCard(
  label: 'Baseline Scope',
  value: '${baselineItems.length} items',
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  icon: Icons.lock_outline,
  ),
  _BaselineStatCard(
@@ -978,7 +1010,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
 
  void _showCompareDialog(
  List<ScopeTrackingItem> baseline, List<ScopeTrackingItem> creep) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Baseline Comparison'),
@@ -989,7 +1021,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  _compareRow('Baseline Items', '${baseline.length}',
- const Color(0xFF2563EB)),
+ const Color(0xFFFFC812)),
  const SizedBox(height: 12),
  _compareRow('Scope Creep', '${creep.length}',
  const Color(0xFFEF4444)),
@@ -1036,12 +1068,12 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  }
 
  void _showAddItemDialog() {
- final nameCtrl = TextEditingController();
- final typeCtrl = TextEditingController(text: 'predictive');
- final statusCtrl = TextEditingController(text: 'Not Started');
- final ownerCtrl = TextEditingController();
+ final nameCtrl = SpellCheckTextEditingController();
+ final typeCtrl = SpellCheckTextEditingController(text: 'predictive');
+ final statusCtrl = SpellCheckTextEditingController(text: 'Not Started');
+ final ownerCtrl = SpellCheckTextEditingController();
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Add Scope Item'),
@@ -1061,7 +1093,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: 'predictive',
+ initialValue: 'predictive',
  decoration: const InputDecoration(
  labelText: 'Scope Type',
  border: OutlineInputBorder(),
@@ -1091,7 +1123,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: 'Not Started',
+ initialValue: 'Not Started',
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -1237,8 +1269,8 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  screenTitle: 'Scope Tracking Plan',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_scope_tracking_plan_notes'] ?? 'No data recorded.'),
  ],
@@ -1270,10 +1302,10 @@ class _ScopeMetricCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: data.color.withOpacity(0.2)),
+ border: Border.all(color: data.color.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: data.color.withOpacity(0.06),
+ color: data.color.withValues(alpha: 0.06),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1289,7 +1321,7 @@ class _ScopeMetricCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: data.color.withOpacity(0.1),
+ color: data.color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -1336,7 +1368,7 @@ class _TraceStat extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1376,7 +1408,7 @@ class _LinkBadge extends StatelessWidget {
  constraints: const BoxConstraints(maxWidth: 140),
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1403,7 +1435,7 @@ class _StatusBadge extends StatelessWidget {
  case 'Not Started':
  return const Color(0xFF9CA3AF);
  case 'In-Progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'Verified':
  return const Color(0xFF10B981);
  case 'Out-of-Scope':
@@ -1419,7 +1451,7 @@ class _StatusBadge extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: c.withOpacity(0.12),
+ color: c.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1451,7 +1483,7 @@ class _BaselineStatCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.15)),
+ border: Border.all(color: color.withValues(alpha: 0.15)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1467,211 +1499,6 @@ class _BaselineStatCard extends StatelessWidget {
  Text(label,
  style: const TextStyle(
  fontSize: 11, color: Color(0xFF6B7280))),
- ],
- ),
- );
- }
-}
-
-class _ScopeTrackingHeader extends StatelessWidget {
- const _ScopeTrackingHeader({
- required this.onBack,
- required this.onForward,
- this.onRegenerateAll,
- this.isRegenerating = false,
- });
-
- final VoidCallback onBack;
- final VoidCallback onForward;
- final VoidCallback? onRegenerateAll;
- final bool isRegenerating;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 6)),
- ],
- ),
- child: Row(
- children: [
- _RoundIconButton(
- icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 10),
- _RoundIconButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const SizedBox(width: 16),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Scope Tracking Plan',
- style: TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- SizedBox(height: 6),
- Text(
- 'Govern scope integrity, change control, and variance signals across delivery.',
- style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- ),
- if (onRegenerateAll != null)
- Padding(
- padding: const EdgeInsets.only(right: 12),
- child: IconButton(
- onPressed: isRegenerating ? null : onRegenerateAll,
- icon: isRegenerating
- ? const SizedBox(
- width: 18,
- height: 18,
- child: CircularProgressIndicator(strokeWidth: 2),
- )
- : const Icon(Icons.auto_awesome),
- tooltip: 'Regenerate All Scope Items',
- style: IconButton.styleFrom(
- backgroundColor: const Color(0xFFFFF7ED),
- foregroundColor: const Color(0xFF9A3412),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- ),
- ),
- const SizedBox(width: 8),
- const _PlanStatusPill(label: 'Active'),
- ],
- ),
- );
- }
-}
-
-class _RoundIconButton extends StatelessWidget {
- const _RoundIconButton({required this.icon, this.onTap});
-
- final IconData icon;
- final VoidCallback? onTap;
-
- @override
- Widget build(BuildContext context) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(16),
- child: Container(
- width: 34,
- height: 34,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 14, color: const Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _PlanStatusPill extends StatelessWidget {
- const _PlanStatusPill({required this.label});
-
- final String label;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: const Color(0xFF10B981),
- borderRadius: BorderRadius.circular(999),
- ),
- child: Text(
- label,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
- ),
- );
- }
-}
-
-class _ScopeTrackingHero extends StatelessWidget {
- const _ScopeTrackingHero();
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- gradient: const LinearGradient(
- colors: [Color(0xFFFFF7CC), Color(0xFFFFFBEB)],
- begin: Alignment.topLeft,
- end: Alignment.bottomRight,
- ),
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFF5E7A5)),
- ),
- child: Row(
- children: [
- Container(
- width: 52,
- height: 52,
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFF2E2A4)),
- ),
- child: const Icon(Icons.track_changes_outlined,
- color: Color(0xFFB45309)),
- ),
- const SizedBox(width: 16),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Scope Guardrails',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF92400E)),
- ),
- SizedBox(height: 6),
- Text(
- 'Baseline scope, govern changes, and detect drift before impact escalates.',
- style: TextStyle(fontSize: 13, color: Color(0xFF7C5C1A)),
- ),
- ],
- ),
- ),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(14),
- border: Border.all(color: const Color(0xFFF2E2A4)),
- ),
- child: const Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text('Scope Health',
- style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
- SizedBox(height: 4),
- Text('Stable',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A))),
- ],
- ),
- ),
  ],
  ),
  );
@@ -1694,9 +1521,9 @@ class _ScopeControlPlaybook extends StatelessWidget {
  color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 6)),
  ],
  ),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Scope Control Playbook',
  style: TextStyle(
@@ -1824,12 +1651,12 @@ class _ChangeIntakeCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _ScopeCardShell(
+ return const _ScopeCardShell(
  title: 'Change Intake Workflow',
  subtitle: 'Standardize how scope changes move through governance.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  _WorkflowStep(
  step: '1',
  title: 'Submit request',
@@ -1861,30 +1688,30 @@ class _GovernanceCadenceCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _ScopeCardShell(
+ return const _ScopeCardShell(
  title: 'Governance Cadence',
  subtitle: 'Oversight rhythm for scope health.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const _CadenceRow(
+ _CadenceRow(
  label: 'Change control board', value: 'Weekly • Tue 10:00'),
- const _CadenceRow(
+ _CadenceRow(
  label: 'Scope health review', value: 'Bi-weekly • Fri 14:00'),
- const _CadenceRow(
+ _CadenceRow(
  label: 'Executive checkpoint', value: 'Monthly • 1st Thu'),
- const SizedBox(height: 16),
- const Text(
+ SizedBox(height: 16),
+ Text(
  'Next session agenda',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827)),
  ),
- const SizedBox(height: 8),
- const _ScopeBullet(text: 'Review open CRs and fast-track decisions'),
- const _ScopeBullet(text: 'Validate variance vs baseline'),
- const _ScopeBullet(text: 'Confirm mitigation owners'),
+ SizedBox(height: 8),
+ _ScopeBullet(text: 'Review open CRs and fast-track decisions'),
+ _ScopeBullet(text: 'Validate variance vs baseline'),
+ _ScopeBullet(text: 'Confirm mitigation owners'),
  ],
  ),
  );
@@ -1896,23 +1723,23 @@ class _DriftSignalsCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _ScopeCardShell(
+ return const _ScopeCardShell(
  title: 'Scope Drift Signals',
  subtitle: 'Early warnings to protect delivery.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const _ScopeBullet(text: 'Unplanned work added in sprints'),
- const _ScopeBullet(text: 'Variance > 3% for two cycles'),
- const _ScopeBullet(text: 'Dependencies added without CR'),
- const SizedBox(height: 16),
+ _ScopeBullet(text: 'Unplanned work added in sprints'),
+ _ScopeBullet(text: 'Variance > 3% for two cycles'),
+ _ScopeBullet(text: 'Dependencies added without CR'),
+ SizedBox(height: 16),
  Wrap(
  spacing: 8,
  runSpacing: 8,
- children: const [
+ children: [
  _ScopeTag(label: '3 Active Alerts', tone: Color(0xFFF59E0B)),
  _ScopeTag(label: '1 Escalation', tone: Color(0xFFEF4444)),
- _ScopeTag(label: 'Risk Score: Medium', tone: Color(0xFF6366F1)),
+ _ScopeTag(label: 'Risk Score: Medium', tone: Color(0xFFB8860B)),
  ],
  ),
  ],
@@ -2004,7 +1831,7 @@ class _ScopeTag extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(

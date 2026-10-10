@@ -1,18 +1,17 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
-import 'package:ndu_project/screens/requirements_implementation_screen.dart';
-import 'package:ndu_project/screens/technical_alignment_screen.dart';
-import 'package:ndu_project/screens/ui_ux_design_screen.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/architecture_canvas.dart';
+import 'package:provider/provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/architecture_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -21,15 +20,15 @@ import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/widgets/whiteboard_canvas.dart';
 import 'package:ndu_project/widgets/chart_builder_workspace.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/design_governance_dashboard.dart';
 import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
-import 'package:ndu_project/widgets/design_readiness_card.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/web_utils.dart';
 import 'package:ndu_project/utils/file_upload_helper.dart';
+import 'package:ndu_project/widgets/safe_section.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -37,6 +36,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class DesignPhaseScreen extends StatefulWidget {
  const DesignPhaseScreen(
  {super.key, this.activeItemLabel = 'Design Management'});
@@ -82,7 +82,6 @@ class _DesignPhaseScreenState extends State<DesignPhaseScreen> {
  Timer? _saveDebounce;
 
  // UI state
- bool _showProgressCard = true;
 
  DesignTool _activeTool = DesignTool.architecture;
  late final TextEditingController _richTextController;
@@ -160,7 +159,7 @@ class _DesignPhaseScreenState extends State<DesignPhaseScreen> {
  screenTitle: 'Design Phase',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['design_phase_screen'] ?? 'No data recorded.'),
  ],
@@ -176,16 +175,7 @@ Future<void> _loadProgress(String projectId) async {
  }
  }
 
- Widget _buildDesignDashboard(double padding) {
- if (_progress == null) return const SizedBox.shrink();
-
- // Use the new Readiness Card
- // Note: _progress is technically DesignPhaseProgress (typedef for DesignReadinessModel)
- return Padding(
- padding: EdgeInsets.symmetric(horizontal: padding, vertical: 16),
- child: DesignReadinessCard(readiness: _progress!),
- );
- }
+// DesignReadinessCard panel removed per user request.
 
  @override
  void dispose() {
@@ -354,9 +344,6 @@ Future<void> _loadProgress(String projectId) async {
  if (widget.activeItemLabel == 'Design Management') {
  return _buildStableManagementScreen(padding);
  }
- if (kIsWeb) {
- return _buildMinimalWebScreen(padding);
- }
 
  return ResponsiveScaffold(
  activeItemLabel: widget.activeItemLabel,
@@ -371,11 +358,8 @@ Future<void> _loadProgress(String projectId) async {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // Move Design Dashboard inside scroll view
- if (_projectId != null) ...[
- _buildDesignDashboard(padding),
- const SizedBox(height: 16),
- ],
+ // Design readiness / Project Progress panel removed per user
+ // request (took up too much screen space).
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Design',
@@ -439,10 +423,11 @@ Future<void> _loadProgress(String projectId) async {
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Design overview',
- nextLabel: 'Next: Requirements Implementation',
- onBack: () => Navigator.of(context).maybePop(),
- onNext: () => context.push('/requirements-implementation')),
+ backLabel: PlanningPhaseNavigation.backLabel('design_management'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('design_management'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'design_management'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'design_management'),
+ ),
  ],
  ),
  );
@@ -455,16 +440,19 @@ Future<void> _loadProgress(String projectId) async {
  breadcrumbTitle: 'Design Management',
  onItemSelected: _openStableDesignItem,
  child: Container(
- color: const Color(0xFFF7F9FB),
+ color: Colors.white,
  child: ListView(
  padding: EdgeInsets.all(padding),
  children: [
  // ── 1. Design Readiness Progress Card ──────────────────────────
- if (_showProgressCard) _buildReadinessProgressCard(),
- if (_showProgressCard) const SizedBox(height: 20),
+ // Project Progress / Blocking items panel removed per user request
+ // (it took up too much screen space).
 
  // ── 2. Notes Section ───────────────────────────────────────────
- _buildStableNotesCard(),
+ SafeSection(
+   title: 'Notes',
+   builder: (_) => _buildStableNotesCard(),
+ ),
  const SizedBox(height: 24),
 
  // ── 3. Design Management Heading ───────────────────────────────
@@ -484,23 +472,38 @@ Future<void> _loadProgress(String projectId) async {
  const SizedBox(height: 20),
 
  // ── 4. Design Strategy & Governance ────────────────────────────
- _buildStableStrategySection(),
+ SafeSection(
+   title: 'Design Strategy & Governance',
+   builder: (_) => _buildStableStrategySection(),
+ ),
  const SizedBox(height: 24),
 
  // ── 5. Two-Column Cards: Design Documents + Design Tools ───────
- _buildStableDocumentToolCards(),
+ SafeSection(
+   title: 'Design Documents & Tools',
+   builder: (_) => _buildStableDocumentToolCards(),
+ ),
  const SizedBox(height: 24),
 
  // ── 6. System Architecture Section ─────────────────────────────
- _buildStableSystemArchitecture(),
+ SafeSection(
+   title: 'System Architecture',
+   builder: (_) => _buildStableSystemArchitecture(),
+ ),
  const SizedBox(height: 24),
 
  // ── 7. Design Tools & Rich Text Editor ─────────────────────────
- _buildStableDesignToolsEditor(),
+ SafeSection(
+   title: 'Design Tools',
+   builder: (_) => _buildStableDesignToolsEditor(),
+ ),
  const SizedBox(height: 24),
 
  // ── 7.5 Collaborators Section ──────────────────────────────────
- _buildStableCollaboratorsCard(),
+ SafeSection(
+   title: 'Collaborators',
+   builder: (_) => _buildStableCollaboratorsCard(),
+ ),
  const SizedBox(height: 24),
 
  // ── 8. Navigation Buttons ──────────────────────────────────────
@@ -545,197 +548,6 @@ Future<void> _loadProgress(String projectId) async {
   }
 
  // ── 1. Design Readiness Progress Card ──────────────────────────────────
- Widget _buildReadinessProgressCard() {
- final provider = ProjectDataInherited.maybeOf(context);
- final projectData = provider?.projectData ?? ProjectDataModel();
- final data = _resolvedManagementData(projectData);
- final readiness = _progress ?? data.readiness;
- final score = (readiness.overallScore * 100).toInt();
- final scoreColor = score >= 80
- ? const Color(0xFF16A34A)
- : score >= 50
- ? const Color(0xFFD97706)
- : const Color(0xFFDC2626);
- final label = score >= 90
- ? 'Ready for Execution'
- : score >= 70
- ? 'Nearing Completion'
- : score >= 40
- ? 'In Progress'
- : 'Early Stages';
-
- return Stack(
- children: [
- Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: const Color(0xFFFEF2F2),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFFECACA)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'PROJECT PROGRESS',
- style: TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w700,
- color: Colors.grey[600],
- letterSpacing: 0.8,
- ),
- ),
- const SizedBox(height: 6),
- Row(
- crossAxisAlignment: CrossAxisAlignment.end,
- children: [
- Text(
- '$score%',
- style: TextStyle(
- fontSize: 40,
- fontWeight: FontWeight.w900,
- color: scoreColor,
- height: 1.0,
- ),
- ),
- const SizedBox(width: 12),
- Padding(
- padding: const EdgeInsets.only(bottom: 6),
- child: Text(
- label,
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: scoreColor,
- ),
- ),
- ),
- ],
- ),
- ],
- ),
- Container(
- width: 80,
- height: 80,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFFECACA), width: 3),
- ),
- child: Stack(
- alignment: Alignment.center,
- children: [
- SizedBox(
- width: 80,
- height: 80,
- child: CircularProgressIndicator(
- value: readiness.overallScore,
- strokeWidth: 6,
- backgroundColor: const Color(0xFFFEE2E2),
- valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
- ),
- ),
- Icon(
- score >= 90
- ? Icons.rocket_launch_rounded
- : score >= 70
- ? Icons.check_circle_outline_rounded
- : score >= 40
- ? Icons.construction_rounded
- : Icons.design_services_rounded,
- size: 28,
- color: scoreColor,
- ),
- ],
- ),
- ),
- ],
- ),
- if (readiness.missingItems.isNotEmpty) ...[
- const SizedBox(height: 14),
- Container(
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: const Color(0xFFFECACA)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Icon(Icons.warning_amber_rounded,
- size: 16, color: Colors.red[700]),
- const SizedBox(width: 8),
- Text(
- 'Blocking items',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Colors.red[800],
- ),
- ),
- ],
- ),
- const SizedBox(height: 6),
- ...readiness.missingItems.take(3).map((item) => Padding(
- padding: const EdgeInsets.only(bottom: 2),
- child: Text(
- '- $item',
- style: TextStyle(
- fontSize: 12, color: Colors.red[800]),
- ),
- )),
- if (readiness.missingItems.length > 3)
- Text(
- '+ ${readiness.missingItems.length - 3} more items',
- style: TextStyle(
- fontSize: 11,
- color: Colors.red[600],
- fontStyle: FontStyle.italic),
- ),
- ],
- ),
- ),
- ],
- ],
- ),
- ),
- // Close button in top-right corner
- Positioned(
- top: 8,
- right: 8,
- child: Material(
- color: Colors.transparent,
- child: InkWell(
- onTap: () => setState(() => _showProgressCard = false),
- borderRadius: BorderRadius.circular(16),
- child: Container(
- width: 28,
- height: 28,
- decoration: BoxDecoration(
- color: Colors.white.withValues(alpha: 0.8),
- shape: BoxShape.circle,
- ),
- child: Icon(
- Icons.close,
- size: 16,
- color: Colors.grey[600],
- ),
- ),
- ),
- ),
- ),
- ],
- );
- }
 
  // ── 4. Design Strategy & Governance (desktop 3-column) ─────────────────
  Widget _buildStableStrategySection() {
@@ -778,7 +590,7 @@ Future<void> _loadProgress(String projectId) async {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: const Text(
@@ -786,7 +598,7 @@ Future<void> _loadProgress(String projectId) async {
  style: TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -925,9 +737,9 @@ Future<void> _loadProgress(String projectId) async {
  child: Container(
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  boxShadow: const [
  BoxShadow(
  color: Color(0x08000000),
@@ -945,13 +757,13 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFEF3C7),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
  Icons.insert_drive_file_outlined,
  size: 20,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(width: 10),
@@ -969,7 +781,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withValues(alpha: 0.12),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -977,7 +789,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -993,14 +805,14 @@ Future<void> _loadProgress(String projectId) async {
  Icon(
  Icons.folder_open_outlined,
  size: 48,
- color: const Color(0xFF005BB3).withValues(alpha: 0.3),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.3),
  ),
  const SizedBox(height: 12),
  Text(
  'No documents added',
  style: TextStyle(
  fontSize: 13,
- color: const Color(0xFF005BB3).withValues(alpha: 0.6),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.6),
  fontWeight: FontWeight.w500,
  ),
  ),
@@ -1015,7 +827,7 @@ Future<void> _loadProgress(String projectId) async {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Row(
  children: [
@@ -1023,7 +835,7 @@ Future<void> _loadProgress(String projectId) async {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFEF3C7),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(
@@ -1031,7 +843,7 @@ Future<void> _loadProgress(String projectId) async {
  ? Icons.attach_file
  : Icons.description_outlined,
  size: 16,
- color: const Color(0xFF005BB3),
+ color: const Color(0xFFFFC812),
  ),
  ),
  const SizedBox(width: 10),
@@ -1053,7 +865,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withValues(alpha: 0.1),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1061,7 +873,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w600,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1084,7 +896,7 @@ Future<void> _loadProgress(String projectId) async {
  if (doc.url != null && doc.url!.isNotEmpty)
  IconButton(
  icon: const Icon(Icons.open_in_new,
- size: 16, color: Color(0xFF005BB3)),
+ size: 16, color: Color(0xFFFFC812)),
  onPressed: () {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('Opening ${doc.url}')),
@@ -1119,7 +931,7 @@ Future<void> _loadProgress(String projectId) async {
  child: ElevatedButton.icon(
  onPressed: _addOutputDoc,
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF005BB3),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  elevation: 0,
  padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1145,9 +957,9 @@ Future<void> _loadProgress(String projectId) async {
  child: Container(
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  boxShadow: const [
  BoxShadow(
  color: Color(0x08000000),
@@ -1165,13 +977,13 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFEF3C7),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
  Icons.build_outlined,
  size: 20,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(width: 10),
@@ -1189,7 +1001,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withValues(alpha: 0.12),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -1197,7 +1009,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1213,14 +1025,14 @@ Future<void> _loadProgress(String projectId) async {
  Icon(
  Icons.handyman_outlined,
  size: 48,
- color: const Color(0xFF005BB3).withValues(alpha: 0.3),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.3),
  ),
  const SizedBox(height: 12),
  Text(
  'No tools configured',
  style: TextStyle(
  fontSize: 13,
- color: const Color(0xFF005BB3).withValues(alpha: 0.6),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.6),
  fontWeight: FontWeight.w500,
  ),
  ),
@@ -1235,7 +1047,7 @@ Future<void> _loadProgress(String projectId) async {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Row(
  children: [
@@ -1243,7 +1055,7 @@ Future<void> _loadProgress(String projectId) async {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFEF3C7),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(
@@ -1251,7 +1063,7 @@ Future<void> _loadProgress(String projectId) async {
  ? Icons.attach_file
  : (tool.isInternal ? Icons.dns : Icons.public),
  size: 16,
- color: const Color(0xFF005BB3),
+ color: const Color(0xFFFFC812),
  ),
  ),
  const SizedBox(width: 10),
@@ -1273,7 +1085,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withValues(alpha: 0.1),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1281,7 +1093,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w600,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1304,7 +1116,7 @@ Future<void> _loadProgress(String projectId) async {
  if (tool.url.isNotEmpty)
  IconButton(
  icon: const Icon(Icons.open_in_new,
- size: 16, color: Color(0xFF005BB3)),
+ size: 16, color: Color(0xFFFFC812)),
  onPressed: () {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('Opening ${tool.url}')),
@@ -1339,7 +1151,7 @@ Future<void> _loadProgress(String projectId) async {
  child: ElevatedButton.icon(
  onPressed: _showAddToolUploadDialog,
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF005BB3),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  elevation: 0,
  padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1386,7 +1198,6 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: const BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
  border: Border(bottom: BorderSide(color: Color(0xFFE4E7EC))),
  ),
  child: Row(
@@ -1395,13 +1206,13 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
  Icons.account_tree_outlined,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812), // NDU primary gold
  ),
  ),
  const SizedBox(width: 10),
@@ -1417,7 +1228,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFF0FDF4),
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1425,7 +1236,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF16A34A),
+ color: Color(0xFFB8860B), // NDU deep gold
  ),
  ),
  ),
@@ -1433,7 +1244,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1), // amber 50 — was blue #FFF8E1
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1441,7 +1252,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFB8860B), // NDU deep gold — was blue #FFC812
  ),
  ),
  ),
@@ -1470,7 +1281,7 @@ Future<void> _loadProgress(String projectId) async {
  color: _isSaving
  ? const Color(0xFFD97706)
  : _lastSavedAt != null
- ? const Color(0xFF16A34A)
+ ? const Color(0xFFB8860B)
  : Colors.grey[500],
  ),
  const SizedBox(width: 4),
@@ -1486,7 +1297,7 @@ Future<void> _loadProgress(String projectId) async {
  color: _isSaving
  ? const Color(0xFFD97706)
  : _lastSavedAt != null
- ? const Color(0xFF16A34A)
+ ? const Color(0xFFB8860B)
  : Colors.grey[500],
  ),
  ),
@@ -1523,9 +1334,7 @@ Future<void> _loadProgress(String projectId) async {
  decoration: const BoxDecoration(
  color: Color(0xFFFAFBFD),
  border: Border(right: BorderSide(color: Color(0xFFE4E7EC))),
- borderRadius: BorderRadius.only(
- bottomLeft: Radius.circular(16),
- ),
+
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1619,18 +1428,18 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.all(10),
  margin: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue)
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Icon(Icons.lightbulb_outline, size: 14, color: Color(0xFF2563EB)),
+ const Icon(Icons.lightbulb_outline, size: 14, color: Color(0xFFFFC812)), // NDU primary gold
  const SizedBox(width: 6),
  Expanded(
  child: Text(
  'Drag components to canvas. Use Connect mode to draw arrows between nodes.',
- style: TextStyle(fontSize: 10, color: const Color(0xFF2563EB).withValues(alpha: 0.8), height: 1.4),
+ style: TextStyle(fontSize: 10, color: const Color(0xFFB8860B).withValues(alpha: 0.85), height: 1.4), // NDU deep gold
  ),
  ),
  ],
@@ -1762,13 +1571,13 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue #FEF3C7)
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
  Icons.design_services_outlined,
  size: 20,
- color: Color(0xFF005BB3),
+ color: Color(0xFFFFC812), // NDU primary gold (was blue #FFC812)
  ),
  ),
  const SizedBox(width: 10),
@@ -1830,7 +1639,7 @@ Future<void> _loadProgress(String projectId) async {
  size: 14,
  color: _isSaving
  ? Colors.orange
- : const Color(0xFF005BB3)),
+ : const Color(0xFFFFC812)), // NDU primary gold (was blue #FFC812)
  const SizedBox(width: 6),
  Text(
  _isSaving
@@ -1842,7 +1651,7 @@ Future<void> _loadProgress(String projectId) async {
  fontSize: 12,
  color: _isSaving
  ? Colors.orange
- : const Color(0xFF005BB3),
+ : const Color(0xFFFFC812), // NDU primary gold (was blue #FFC812)
  fontWeight: FontWeight.w600,
  ),
  ),
@@ -1850,13 +1659,13 @@ Future<void> _loadProgress(String projectId) async {
  _buildGovernanceMetric(
  'Nodes',
  '${_nodes.length}',
- const Color(0xFF7C3AED),
+ const Color(0xFFB8860B), // NDU deep gold (was purple #B8860B)
  ),
  const SizedBox(width: 12),
  _buildGovernanceMetric(
  'Edges',
  '${_edges.length}',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706), // amber 600 (was blue #FFC812)
  ),
  ],
  ),
@@ -1894,13 +1703,13 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFFAF5FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
  Icons.people_outline,
  size: 20,
- color: Color(0xFF7C3AED),
+ color: Color(0xFFB8860B),
  ),
  ),
  const SizedBox(width: 10),
@@ -1964,11 +1773,9 @@ Future<void> _loadProgress(String projectId) async {
  SizedBox(
  width: double.infinity,
  child: ElevatedButton.icon(
- onPressed: () {
- // Open collaborator dialog
- },
+ onPressed: () => _showAddCollaboratorDialog(context),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF7C3AED),
+ backgroundColor: const Color(0xFFB8860B),
  foregroundColor: Colors.white,
  elevation: 0,
  padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1996,12 +1803,12 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
  color: isSelected
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : const Color(0xFFF8FAFC),
  borderRadius: BorderRadius.circular(10),
  border: Border.all(
  color: isSelected
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFFE2E8F0),
  ),
  ),
@@ -2011,7 +1818,7 @@ Future<void> _loadProgress(String projectId) async {
  Icon(icon,
  size: 16,
  color: isSelected
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF64748B)),
  const SizedBox(width: 6),
  Text(
@@ -2020,7 +1827,7 @@ Future<void> _loadProgress(String projectId) async {
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: isSelected
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF64748B),
  ),
  ),
@@ -2132,70 +1939,6 @@ Future<void> _loadProgress(String projectId) async {
  ),
  ),
  ],
- ),
- );
- }
-
- Widget _buildMinimalWebScreen(double padding) {
- return Scaffold(
- backgroundColor: Theme.of(context).scaffoldBackgroundColor,
- floatingActionButton: const KazAiChatBubble(positioned: false),
- body: SafeArea(
- child: Center(
- child: Padding(
- padding: EdgeInsets.all(padding),
- child: ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 720),
- child: Container(
- width: double.infinity,
- padding: const EdgeInsets.all(24),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: AppSemanticColors.border),
- boxShadow: const [
- BoxShadow(
- color: Color(0x12000000),
- blurRadius: 18,
- offset: Offset(0, 10),
- ),
- ],
- ),
- child: const Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Design Management',
- style: TextStyle(
- fontSize: 28,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- SizedBox(height: 12),
- Text(
- 'Web diagnostic mode is active.',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w600,
- ),
- ),
- SizedBox(height: 12),
- Text(
- 'If this placeholder renders, the previous layout failure was inside the Design Management widget tree. If it still crashes, the failure is outside this screen and in a shared app wrapper.',
- style: TextStyle(
- fontSize: 14,
- height: 1.5,
- color: Color(0xFF4B5563),
- ),
- ),
- ],
- ),
- ),
- ),
- ),
- ),
  ),
  );
  }
@@ -2422,12 +2165,12 @@ Future<void> _loadProgress(String projectId) async {
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: const Icon(
  Icons.admin_panel_settings_outlined,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(height: 12),
@@ -2447,7 +2190,7 @@ Future<void> _loadProgress(String projectId) async {
  _buildGovernanceMetric(
  'Readiness',
  '${(readiness.overallScore * 100).toInt()}%',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  _buildGovernanceMetric(
  'Team Members',
@@ -2457,12 +2200,12 @@ Future<void> _loadProgress(String projectId) async {
  _buildGovernanceMetric(
  'Requirements',
  '${projectData.frontEndPlanningData.requirements.length}',
- const Color(0xFF005BB3),
+ const Color(0xFFFFC812),
  ),
  _buildGovernanceMetric(
  'Architecture Nodes',
  '${_nodes.length}',
- const Color(0xFF7C3AED),
+ const Color(0xFFB8860B),
  ),
  ],
  ),
@@ -2532,11 +2275,11 @@ Future<void> _loadProgress(String projectId) async {
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  ),
  child:
- const Icon(Icons.edit_note_outlined, color: Color(0xFF2563EB)),
+ const Icon(Icons.edit_note_outlined, color: Color(0xFFFFC812)),
  ),
  const SizedBox(height: 12),
  const Text(
@@ -2584,12 +2327,12 @@ Future<void> _loadProgress(String projectId) async {
  _buildGovernanceMetric(
  'Nodes',
  '${_nodes.length}',
- const Color(0xFF7C3AED),
+ const Color(0xFFB8860B),
  ),
  _buildGovernanceMetric(
  'Edges',
  '${_edges.length}',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  _buildGovernanceMetric(
  'Status',
@@ -2693,7 +2436,7 @@ Future<void> _loadProgress(String projectId) async {
  bool showExternalIcon = false,
  }) {
  final backgroundColor = isSelected
- ? Colors.blue.withValues(alpha: 0.1)
+ ? const Color(0xFFFFC812).withValues(alpha: 0.12) // NDU primary gold — yellow theme (was blue)
  : Colors.grey.withValues(alpha: 0.06);
  return Material(
  color: Colors.transparent,
@@ -2711,13 +2454,13 @@ Future<void> _loadProgress(String projectId) async {
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(icon,
- size: 18, color: isSelected ? Colors.blue : Colors.grey[700]),
+ size: 18, color: isSelected ? const Color(0xFFFFC812) : Colors.grey[700]), // NDU primary gold (was blue)
  const SizedBox(width: 12),
  Text(
  title,
  style: TextStyle(
  fontSize: 13,
- color: isSelected ? Colors.blue : Colors.black87,
+ color: isSelected ? const Color(0xFFFFC812) : Colors.black87, // NDU primary gold (was blue)
  fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
  ),
  ),
@@ -2814,17 +2557,216 @@ Future<void> _loadProgress(String projectId) async {
 
  Color _getColorForMember(String name) {
  final colors = [
- Colors.blue,
- Colors.purple,
- Colors.orange,
- Colors.teal,
- Colors.pink,
- Colors.indigo,
- Colors.cyan,
- Colors.amber
+ const Color(0xFFFFC812), // NDU primary gold
+ const Color(0xFFB8860B), // NDU deep gold
+ const Color(0xFFD97706), // amber 600
+ const Color(0xFF92400E), // amber 800
+ const Color(0xFFCA8A04), // yellow 600
+ const Color(0xFFA16207), // yellow 700
+ const Color(0xFFB45309), // amber 700
+ const Color(0xFFF59E0B), // amber 500
  ];
  final hash = name.hashCode.abs();
  return colors[hash % colors.length];
+ }
+
+ void _showAddCollaboratorDialog(BuildContext context) {
+ final nameController = SpellCheckTextEditingController();
+ final roleController = SpellCheckTextEditingController();
+ final emailController = SpellCheckTextEditingController();
+ final provider = context.read<ProjectDataProvider>();
+
+ // Known-credential suggestions: existing project collaborators first
+ // (full name/role/email), then registered/invited users from Firestore.
+ List<Map<String, String>> suggestions = [];
+ Timer? suggestDebounce;
+
+ void fillFromSuggestion(Map<String, String> s) {
+ nameController.text = s['name'] ?? '';
+ roleController.text = s['role'] ?? roleController.text;
+ emailController.text = s['email'] ?? '';
+ suggestions = [];
+ }
+
+ Future<void> refreshSuggestions(String query) async {
+ final q = query.trim().toLowerCase();
+ if (q.isEmpty) {
+ suggestions = [];
+ return;
+ }
+ final matches = <Map<String, String>>[];
+ final seen = <String>{};
+ bool addMatch(String name, String role, String email) {
+ final key = name.toLowerCase();
+ if (name.isEmpty || !seen.add(key)) return false;
+ if (!(name.toLowerCase().contains(q) ||
+ email.toLowerCase().contains(q))) {
+ return false;
+ }
+ matches.add({'name': name, 'role': role, 'email': email});
+ return true;
+ }
+
+ for (final m in provider.projectData.teamMembers) {
+ addMatch(m.name.trim(), m.role.trim(), m.email.trim());
+ }
+ try {
+ final users = await UserService.searchUsers(q);
+ for (final u in users) {
+ addMatch(u.displayName.trim(), '', u.email.trim());
+ }
+ } catch (_) {
+ // Directory lookup is best-effort; local matches already collected.
+ }
+ suggestions = matches.take(6).toList();
+ }
+
+ showAppDialog(
+ context: context,
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setModalState) => AlertDialog(
+ title: const Text('Add Collaborator'),
+ content: SizedBox(
+ width: 400,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: nameController,
+ decoration: const InputDecoration(
+ labelText: 'Name *',
+ hintText: 'Type to search invited users',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (value) {
+ suggestDebounce?.cancel();
+ suggestDebounce = Timer(
+ const Duration(milliseconds: 250),
+ () => refreshSuggestions(value)
+ .then((_) {
+ if (ctx.mounted) setModalState(() {});
+ }),
+ );
+ },
+ ),
+ // Credential pull-down: matching invited/registered users.
+ if (suggestions.isNotEmpty)
+ Container(
+ margin: const EdgeInsets.only(top: 6),
+ decoration: BoxDecoration(
+ border: Border.all(color: Colors.grey.shade300),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Column(
+ children: [
+ for (final s in suggestions)
+ InkWell(
+ onTap: () => setModalState(
+ () => fillFromSuggestion(s)),
+ child: Container(
+ width: double.infinity,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ border: Border(
+ bottom: BorderSide(
+ color: Colors.grey.shade200)),
+ ),
+ child: Row(
+ children: [
+ const Icon(Icons.person_outline,
+ size: 18, color: Color(0xFFB8860B)),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ Text(s['name'] ?? '',
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w600)),
+ if ((s['email'] ?? '').isNotEmpty)
+ Text(s['email']!,
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: TextStyle(
+ fontSize: 11,
+ color: Colors.grey[600])),
+ ],
+ ),
+ ),
+ if ((s['role'] ?? '').isNotEmpty)
+ Text(s['role']!,
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: TextStyle(
+ fontSize: 11,
+ color: Colors.grey[600])),
+ ],
+ ),
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: roleController,
+ decoration: const InputDecoration(
+ labelText: 'Role',
+ hintText: 'e.g. UX Designer, Backend Engineer',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: emailController,
+ keyboardType: TextInputType.emailAddress,
+ decoration: const InputDecoration(
+ labelText: 'Email',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.pop(ctx),
+ child: const Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () {
+ if (nameController.text.trim().isEmpty) return;
+ final provider = context.read<ProjectDataProvider>();
+ final current = provider.projectData.teamMembers;
+ final newMember = TeamMember(
+ id: newId(),
+ name: nameController.text.trim(),
+ role: roleController.text.trim(),
+ email: emailController.text.trim(),
+ );
+ provider.updateField(
+ (data) => data.copyWith(teamMembers: [...current, newMember]),
+ );
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add'),
+ ),
+ ],
+ ),
+ ),
+ );
  }
 
  Widget _buildCollaboratorItem(
@@ -2868,7 +2810,7 @@ Future<void> _loadProgress(String projectId) async {
  width: 8,
  height: 8,
  decoration: const BoxDecoration(
- color: Colors.green,
+ color: Color(0xFFFFC812), // NDU primary gold — yellow theme (was green online dot)
  shape: BoxShape.circle,
  ),
  ),
@@ -2892,7 +2834,7 @@ Future<void> _loadProgress(String projectId) async {
  }
 
  // For mobile/desktop, use modal with WebView
- showDialog(
+ showAppDialog(
  context: context,
  builder: (context) => Dialog(
  backgroundColor: Colors.transparent,
@@ -2918,10 +2860,6 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
  color: Colors.grey.shade50,
- borderRadius: const BorderRadius.only(
- topLeft: Radius.circular(16),
- topRight: Radius.circular(16),
- ),
  border: Border(
  bottom: BorderSide(color: Colors.grey.shade200),
  ),
@@ -2998,11 +2936,11 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: Colors.blue.withValues(alpha: 0.1),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.12), // NDU primary gold — yellow theme (was blue)
  borderRadius: BorderRadius.circular(4),
  ),
  child: const Text('Required',
- style: TextStyle(fontSize: 11, color: Colors.blue)),
+ style: TextStyle(fontSize: 11, color: Color(0xFFB8860B))), // NDU deep gold (was blue)
  ),
  ],
  ),
@@ -3225,12 +3163,12 @@ Future<void> _loadProgress(String projectId) async {
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue #FFF8E1)
  borderRadius: BorderRadius.circular(999),
  ),
  child: const Text('Live canvas',
  style:
- TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+ TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB8860B))), // NDU deep gold
  ),
  const Spacer(),
  OutlinedButton.icon(
@@ -3272,7 +3210,7 @@ Future<void> _loadProgress(String projectId) async {
  onPressed: _clearArchitectureCanvas,
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF7A0916),
- side: const BorderSide(color: Color(0xFFFDA4AF)),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  padding: const EdgeInsets.symmetric(
  horizontal: 12, vertical: 10),
  shape: RoundedRectangleBorder(
@@ -3596,159 +3534,19 @@ Future<void> _loadProgress(String projectId) async {
  }
  }
 
- Widget _buildWebArchitectureFallback() {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: AppSemanticColors.border),
- ),
- padding: const EdgeInsets.all(20),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Container(
- width: 42,
- height: 42,
- decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
- borderRadius: BorderRadius.circular(12),
- ),
- child: const Icon(Icons.account_tree_outlined,
- color: Color(0xFF2563EB)),
- ),
- const SizedBox(width: 12),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Architecture Workspace',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- SizedBox(height: 4),
- Text(
- 'Web-safe summary mode is active to keep the Design Management screen stable and visible.',
- style: TextStyle(
- fontSize: 12,
- color: Color(0xFF6B7280),
- height: 1.4,
- ),
- ),
- ],
- ),
- ),
- ],
- ),
- const SizedBox(height: 20),
- Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: AppSemanticColors.border),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- '${_nodes.length} architecture nodes captured',
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- const SizedBox(height: 8),
- Text(
- _nodes.isEmpty
- ? 'No architecture nodes have been added yet. Use the Rich Text Editor or add nodes from a non-web environment if you need the full interactive canvas.'
- : _nodes.take(6).map((n) => '• ${n.label}').join('\n'),
- style: const TextStyle(
- fontSize: 13,
- color: Color(0xFF4B5563),
- height: 1.5,
- ),
- ),
- ],
- ),
- ),
- const SizedBox(height: 16),
- OutlinedButton.icon(
- onPressed: () => setState(() => _activeTool = DesignTool.richText),
- icon: const Icon(Icons.text_fields, size: 18),
- label: const Text('Switch to Rich Text Editor'),
- style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF111827),
- side: const BorderSide(color: Color(0xFFE5E7EB)),
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
- ),
- ),
- const SizedBox(height: 20),
- Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: AppSemanticColors.border),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- const Expanded(
- child: Text(
- 'Manual node register',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- ),
- TextButton.icon(
- onPressed: _addArchitectureNode,
- icon: const Icon(Icons.add, size: 16),
- label: const Text('Add node'),
- ),
- ],
- ),
- const SizedBox(height: 12),
- if (_nodes.isEmpty)
- Text(
- 'No nodes yet. Add one manually to keep the architecture model editable on web.',
- style: TextStyle(fontSize: 12, color: Colors.grey[600]),
- )
- else
- ..._nodes.map(_buildWebNodeEditor),
- ],
- ),
- ),
- ],
- ),
- );
- }
-
  void _addOutputDoc() {
  _showAddDocumentUploadDialog();
  }
 
  Future<void> _showAddDocumentUploadDialog() async {
- final titleController = TextEditingController();
+ final titleController = SpellCheckTextEditingController();
  String docType = 'Output';
  String? uploadedFileName;
  String? uploadedFileUrl;
  String? uploadedStoragePath;
  bool isUploading = false;
 
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -3758,11 +3556,11 @@ Future<void> _loadProgress(String projectId) async {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.insert_drive_file_outlined,
- size: 18, color: Color(0xFF005BB3)),
+ size: 18, color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 10),
  const Text('Add Document',
@@ -3806,7 +3604,7 @@ Future<void> _loadProgress(String projectId) async {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
  color: uploadedFileName != null
- ? const Color(0xFF005BB3)
+ ? const Color(0xFFFFC812)
  : const Color(0xFFE2E8F0),
  ),
  ),
@@ -3816,7 +3614,7 @@ Future<void> _loadProgress(String projectId) async {
  Row(
  children: [
  const Icon(Icons.check_circle,
- size: 20, color: Color(0xFF005BB3)),
+ size: 20, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -3907,8 +3705,8 @@ Future<void> _loadProgress(String projectId) async {
  label: Text(
  isUploading ? 'Uploading...' : 'Choose File'),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF005BB3),
- side: const BorderSide(color: Color(0xFF005BB3)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  padding: const EdgeInsets.symmetric(vertical: 10),
  ),
  ),
@@ -3965,7 +3763,7 @@ Future<void> _loadProgress(String projectId) async {
  Navigator.pop(dialogContext);
  },
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF005BB3),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  child: const Text('Add Document'),
@@ -3977,15 +3775,15 @@ Future<void> _loadProgress(String projectId) async {
  }
 
  Future<void> _showAddToolUploadDialog() async {
- final nameController = TextEditingController();
- final urlController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
+ final urlController = SpellCheckTextEditingController();
  bool isInternal = false;
  String? uploadedFileName;
  String? uploadedFileUrl;
  String? uploadedStoragePath;
  bool isUploading = false;
 
- await showDialog(
+ await showAppDialog(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -3995,11 +3793,11 @@ Future<void> _loadProgress(String projectId) async {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.build_outlined,
- size: 18, color: Color(0xFF005BB3)),
+ size: 18, color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 10),
  const Text('Add Design Tool',
@@ -4044,11 +3842,11 @@ Future<void> _loadProgress(String projectId) async {
  width: double.infinity,
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
  color: uploadedFileName != null
- ? const Color(0xFF005BB3)
+ ? const Color(0xFFFFC812)
  : const Color(0xFFE2E8F0),
  ),
  ),
@@ -4058,7 +3856,7 @@ Future<void> _loadProgress(String projectId) async {
  Row(
  children: [
  const Icon(Icons.check_circle,
- size: 20, color: Color(0xFF005BB3)),
+ size: 20, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -4149,8 +3947,8 @@ Future<void> _loadProgress(String projectId) async {
  label: Text(
  isUploading ? 'Uploading...' : 'Choose File'),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF005BB3),
- side: const BorderSide(color: Color(0xFF005BB3)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  padding: const EdgeInsets.symmetric(vertical: 10),
  ),
  ),
@@ -4201,7 +3999,7 @@ Future<void> _loadProgress(String projectId) async {
  Navigator.pop(dialogContext);
  },
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF005BB3),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  child: const Text('Add Tool'),
@@ -4249,46 +4047,6 @@ Future<void> _loadProgress(String projectId) async {
  _edges.clear();
  });
  _scheduleSave();
- }
-
- Widget _buildWebNodeEditor(ArchitectureNode node) {
- return Container(
- margin: const EdgeInsets.only(bottom: 10),
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: AppSemanticColors.border),
- ),
- child: Row(
- children: [
- Icon(node.icon ?? Icons.widgets_outlined,
- size: 18, color: const Color(0xFF475467)),
- const SizedBox(width: 10),
- Expanded(
- child: VoiceTextFormField(
- key: ValueKey('web-node-${node.id}'),
- initialValue: node.label,
- decoration: const InputDecoration(
- isDense: true,
- hintText: 'Node label',
- border: OutlineInputBorder(),
- ),
- onChanged: (value) {
- node.label = value;
- _scheduleSave();
- },
- ),
- ),
- const SizedBox(width: 8),
- IconButton(
- tooltip: 'Delete node',
- onPressed: () => _deleteArchitectureNode(node.id),
- icon: const Icon(Icons.delete_outline, color: Color(0xFFB42318)),
- ),
- ],
- ),
- );
  }
 
  Widget _buildRichTextPlaceholder() {

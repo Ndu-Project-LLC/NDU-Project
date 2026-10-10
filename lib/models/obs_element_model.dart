@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class ObsElement {
   final String id;
   String name;
@@ -71,7 +73,7 @@ class ObsElement {
     this.level = 0,
     this.path = '',
     this.isActive = true,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   /// Computed: availability = remaining capacity / total capacity (0-1).
   double get availability =>
@@ -154,7 +156,7 @@ class ObsElement {
 
     return ObsElement(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       name: json['name']?.toString() ?? '',
       parentObsId: json['parentObsId']?.toString() ?? '',
       manager: json['manager']?.toString() ?? '',

@@ -7,6 +7,9 @@ import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/widgets/page_walkthrough.dart';
+import 'package:ndu_project/widgets/project_activity_header_action.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/ai_assist_helper.dart';
@@ -16,15 +19,13 @@ import 'package:ndu_project/widgets/responsive.dart';
 // Brand design tokens (matching the HTML source / Material You spec)
 // ─────────────────────────────────────────────────────────────────────────────
 class _Tokens {
-  static const background = Color(0xFFF7F9FB);
   static const surface = Color(0xFFFFFFFF);
   static const onSurface = Color(0xFF191C1E);
   static const onSurfaceVariant = Color(0xFF414754);
   static const outline = Color(0xFF717786);
   static const outlineVariant = Color(0xFFC0C6D6);
-  static const primary = Color(0xFF005BB3);
+  static const primary = Color(0xFFFFC812);
   static const tertiaryFixedDim = Color(0xFFFABD00);
-  static const tertiary = Color(0xFF755700);
 }
 
 class UnifiedPhaseHeader extends StatelessWidget {
@@ -144,19 +145,20 @@ class UnifiedPhaseHeader extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Right: Notification bell
-                IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded,
-                      color: _Tokens.onSurface, size: 22),
-                  tooltip: 'Notifications',
-                  padding: const EdgeInsets.all(8),
-                  constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
-                  onPressed: () {
-                    // Placeholder for notification action
-                  },
+                // Right: outstanding tasks (only when a project context exists).
+                _ProjectActivityHeaderActionSlot(
+                  onOpenActivityLog: onOpenActivityLog ??
+                      () => ProjectActivitiesLogScreen.open(context),
+                  compact: true,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
+                PageWalkthroughButton(
+                  pageId: breadcrumbTitle ?? title,
+                  pageTitle: breadcrumbTitle ?? title,
+                  compact: true,
+                ),
+                if (ProjectDataInherited.maybeRead(context) != null)
+                  const SizedBox(width: 4),
                 // Right: Yellow chat "C" button
                 GestureDetector(
                   onTap: () => KazAiChatBubble.openChat(context),
@@ -252,7 +254,7 @@ class UnifiedPhaseHeader extends StatelessWidget {
     );
   }
 
-  // ─── Desktop: original layout (back/forward | title | activity log + profile) ─
+  // ─── Desktop: original layout (back/forward | title | project actions + profile) ─
   Widget _buildDesktopHeader(BuildContext context) {
     return Container(
       height: 72,
@@ -300,10 +302,10 @@ class UnifiedPhaseHeader extends StatelessWidget {
                     PdfExportHelper.exportScreenPdf(
                       context: context,
                       screenTitle: title,
-                      sections: [
-                        PdfSection.text(
-                            title, 'Project section export from Ndu Project.'),
-                      ],
+                      // No structured sections: the export captures the screen
+                      // itself so the PDF contains everything actually
+                      // on screen.
+                      sections: const <PdfSection>[],
                     );
                   },
             ),
@@ -318,17 +320,84 @@ class UnifiedPhaseHeader extends StatelessWidget {
                   },
             ),
           if (showAiAssist) const SizedBox(width: 8),
-          if (showActivityLogAction)
-            _ActivityLogAction(
-              compact: false,
-              onTap: onOpenActivityLog ??
-                  () => ProjectActivitiesLogScreen.open(context),
+          _ProjectActivityHeaderActionSlot(
+            onOpenActivityLog: onOpenActivityLog ??
+                () => ProjectActivitiesLogScreen.open(context),
+          ),
+          // Guided tour of this page, beside Tasks (Lusaka 28). The gap lives
+          // inside the Flexible so it shrinks with the chip — a fixed gap in an
+          // at-capacity Row is what tips it into an overflow.
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 8),
+                Flexible(
+                  child: _WalkthroughSlot(
+                    pageId: breadcrumbTitle ?? title,
+                    pageTitle: breadcrumbTitle ?? title,
+                  ),
+                ),
+              ],
             ),
-          if (showActivityLogAction) const SizedBox(width: 12),
+          ),
+          const SizedBox(width: 12),
           ...trailingActions,
           if (trailingActions.isNotEmpty) const SizedBox(width: 12),
         ],
       ),
+    );
+  }
+}
+
+/// The Walkthrough chip, which drops its label and becomes an icon when the
+/// header has no room for it.
+///
+/// The action row is a fixed [Row] that already carries Tasks, Export PDF and
+/// AI Assist, so an unconditionally labelled chip overflows it on tablet-width
+/// screens. Shrinking to an icon keeps the affordance on every page without
+/// pushing the row over.
+class _WalkthroughSlot extends StatelessWidget {
+  const _WalkthroughSlot({required this.pageId, this.pageTitle});
+
+  final String pageId;
+  final String? pageTitle;
+
+  /// Width the labelled chip needs before it starts overflowing.
+  static const _labelledWidth = 124.0;
+
+  @override
+  Widget build(BuildContext context) {
+    // Not wrapped in Flexible here: the call site already provides one, and
+    // nesting two makes both compete for the same parent data.
+    return LayoutBuilder(
+      builder: (context, constraints) => PageWalkthroughButton(
+        pageId: pageId,
+        pageTitle: pageTitle,
+        compact: constraints.maxWidth < _labelledWidth,
+        maxWidth: constraints.maxWidth,
+      ),
+    );
+  }
+}
+
+class _ProjectActivityHeaderActionSlot extends StatelessWidget {
+  const _ProjectActivityHeaderActionSlot({
+    required this.onOpenActivityLog,
+    this.compact = false,
+  });
+
+  final VoidCallback onOpenActivityLog;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = ProjectDataInherited.maybeOf(context);
+    if (provider == null) return const SizedBox.shrink();
+    return ProjectActivityHeaderAction(
+      activities: provider.projectData.projectActivities,
+      compact: compact,
+      onOpenActivityLog: onOpenActivityLog,
     );
   }
 }
@@ -375,43 +444,6 @@ class _BreadcrumbNavButton extends StatelessWidget {
 }
 
 // ─── Legacy circle nav button (kept for backward compatibility) ───────────
-class _CircleNavButton extends StatelessWidget {
-  const _CircleNavButton({
-    required this.icon,
-    required this.iconSize,
-    this.onTap,
-    this.enabled = true,
-  });
-
-  final IconData icon;
-  final double iconSize;
-  final VoidCallback? onTap;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Color(0xFFE2E8F0),
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: enabled ? const Color(0xFF374151) : const Color(0xFFCBD5E0),
-        ),
-      ),
-    );
-  }
-}
 
 // ─── UnifiedScaffoldAppBar — AppBar wrapper for screens needing Scaffold.appBar ─
 class UnifiedScaffoldAppBar extends StatelessWidget
@@ -423,6 +455,7 @@ class UnifiedScaffoldAppBar extends StatelessWidget
     this.onMenuTap,
     this.showActivityLogAction = true,
     this.onOpenActivityLog,
+    this.additionalActions = const <Widget>[],
   });
 
   final Color? backgroundColor;
@@ -430,6 +463,7 @@ class UnifiedScaffoldAppBar extends StatelessWidget
   final VoidCallback? onMenuTap;
   final bool showActivityLogAction;
   final VoidCallback? onOpenActivityLog;
+  final List<Widget> additionalActions;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -468,6 +502,17 @@ class UnifiedScaffoldAppBar extends StatelessWidget
             ),
       centerTitle: true,
       actions: [
+        _ProjectActivityHeaderActionSlot(
+          onOpenActivityLog: onOpenActivityLog ??
+              () => ProjectActivitiesLogScreen.open(context),
+          compact: true,
+        ),
+        PageWalkthroughButton(
+          pageId: title ?? 'Page',
+          pageTitle: title,
+          compact: true,
+        ),
+        ...additionalActions,
         if (showActivityLogAction)
           Padding(
             padding: EdgeInsets.only(right: isMobile ? 8 : 10),
@@ -477,6 +522,7 @@ class UnifiedScaffoldAppBar extends StatelessWidget
                   () => ProjectActivitiesLogScreen.open(context),
             ),
           ),
+        ...additionalActions,
         Padding(
           padding: EdgeInsets.only(right: isMobile ? 8 : 12),
           child: const UnifiedProfileMenu(compact: true),
@@ -523,13 +569,13 @@ class UnifiedProfileMenu extends StatelessWidget {
         ? CircleAvatar(
             radius: compact ? 16 : 20,
             backgroundImage: NetworkImage(photoUrl),
-            backgroundColor: Colors.blue,
+            backgroundColor: const Color(0xFFFFC812),
           )
         : Container(
             width: compact ? 32 : 40,
             height: compact ? 32 : 40,
             decoration: const BoxDecoration(
-              color: Colors.blue,
+              color: Color(0xFFFFC812),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -663,9 +709,9 @@ class _ActivityLogAction extends StatelessWidget {
             vertical: 8,
           ),
           decoration: BoxDecoration(
-            color: Color(0xFFFFF7E0),
+            color: const Color(0xFFFFF7E0),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFFFD873)),
+            border: Border.all(color: const Color(0xFFFFD873)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -716,9 +762,9 @@ class _HeaderActionChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: Color(0xFFF0F4FF),
+            color: const Color(0xFFF0F4FF),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFC7D2FE)),
+            border: Border.all(color: const Color(0xFFFEF3C7)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -761,7 +807,7 @@ class _AiAssistChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: Color(0xFF4154F1),
+            color: const Color(0xFF4154F1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

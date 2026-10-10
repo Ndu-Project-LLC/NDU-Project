@@ -362,6 +362,16 @@ class BusinessSystemIntegrationService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  /// Test seam: replaces the program-scoped read behind [loadAll].
+  @visibleForTesting
+  static Future<List<BusinessSystemIntegration>> Function(String programId)?
+      loadAllOverride;
+
+  /// Test seam: replaces the per-project read behind [loadAllForProjects].
+  @visibleForTesting
+  static Future<List<BusinessSystemIntegration>> Function(
+      List<String> projectIds)? projectIntegrationsOverride;
+
   /// Collection reference for a program's integrations.
   static CollectionReference<Map<String, dynamic>> _coll(String programId) {
     return _firestore
@@ -386,6 +396,8 @@ class BusinessSystemIntegrationService {
   /// Load all integrations for a program (one-shot).
   static Future<List<BusinessSystemIntegration>> loadAll(
       String programId) async {
+    final override = loadAllOverride;
+    if (override != null) return override(programId);
     try {
       final snap = await _coll(programId).get();
       return snap.docs
@@ -420,6 +432,98 @@ class BusinessSystemIntegrationService {
       debugPrint('[BusinessSystemIntegrationService] delete error: $e');
       rethrow;
     }
+  }
+
+  // ─── Project-scoped connections ────────────────────────────────────────
+  // Module-level connectors (the Cost Estimate's accounting providers) belong
+  // to one project rather than a whole program, so their connection record is
+  // mirrored under `projects/{projectId}/businessIntegrations/{providerName}`
+  // — a path the existing project-subcollection rule already allows for the
+  // project owner and its members.
+
+  static CollectionReference<Map<String, dynamic>> _projectColl(
+      String projectId) {
+    return _firestore
+        .collection('projects')
+        .doc(projectId)
+        .collection('businessIntegrations');
+  }
+
+  /// Upsert a project-scoped connection record.
+  ///
+  /// The tokens themselves stay in platform secure storage; this record is the
+  /// durable, cross-device view of the connection (status, scopes, expiry and
+  /// who connected it).
+  static Future<void> saveForProject(
+      String projectId, BusinessSystemIntegration integration) async {
+    try {
+      await _projectColl(projectId)
+          .doc(integration.provider.name)
+          .set(integration.toFirestore(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[BusinessSystemIntegrationService] saveForProject error: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove a project-scoped connection record (disconnect).
+  static Future<void> deleteForProject(
+      String projectId, BusinessSystemProvider p) async {
+    try {
+      await _projectColl(projectId).doc(p.name).delete();
+    } catch (e) {
+      debugPrint(
+          '[BusinessSystemIntegrationService] deleteForProject error: $e');
+      rethrow;
+    }
+  }
+
+  /// Load the connections recorded against each of [projectIds].
+  ///
+  /// Module connectors (the Cost Estimate's accounting providers) are stored
+  /// per project, so a program's roll-up has to read every project in it.
+  /// Projects the caller cannot read are skipped rather than failing the whole
+  /// read — one unreadable project must not blank the dashboard card.
+  static Future<List<BusinessSystemIntegration>> loadAllForProjects(
+      List<String> projectIds) async {
+    final override = projectIntegrationsOverride;
+    if (override != null) return override(projectIds);
+    if (projectIds.isEmpty) return const [];
+    final perProject = await Future.wait(projectIds.map((projectId) async {
+      try {
+        final snap = await _projectColl(projectId).get();
+        return snap.docs
+            .map((d) => BusinessSystemIntegration.fromFirestore(
+                d as DocumentSnapshot<Map<String, dynamic>>))
+            .toList();
+      } catch (e) {
+        debugPrint(
+            '[BusinessSystemIntegrationService] loadAllForProjects($projectId) error: $e');
+        return <BusinessSystemIntegration>[];
+      }
+    }));
+    return perProject.expand((records) => records).toList();
+  }
+
+  /// Collapse connection records down to one entry per provider.
+  ///
+  /// The same provider can legitimately be recorded twice — once for the
+  /// program and once for a project that connects it from a module (the Cost
+  /// Estimate's accounting providers) — so the roll-up de-duplicates by
+  /// provider and keeps whichever record was written most recently.
+  static List<BusinessSystemIntegration> mergeByProvider(
+    Iterable<BusinessSystemIntegration> first,
+    Iterable<BusinessSystemIntegration> second,
+  ) {
+    final merged = <BusinessSystemProvider, BusinessSystemIntegration>{};
+    for (final integration in [...first, ...second]) {
+      final existing = merged[integration.provider];
+      if (existing == null ||
+          integration.updatedAt.isAfter(existing.updatedAt)) {
+        merged[integration.provider] = integration;
+      }
+    }
+    return merged.values.toList();
   }
 
   /// Mark a connection as connecting (during OAuth dance) or connected

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/screens/ssher_components.dart';
 import 'package:ndu_project/screens/ssher_add_safety_item_dialog.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -74,7 +75,7 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
 
 
  Future<void> _handleAddItem() async {
- final result = await showDialog<SsherItemInput>(
+ final result = await showAppDialog<SsherItemInput>(
  context: context,
  builder: (ctx) => AddSsherItemDialog(
  accentColor: widget.accentColor,

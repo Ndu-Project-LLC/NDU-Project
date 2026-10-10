@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -13,6 +14,8 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 class FrontEndPlanningPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningPersonnelScreen({super.key});
 
@@ -27,7 +30,7 @@ class FrontEndPlanningPersonnelScreen extends StatefulWidget {
 
 class _FrontEndPlanningPersonnelScreenState
  extends State<FrontEndPlanningPersonnelScreen> {
- final TextEditingController _notes = TextEditingController();
+ final TextEditingController _notes = SpellCheckTextEditingController();
  List<StaffingRow> _rows = [];
  bool _isSyncReady = false;
 
@@ -54,9 +57,9 @@ class _FrontEndPlanningPersonnelScreenState
  screenTitle: 'Personnel',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -96,27 +99,27 @@ class _FrontEndPlanningPersonnelScreenState
  }
 
  Future<void> _upsertRow({StaffingRow? existing}) async {
- final roleController = TextEditingController(text: existing?.role ?? '');
- final quantityController = TextEditingController(
+ final roleController = SpellCheckTextEditingController(text: existing?.role ?? '');
+ final quantityController = SpellCheckTextEditingController(
  text: existing != null ? existing.quantity.toString() : '1');
  final durationController =
- TextEditingController(text: existing?.durationMonths ?? '');
+ SpellCheckTextEditingController(text: existing?.durationMonths ?? '');
  final monthlyCostController =
- TextEditingController(text: existing?.monthlyCost ?? '');
+ SpellCheckTextEditingController(text: existing?.monthlyCost ?? '');
  final startDateController =
- TextEditingController(text: existing?.startDate ?? '');
+ SpellCheckTextEditingController(text: existing?.startDate ?? '');
  final descriptionController =
- TextEditingController(text: existing?.roleDescription ?? '');
+ SpellCheckTextEditingController(text: existing?.roleDescription ?? '');
  final skillsController =
- TextEditingController(text: existing?.skillRequirements ?? '');
- final notesController = TextEditingController(text: existing?.notes ?? '');
+ SpellCheckTextEditingController(text: existing?.skillRequirements ?? '');
+ final notesController = SpellCheckTextEditingController(text: existing?.notes ?? '');
  var isInternal = existing?.isInternal ?? true;
  var status = existing?.status.trim().isNotEmpty == true
  ? existing!.status.trim()
  : 'Not Started';
 
  try {
- final result = await showDialog<StaffingRow>(
+ final result = await showAppDialog<StaffingRow>(
  context: context,
  builder: (dialogContext) {
  return StatefulBuilder(
@@ -176,7 +179,8 @@ class _FrontEndPlanningPersonnelScreenState
  const TextInputType.numberWithOptions(
  decimal: true,
  ),
- decoration: const InputDecoration(  labelText: 'Monthly Rate',
+ decoration: const InputDecoration(
+ labelText: 'Monthly Rate',
  border: OutlineInputBorder(),
  ),
  ),
@@ -343,7 +347,7 @@ class _FrontEndPlanningPersonnelScreenState
  }
 
  Future<void> _deleteRow(StaffingRow row) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete Role'),
@@ -367,7 +371,8 @@ class _FrontEndPlanningPersonnelScreenState
  _rows.removeWhere((item) => item.id == row.id);
  });
  _syncRowsToProvider();
-    showDeleteSuccessSnackBar(context, itemLabel: 'Staffing Row');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Staffing Row');
  }
 
  double get _staffingTotal =>
@@ -391,10 +396,13 @@ class _FrontEndPlanningPersonnelScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _roundedField(
+ CollapsibleNotesSection(
+ title: 'Notes',
+ child: _roundedField(
  controller: _notes,
  hint: 'Input your notes here…',
  minLines: 3,
+ ),
  ),
  const SizedBox(height: 22),
  Row(
@@ -707,7 +715,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -753,7 +761,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
- border: TableBorder(
+ border: const TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -847,13 +855,13 @@ class _BottomOverlays extends StatelessWidget {
  ),
  child: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Text(
  'AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  SizedBox(width: 10),

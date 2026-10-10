@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/user_model.dart';
@@ -9,6 +10,7 @@ import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class AdminSubscriptionLookupScreen extends StatefulWidget {
   const AdminSubscriptionLookupScreen({super.key});
@@ -20,7 +22,7 @@ class AdminSubscriptionLookupScreen extends StatefulWidget {
 
 class _AdminSubscriptionLookupScreenState
     extends State<AdminSubscriptionLookupScreen> {
-  final _searchController = TextEditingController();
+  final _searchController = SpellCheckTextEditingController();
   UserModel? _selectedUser;
   List<Subscription> _subscriptions = [];
   List<Invoice> _invoices = [];
@@ -40,9 +42,9 @@ class _AdminSubscriptionLookupScreenState
     NavigationContextService.instance
         .setLastAdminDashboard(AppRoutes.adminHome);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -509,7 +511,7 @@ class _AdminSubscriptionLookupScreenState
     SubscriptionTier? selectedTier;
     bool isAnnual = false;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -612,7 +614,7 @@ class _AdminSubscriptionLookupScreenState
 
     int daysToExtend = 7;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -725,7 +727,7 @@ class _AdminSubscriptionLookupScreenState
         _subscriptions.where((s) => s.isActive).firstOrNull;
     if (activeSubscription == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Subscription'),

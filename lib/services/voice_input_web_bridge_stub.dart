@@ -7,7 +7,7 @@ import 'voice_input_service.dart';
 bool webVoiceInit(VoiceInputService service) => false;
 
 /// Starts listening on web SpeechRecognition. No-op on non-web.
-bool webVoiceStart(dynamic recognition, String? localeId) => false;
+Future<bool> webVoiceStart(dynamic recognition, String? localeId) async => false;
 
 /// Stops listening on web SpeechRecognition. No-op on non-web.
 void webVoiceStop(dynamic recognition) {}

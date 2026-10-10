@@ -1,22 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -25,6 +23,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectPlanLevel1ScheduleScreen extends StatefulWidget {
  const ProjectPlanLevel1ScheduleScreen({super.key});
 
@@ -49,7 +48,6 @@ class _Level1ScheduleScreenState
  List<_L1Phase> _baselinePhases = [];
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  @override
  void initState() {
@@ -66,15 +64,7 @@ class _Level1ScheduleScreenState
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(
- context, 'project_plan_level1_schedule');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('Level1Schedule carried-context error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  void _loadData() {
@@ -314,7 +304,7 @@ class _Level1ScheduleScreenState
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,8 +317,8 @@ class _Level1ScheduleScreenState
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -340,31 +330,22 @@ class _Level1ScheduleScreenState
  children: [
  PlanningPhaseHeader(title: 'Project Schedule', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _TopHeader(
- title: 'Level 1 - Project Schedule',
- onBack: () => PlanningPhaseNavigation.goToPrevious(
- context, 'project_plan_level1_schedule'),
- onForward: () => PlanningPhaseNavigation.goToNext(
- context, 'project_plan_level1_schedule'),
- ),
+ // _TopHeader (Level 1 - Project Schedule sub-header with nav arrows +
+ // duplicate user chip) removed per product decision 2026-08-17 — the
+ // standard PlanningPhaseHeader above already provides the page title
+ // and user identity, so this was a redundant sub-header taking up
+ // vertical space. The PlanningPhaseNavigation forward/back chevrons
+ // are still surfaced by LaunchPhaseNavigation at the bottom of the
+ // page (no functional regression).
  const SizedBox(height: 12),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CarriedContextBanner(
- checkpoint: 'project_plan_level1_schedule',
- contextText: _carriedContext!,
- ),
- ),
- Text(
+
+ const Text(
  'Map major phases, milestone timing, and governance checkpoints.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 20),
- PlanningAiNotesCard(
+ const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Level 1 - Project Schedule',
  noteKey: 'planning_project_plan_level1_notes',
@@ -416,13 +397,13 @@ class _Level1ScheduleScreenState
  _MetricCard(
  label: 'Total Duration',
  value: _totalDurationDays > 0 ? '$_totalDurationDays days' : '--',
- accent: const Color(0xFF3B82F6),
+ accent: const Color(0xFFFFC812),
  icon: Icons.schedule_outlined,
  ),
  _MetricCard(
  label: 'Phases',
  value: '${_phases.length}',
- accent: const Color(0xFF8B5CF6),
+ accent: const Color(0xFFB8860B),
  icon: Icons.layers_outlined,
  ),
  _MetricCard(
@@ -538,14 +519,14 @@ class _Level1ScheduleScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Padding(
- padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+ const Padding(
+ padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
  child: Row(
  children: [
- const Icon(Icons.table_chart_outlined,
+ Icon(Icons.table_chart_outlined,
  size: 18, color: Color(0xFF6B7280)),
- const SizedBox(width: 8),
- const Text(
+ SizedBox(width: 8),
+ Text(
  'Phase Summary',
  style: TextStyle(
  fontSize: 16,
@@ -653,7 +634,7 @@ class _Level1ScheduleScreenState
  ? const Color(0xFF10B981)
  : progressPct >= 50
  ? const Color(0xFFF59E0B)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFFC812),
  ),
  ),
  ),
@@ -679,7 +660,7 @@ class _Level1ScheduleScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -781,7 +762,7 @@ class _Level1ScheduleScreenState
  ? const Color(0xFF10B981)
  : progressPct >= 50
  ? const Color(0xFFF59E0B)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFFC812),
  ),
  ),
  ),
@@ -807,7 +788,7 @@ class _Level1ScheduleScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -952,7 +933,7 @@ class _Level1ScheduleScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -960,7 +941,7 @@ class _Level1ScheduleScreenState
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1044,7 +1025,7 @@ class _Level1ScheduleScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -1052,7 +1033,7 @@ class _Level1ScheduleScreenState
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1119,7 +1100,7 @@ class _Level1ScheduleScreenState
  Color _statusColor(String status) {
  final s = status.toLowerCase();
  if (s.contains('complete')) return const Color(0xFF10B981);
- if (s.contains('progress')) return const Color(0xFF3B82F6);
+ if (s.contains('progress')) return const Color(0xFFFFC812);
  if (s.contains('risk') || s.contains('behind')) {
  return const Color(0xFFEF4444);
  }
@@ -1183,8 +1164,8 @@ class _Level1ScheduleScreenState
  screenTitle: 'Project Plan Subsections',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['planning_project_plan_subsections_notes'] ?? 'No data recorded.'),
  ],
@@ -1446,7 +1427,7 @@ class _L1GanttChart extends StatelessWidget {
  pxPerDay,
  decoration: BoxDecoration(
  color: const Color(0xFFE5E7EB)
- .withOpacity(0.6),
+ .withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(6),
  border: Border.all(
  color: const Color(0xFFD1D5DB),
@@ -1484,7 +1465,7 @@ class _L1GanttChart extends StatelessWidget {
  child: Container(
  decoration: BoxDecoration(
  color: _phaseColor(index)
- .withOpacity(0.85),
+ .withValues(alpha: 0.85),
  ),
  ),
  ),
@@ -1525,7 +1506,7 @@ class _L1GanttChart extends StatelessWidget {
  width: 20,
  height: 10,
  decoration: BoxDecoration(
- color: const Color(0xFFE5E7EB).withOpacity(0.6),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(3),
  border: Border.all(color: const Color(0xFFD1D5DB)),
  ),
@@ -1540,7 +1521,7 @@ class _L1GanttChart extends StatelessWidget {
  width: 20,
  height: 10,
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFFC812),
  borderRadius: BorderRadius.circular(3),
  ),
  ),
@@ -1606,10 +1587,10 @@ class _L1GanttChart extends StatelessWidget {
  child: Tooltip(
  message:
  '${m.name}${m.targetDate != null ? ' — ${_fmtDate(m.targetDate!)}' : ''}',
- child: CustomPaint(
- size: const Size(12, 12),
+ child: const CustomPaint(
+ size: Size(12, 12),
  painter: _DiamondPainter(
- color: const Color(0xFFF59E0B),
+ color: Color(0xFFF59E0B),
  ),
  ),
  ),
@@ -1625,14 +1606,14 @@ class _L1GanttChart extends StatelessWidget {
 
  Color _phaseColor(int index) {
  const colors = [
- Color(0xFF3B82F6),
- Color(0xFF8B5CF6),
+ Color(0xFFFFC812),
+ Color(0xFFB8860B),
  Color(0xFF10B981),
  Color(0xFFF59E0B),
  Color(0xFFEF4444),
- Color(0xFF06B6D4),
- Color(0xFFEC4899),
- Color(0xFF6366F1),
+ Color(0xFFD97706),
+ Color(0xFFD97706),
+ Color(0xFFB8860B),
  ];
  return colors[index % colors.length];
  }
@@ -1791,7 +1772,6 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  final ScrollController _verticalScrollController = ScrollController();
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  @override
  void initState() {
@@ -1808,15 +1788,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(
- context, 'project_plan_detailed_schedule');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('DetailedSchedule carried-context error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  @override
@@ -1984,7 +1956,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
 
  void _addTask() {
  final newTask = _DetailedTask(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
+ id: newId(),
  wbsId: '',
  title: 'New Task',
  startDate: _projectStart ?? DateTime.now(),
@@ -2019,10 +1991,13 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  }
 
  void _deleteTask(String taskId) async {
- final task =
- _tasks.firstWhere((t) => t.id == taskId, orElse: () => _tasks.first);
+ // The task may already be gone (list re-synced between render and
+ // tap); bail out instead of throwing "Bad state: No element".
+ final idx = _tasks.indexWhere((t) => t.id == taskId);
+ if (idx == -1) return;
+ final task = _tasks[idx];
 
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete Task'),
@@ -2051,7 +2026,8 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  });
  _syncToScheduleScreen();
  }
-    showDeleteSuccessSnackBar(context, itemLabel: 'Task');
+if (!mounted) return;
+        showDeleteSuccessSnackBar(context, itemLabel: 'Task');
  }
 
  @override
@@ -2060,21 +2036,21 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  DraggableSidebar(
  openWidth: AppBreakpoints.sidebarWidth(context),
- child: InitiationLikeSidebar(
+ child: const InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Detailed Project Schedule'),
  ),
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -2089,17 +2065,8 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'project_plan_detailed_schedule',
- contextText: _carriedContext!,
- ),
- ),
- PlanningAiNotesCard(
+
+ const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Detailed Project Schedule',
  noteKey: 'planning_project_plan_detailed_notes',
@@ -2231,7 +2198,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  boxShadow: isSelected
  ? [
  BoxShadow(
- color: Colors.black.withOpacity(0.08),
+ color: Colors.black.withValues(alpha: 0.08),
  blurRadius: 4)
  ]
  : null,
@@ -2242,7 +2209,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: isSelected
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF6B7280),
  ),
  ),
@@ -2287,7 +2254,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  _MetricCard(
  label: 'Total Tasks',
  value: '$totalTasks',
- accent: const Color(0xFF3B82F6),
+ accent: const Color(0xFFFFC812),
  icon: Icons.task_alt_outlined,
  ),
  _MetricCard(
@@ -2325,7 +2292,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
 
  Widget _buildGanttSection() {
  if (_tasks.isEmpty) {
- return _SectionEmptyState(
+ return const _SectionEmptyState(
  title: 'No schedule tasks yet',
  message: 'Add tasks to see the detailed Gantt chart.',
  icon: Icons.timeline_outlined,
@@ -2400,20 +2367,20 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  Widget _buildGanttLegend() {
  return Row(
  children: [
- _LegendItem(color: const Color(0xFF3B82F6), label: 'Not Started'),
+ const _LegendItem(color: Color(0xFFFFC812), label: 'Not Started'),
  const SizedBox(width: 16),
- _LegendItem(color: const Color(0xFFF59E0B), label: 'In Progress'),
+ const _LegendItem(color: Color(0xFFF59E0B), label: 'In Progress'),
  const SizedBox(width: 16),
- _LegendItem(color: const Color(0xFF10B981), label: 'Completed'),
+ const _LegendItem(color: Color(0xFF10B981), label: 'Completed'),
  const SizedBox(width: 16),
- _LegendItem(color: const Color(0xFFEF4444), label: 'At Risk'),
+ const _LegendItem(color: Color(0xFFEF4444), label: 'At Risk'),
  if (_showBaseline) ...[
  const SizedBox(width: 24),
  Container(
  width: 20,
  height: 10,
  decoration: BoxDecoration(
- color: const Color(0xFFE5E7EB).withOpacity(0.6),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(3),
  border: Border.all(color: const Color(0xFFD1D5DB)),
  ),
@@ -2486,16 +2453,16 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
  child: Table(
  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- columnWidths: {
- 0: const FixedColumnWidth(56),
- 1: const FlexColumnWidth(3.6),
- 2: const FixedColumnWidth(98),
- 3: const FixedColumnWidth(98),
- 4: const FixedColumnWidth(84),
- 5: const FixedColumnWidth(112),
- 6: const FixedColumnWidth(116),
- 7: const FixedColumnWidth(96),
- 8: const FixedColumnWidth(88),
+ columnWidths: const {
+ 0: FixedColumnWidth(56),
+ 1: FlexColumnWidth(3.6),
+ 2: FixedColumnWidth(98),
+ 3: FixedColumnWidth(98),
+ 4: FixedColumnWidth(84),
+ 5: FixedColumnWidth(112),
+ 6: FixedColumnWidth(116),
+ 7: FixedColumnWidth(96),
+ 8: FixedColumnWidth(88),
  },
  border: const TableBorder(
  horizontalInside: border,
@@ -2592,16 +2559,16 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
  child: Table(
  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- columnWidths: {
- 0: const FixedColumnWidth(56),
- 1: const FlexColumnWidth(3.6),
- 2: const FixedColumnWidth(98),
- 3: const FixedColumnWidth(98),
- 4: const FixedColumnWidth(84),
- 5: const FixedColumnWidth(112),
- 6: const FixedColumnWidth(116),
- 7: const FixedColumnWidth(96),
- 8: const FixedColumnWidth(88),
+ columnWidths: const {
+ 0: FixedColumnWidth(56),
+ 1: FlexColumnWidth(3.6),
+ 2: FixedColumnWidth(98),
+ 3: FixedColumnWidth(98),
+ 4: FixedColumnWidth(84),
+ 5: FixedColumnWidth(112),
+ 6: FixedColumnWidth(116),
+ 7: FixedColumnWidth(96),
+ 8: FixedColumnWidth(88),
  },
  border: const TableBorder(
  horizontalInside: border,
@@ -3006,7 +2973,7 @@ class _DetailedGanttChart extends StatelessWidget {
  : const Color(0xFFFAFAFA)),
  border: Border(
  bottom: BorderSide(
- color: const Color(0xFFE5E7EB).withOpacity(0.5),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.5),
  ),
  ),
  ),
@@ -3063,7 +3030,7 @@ class _DetailedGanttChart extends StatelessWidget {
  barColor = const Color(0xFFEF4444);
  break;
  default:
- barColor = const Color(0xFF3B82F6);
+ barColor = const Color(0xFFFFC812);
  }
 
  final baselineTask = baselineTasks
@@ -3093,7 +3060,7 @@ class _DetailedGanttChart extends StatelessWidget {
  .clamp(20.0, 2000.0),
  height: _rowHeight - 16,
  decoration: BoxDecoration(
- color: const Color(0xFFE5E7EB).withOpacity(0.6),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(6),
  border: Border.all(color: const Color(0xFFD1D5DB)),
  ),
@@ -3118,7 +3085,7 @@ class _DetailedGanttChart extends StatelessWidget {
  widthFactor: task.progress.clamp(0, 1),
  child: Container(
  decoration: BoxDecoration(
- color: barColor.withOpacity(0.7),
+ color: barColor.withValues(alpha: 0.7),
  ),
  ),
  ),
@@ -3338,7 +3305,7 @@ class _DependencyLinePainter extends CustomPainter {
  @override
  void paint(Canvas canvas, Size size) {
  final paint = Paint()
- ..color = const Color(0xFF8B5CF6)
+ ..color = const Color(0xFFB8860B)
  ..strokeWidth = 2
  ..style = PaintingStyle.stroke;
 
@@ -3360,7 +3327,7 @@ class _DependencyLinePainter extends CustomPainter {
  canvas.drawPath(path, paint);
 
  final arrowPaint = Paint()
- ..color = const Color(0xFF8B5CF6)
+ ..color = const Color(0xFFB8860B)
  ..style = PaintingStyle.fill;
 
  final arrowPath = Path();
@@ -3395,10 +3362,10 @@ class _ToggleChip extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF3F4F6),
+ color: isActive ? const Color(0xFFFFF8E1) : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: isActive ? const Color(0xFF6366F1) : const Color(0xFFE5E7EB),
+ color: isActive ? const Color(0xFFB8860B) : const Color(0xFFE5E7EB),
  ),
  ),
  child: Row(
@@ -3408,7 +3375,7 @@ class _ToggleChip extends StatelessWidget {
  icon,
  size: 14,
  color:
- isActive ? const Color(0xFF6366F1) : const Color(0xFF6B7280),
+ isActive ? const Color(0xFFB8860B) : const Color(0xFF6B7280),
  ),
  const SizedBox(width: 6),
  Text(
@@ -3417,7 +3384,7 @@ class _ToggleChip extends StatelessWidget {
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: isActive
- ? const Color(0xFF6366F1)
+ ? const Color(0xFFB8860B)
  : const Color(0xFF6B7280),
  ),
  ),
@@ -3570,7 +3537,7 @@ class _ProgressCell extends StatelessWidget {
  ? const Color(0xFF10B981)
  : pct >= 50
  ? const Color(0xFFF59E0B)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFFC812),
  ),
  ),
  ),
@@ -3615,7 +3582,7 @@ class _StatusCell extends StatelessWidget {
  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -3653,7 +3620,7 @@ class _PriorityCell extends StatelessWidget {
  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -3677,7 +3644,7 @@ class ProjectPlanCondensedSummaryScreen extends StatefulWidget {
 }
 
 class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
- final TextEditingController _summaryController = TextEditingController();
+ final TextEditingController _summaryController = SpellCheckTextEditingController();
  bool _loading = true;
  bool _isGenerating = false;
  String? _undoBeforeAi;
@@ -3685,7 +3652,6 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  DateTime? _lastSavedAt;
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
- String? _carriedContext;
 
  _SummaryData _summaryData = _SummaryData.empty();
 
@@ -3705,15 +3671,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  _isAutoPopulating = true;
  if (mounted) setState(() {});
 
- try {
- final carried = await buildAccumulatedContext(
- context, 'project_plan_condensed_summary');
- if (mounted) setState(() => _carriedContext = carried);
- } catch (e) {
- debugPrint('CondensedSummary carried-context error: $e');
- } finally {
  if (mounted) setState(() => _isAutoPopulating = false);
- }
  }
 
  @override
@@ -3945,7 +3903,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  } catch (e) {
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('AI generation failed: ${e.toString()}')),
+ SnackBar(content: Text('AI generation failed: ${aiErrorMessage(e)}')),
  );
  } finally {
  if (mounted) setState(() => _isGenerating = false);
@@ -4018,21 +3976,21 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  DraggableSidebar(
  openWidth: AppBreakpoints.sidebarWidth(context),
- child: InitiationLikeSidebar(
+ child: const InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Condensed Project Summary'),
  ),
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -4046,17 +4004,8 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'project_plan_condensed_summary',
- contextText: _carriedContext!,
- ),
- ),
- PlanningAiNotesCard(
+
+ const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Condensed Project Summary',
  noteKey:
@@ -4128,10 +4077,10 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  ],
  ),
  const SizedBox(height: 12),
- Text(
+ const Text(
  'Executive view of schedule, cost, scope, and readiness.',
  style:
- const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+ TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
  ),
  ],
  )
@@ -4145,10 +4094,10 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  color: Color(0xFF111827)),
  ),
  const Spacer(),
- Text(
+ const Text(
  'Executive view of project status',
  style:
- const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+ TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
  ),
  const SizedBox(width: 16),
  _buildAIGenerateButton(),
@@ -4208,11 +4157,11 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFEEF2FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.summarize,
- size: 18, color: Color(0xFF6366F1)),
+ size: 18, color: Color(0xFFB8860B)),
  ),
  const SizedBox(width: 12),
  const Text(
@@ -4268,7 +4217,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFF6366F1)),
+ borderSide: const BorderSide(color: Color(0xFFB8860B)),
  ),
  filled: true,
  fillColor: const Color(0xFFF8FAFC),
@@ -4372,7 +4321,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  return _KpiCard(
  label: 'Budget',
  icon: Icons.account_balance_wallet,
- iconColor: const Color(0xFF3B82F6),
+ iconColor: const Color(0xFFFFC812),
  value: budgetFormatted,
  subtitle: 'total budget',
  status: _summaryData.budgetVariance >= 0 ? 'Under Budget' : 'Over Budget',
@@ -4411,7 +4360,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  return _KpiCard(
  label: 'Scope',
  icon: Icons.layers,
- iconColor: const Color(0xFF8B5CF6),
+ iconColor: const Color(0xFFB8860B),
  value: '${_summaryData.scopeIn.length}',
  subtitle: 'in scope items',
  status: _summaryData.scopeOut.isNotEmpty
@@ -4523,7 +4472,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  statusColor = const Color(0xFF10B981);
  break;
  case 'In Progress':
- statusColor = const Color(0xFF3B82F6);
+ statusColor = const Color(0xFFFFC812);
  break;
  case 'At Risk':
  statusColor = const Color(0xFFEF4444);
@@ -4583,7 +4532,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -4615,11 +4564,11 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.checklist, size: 18, color: Color(0xFF8B5CF6)),
- const SizedBox(width: 8),
- const Text(
+ Icon(Icons.checklist, size: 18, color: Color(0xFFB8860B)),
+ SizedBox(width: 8),
+ Text(
  'Scope Summary',
  style: TextStyle(
  fontSize: 14,
@@ -4717,11 +4666,11 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.people, size: 18, color: Color(0xFF3B82F6)),
- const SizedBox(width: 8),
- const Text(
+ Icon(Icons.people, size: 18, color: Color(0xFFFFC812)),
+ SizedBox(width: 8),
+ Text(
  'Team Summary',
  style: TextStyle(
  fontSize: 14,
@@ -4737,13 +4686,13 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  _buildTeamStatChip(
  label: '${_summaryData.teamMembers.length}',
  subtitle: 'Members',
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFFC812),
  ),
  const SizedBox(width: 12),
  _buildTeamStatChip(
  label: '${_summaryData.vendorCount}',
  subtitle: 'Vendors',
- color: const Color(0xFF8B5CF6),
+ color: const Color(0xFFB8860B),
  ),
  ],
  ),
@@ -4798,7 +4747,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Column(
@@ -4861,7 +4810,7 @@ class _KpiCard extends StatelessWidget {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: iconColor.withOpacity(0.12),
+ color: iconColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 18, color: iconColor),
@@ -4897,7 +4846,7 @@ class _KpiCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -5014,298 +4963,6 @@ class _TeamData {
  const _TeamData({required this.members, required this.vendors});
 }
 
-class _ProjectPlanSectionScreen extends StatelessWidget {
- const _ProjectPlanSectionScreen({required this.config});
-
- final _ProjectPlanSectionConfig config;
-
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- final horizontalPadding = isMobile ? 20.0 : 32.0;
-
- return Scaffold(
- backgroundColor: Colors.white,
- body: SafeArea(
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- DraggableSidebar(
- openWidth: AppBreakpoints.sidebarWidth(context),
- child: InitiationLikeSidebar(
- activeItemLabel: config.activeItemLabel),
- ),
- Expanded(
- child: Stack(
- children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
- activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
- ),
- ),
- SingleChildScrollView(
- padding: EdgeInsets.symmetric(
- horizontal: horizontalPadding, vertical: 24),
- child: LayoutBuilder(
- builder: (context, constraints) {
- final width = constraints.maxWidth;
- const gap = 24.0;
- final twoCol = width >= 980;
- final halfWidth = twoCol ? (width - gap) / 2 : width;
- final hasContent = config.metrics.isNotEmpty ||
- config.sections.isNotEmpty;
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _TopHeader(
- title: config.title,
- onBack: () =>
- PlanningPhaseNavigation.goToPrevious(
- context, config.checkpoint),
- onForward: () => PlanningPhaseNavigation.goToNext(
- context, config.checkpoint),
- ),
- const SizedBox(height: 12),
- Text(
- config.subtitle,
- style: const TextStyle(
- fontSize: 14, color: Color(0xFF6B7280)),
- ),
- const SizedBox(height: 20),
- PlanningAiNotesCard(
- title: 'Notes',
- sectionLabel: config.title,
- noteKey: config.noteKey,
- checkpoint: config.checkpoint,
- description:
- 'Capture plan assumptions, deadlines, and key constraints.',
- ),
- const SizedBox(height: 24),
- if (hasContent) ...[
- _MetricsRow(metrics: config.metrics),
- const SizedBox(height: 24),
- Wrap(
- spacing: gap,
- runSpacing: gap,
- children: config.sections
- .map((section) => SizedBox(
- width: halfWidth,
- child: _SectionCard(data: section)))
- .toList(),
- ),
- ] else
- const _SectionEmptyState(
- title: 'No schedule details yet',
- message:
- 'Add schedule insights to populate this view.',
- icon: Icons.calendar_today_outlined,
- ),
- const SizedBox(height: 24),
- LaunchPhaseNavigation(
- backLabel: PlanningPhaseNavigation.backLabel(
- config.checkpoint),
- nextLabel: PlanningPhaseNavigation.nextLabel(
- config.checkpoint),
- onBack: () =>
- PlanningPhaseNavigation.goToPrevious(
- context, config.checkpoint),
- onNext: () => PlanningPhaseNavigation.goToNext(
- context, config.checkpoint),
- ),
- const SizedBox(height: 40),
- ],
- );
- },
- ),
- ),
- const Positioned(
- right: 24,
- bottom: 24,
- child: KazAiChatBubble(positioned: false)),
- ],
- ),
- ),
- ],
- ),
- ),
- );
- }
-}
-
-class _ProjectPlanSectionConfig {
- const _ProjectPlanSectionConfig({
- required this.title,
- required this.subtitle,
- required this.noteKey,
- required this.checkpoint,
- required this.activeItemLabel,
- required this.metrics,
- required this.sections,
- });
-
- final String title;
- final String subtitle;
- final String noteKey;
- final String checkpoint;
- final String activeItemLabel;
- final List<_MetricData> metrics;
- final List<_SectionData> sections;
-}
-
-class _TopHeader extends StatelessWidget {
- const _TopHeader({
- required this.title,
- required this.onBack,
- required this.onForward,
- });
-
- final String title;
- final VoidCallback onBack;
- final VoidCallback onForward;
-
- @override
- Widget build(BuildContext context) {
- return Row(
- children: [
- _CircleIconButton(
- icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 12),
- _CircleIconButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const SizedBox(width: 16),
- Text(
- title,
- style: const TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const Spacer(),
- const SizedBox(width: 8),
- const _UserChip(),
- ],
- );
- }
-}
-
-class _CircleIconButton extends StatelessWidget {
- const _CircleIconButton({required this.icon, this.onTap});
-
- final IconData icon;
- final VoidCallback? onTap;
-
- @override
- Widget build(BuildContext context) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(18),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _UserChip extends StatelessWidget {
- const _UserChip();
-
- @override
- Widget build(BuildContext context) {
- final user = FirebaseAuth.instance.currentUser;
- final displayName =
- FirebaseAuthService.displayNameOrEmail(fallback: 'User');
- final email = user?.email ?? '';
-
- return StreamBuilder<bool>(
- stream: UserService.watchAdminStatus(),
- builder: (context, snapshot) {
- final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
- final role = isAdmin ? 'Admin' : 'Member';
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- CircleAvatar(
- radius: 16,
- backgroundColor: const Color(0xFFE5E7EB),
- backgroundImage: user?.photoURL != null
- ? NetworkImage(user!.photoURL!)
- : null,
- child: user?.photoURL == null
- ? Text(
- displayName.isNotEmpty
- ? displayName[0].toUpperCase()
- : 'U',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151)),
- )
- : null,
- ),
- const SizedBox(width: 8),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(displayName,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600)),
- Text(role,
- style: const TextStyle(
- fontSize: 10, color: Color(0xFF6B7280))),
- ],
- ),
- const SizedBox(width: 6),
- const Icon(Icons.keyboard_arrow_down,
- size: 18, color: Color(0xFF9CA3AF)),
- ],
- ),
- );
- },
- );
- }
-}
-
-class _MetricsRow extends StatelessWidget {
- const _MetricsRow({required this.metrics});
-
- final List<_MetricData> metrics;
-
- @override
- Widget build(BuildContext context) {
- return Wrap(
- spacing: 16,
- runSpacing: 16,
- children: metrics
- .map((metric) => _MetricCard(
- label: metric.label, value: metric.value, accent: metric.color))
- .toList(),
- );
- }
-}
-
-class _MetricData {
- const _MetricData(this.label, this.value, this.color);
-
- final String label;
- final String value;
- final Color color;
-}
-
 class _MetricCard extends StatelessWidget {
  const _MetricCard({
  required this.label,
@@ -5348,146 +5005,6 @@ class _MetricCard extends StatelessWidget {
  value,
  style: TextStyle(
  fontSize: 20, fontWeight: FontWeight.w700, color: accent),
- ),
- ],
- ),
- );
- }
-}
-
-class _SectionData {
- const _SectionData({
- required this.title,
- required this.subtitle,
- }) : bullets = const [],
- statusRows = const [];
-
- final String title;
- final String subtitle;
- final List<_BulletData> bullets;
- final List<_StatusRowData> statusRows;
-}
-
-class _BulletData {
- const _BulletData(this.text, this.isCheck);
-
- final String text;
- final bool isCheck;
-}
-
-class _StatusRowData {
- const _StatusRowData(this.label, this.value, this.color);
-
- final String label;
- final String value;
- final Color color;
-}
-
-class _SectionCard extends StatelessWidget {
- const _SectionCard({required this.data});
-
- final _SectionData data;
-
- @override
- Widget build(BuildContext context) {
- final showBullets = data.bullets.isNotEmpty;
- final showStatus = data.statusRows.isNotEmpty;
-
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(14),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(data.title,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827))),
- const SizedBox(height: 6),
- Text(data.subtitle,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF6B7280), height: 1.4)),
- const SizedBox(height: 16),
- if (showBullets)
- ...data.bullets.map((bullet) => _BulletRow(data: bullet)),
- if (showStatus)
- ...data.statusRows.map((row) => _StatusRow(data: row)),
- ],
- ),
- );
- }
-}
-
-class _BulletRow extends StatelessWidget {
- const _BulletRow({required this.data});
-
- final _BulletData data;
-
- @override
- Widget build(BuildContext context) {
- return Padding(
- padding: const EdgeInsets.only(bottom: 10),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Icon(
- data.isCheck ? Icons.check_circle_outline : Icons.circle,
- size: data.isCheck ? 16 : 8,
- color: data.isCheck
- ? const Color(0xFF10B981)
- : const Color(0xFF9CA3AF),
- ),
- const SizedBox(width: 8),
- Expanded(
- child: Text(
- data.text,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF374151), height: 1.4),
- ),
- ),
- ],
- ),
- );
- }
-}
-
-class _StatusRow extends StatelessWidget {
- const _StatusRow({required this.data});
-
- final _StatusRowData data;
-
- @override
- Widget build(BuildContext context) {
- return Padding(
- padding: const EdgeInsets.only(bottom: 10),
- child: Row(
- children: [
- Expanded(
- child: Text(
- data.label,
- style: const TextStyle(fontSize: 12, color: Color(0xFF374151)),
- ),
- ),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- decoration: BoxDecoration(
- color: data.color.withOpacity(0.12),
- borderRadius: BorderRadius.circular(999),
- ),
- child: Text(
- data.value,
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700, color: data.color),
- ),
  ),
  ],
  ),

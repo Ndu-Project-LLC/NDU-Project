@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -29,6 +31,7 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive.dart'; // Added for AppBreakpoints
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Front End Planning – Contracting screen (formerly Contract & Vendor Quotes).
 /// Updated to use the standard FEP layout with DraggableSidebar and FrontEndPlanningHeader.
@@ -126,7 +129,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  ];
 
- final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _notesController = SpellCheckTextEditingController();
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  bool _isNotesSyncReady = false;
  final OpenAiServiceSecure _openAi = OpenAiServiceSecure();
@@ -182,9 +185,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  screenTitle: 'Contract & Vendor Quotes',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+ PdfSection.text('Notes', fep.requirementsNotes),
  ],
  );
  }
@@ -486,7 +489,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  _workflowDraftSteps = <_ContractingWorkflowStep>[
  ..._workflowDraftSteps,
  _ContractingWorkflowStep(
- id: 'step_${DateTime.now().microsecondsSinceEpoch}',
+ id: newId('step_'),
  name: 'New Step',
  duration: 1,
  unit: 'week',
@@ -549,12 +552,12 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 
  Future<void> _editWorkflowStep(_ContractingWorkflowStep step) async {
- final nameController = TextEditingController(text: step.name);
+ final nameController = SpellCheckTextEditingController(text: step.name);
  final durationController =
- TextEditingController(text: step.duration.toString());
+ SpellCheckTextEditingController(text: step.duration.toString());
  var selectedUnit = step.unit;
 
- final result = await showDialog<_ContractingWorkflowStep>(
+ final result = await showAppDialog<_ContractingWorkflowStep>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -808,13 +811,13 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  children: [
  CircleAvatar(
  radius: 11,
- backgroundColor: const Color(0xFFEFF6FF),
+ backgroundColor: const Color(0xFFFFF8E1),
  child: Text(
  '${index + 1}',
  style: const TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1415,7 +1418,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return;
  }
 
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Start Scope Process?'),
@@ -1470,7 +1473,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  } catch (e) {
  if (!mounted) return;
  if (e is FirebaseException && e.code == 'permission-denied') {
- final continueLocal = await showDialog<bool>(
+ final continueLocal = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Firestore Permission Required'),
@@ -1539,12 +1542,12 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }) {
  final selected = _selectedManagementTab == tab;
  final baseColor =
- selected ? const Color(0xFFEFF6FF) : const Color(0xFFFFFFFF);
+ selected ? const Color(0xFFFFF8E1) : const Color(0xFFFFFFFF);
  final borderColor = selected
- ? const Color(0xFF93C5FD)
+ ? const Color(0xFFFFC812)
  : (enabled ? const Color(0xFFE5E7EB) : const Color(0xFFE5E7EB));
  final textColor = selected
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFFFC812)
  : (enabled ? const Color(0xFF4B5563) : const Color(0xFF9CA3AF));
 
  return InkWell(
@@ -1932,13 +1935,13 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  vertical: 4),
  decoration: BoxDecoration(
  color: const Color(
- 0xFFEFF6FF),
+ 0xFFFFF8E1),
  borderRadius:
  BorderRadius.circular(
  999),
  border: Border.all(
  color: const Color(
- 0xFFBFDBFE),
+ 0xFFFDE68A),
  ),
  ),
  child: Text(
@@ -1948,7 +1951,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  fontWeight:
  FontWeight.w600,
  color:
- Color(0xFF1E3A8A),
+ Color(0xFFB8860B),
  ),
  ),
  ),
@@ -2009,7 +2012,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  label: const Text(
  'Start Process for this Scope'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  ),
@@ -2106,7 +2109,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Consulting',
  'Other',
  ];
- final result = await showDialog<ContractModel>(
+ final result = await showAppDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2132,7 +2135,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Consulting',
  'Other',
  ];
- final result = await showDialog<ContractModel>(
+ final result = await showAppDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2167,7 +2170,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<void> _deleteContract(ContractModel contract) async {
  final projectId = _activeProjectIdOrNull();
  if (projectId == null) return;
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete contract?'),
@@ -2216,7 +2219,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2304,7 +2307,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  'Other',
  ];
 
- final result = await showDialog<VendorModel>(
+ final result = await showAppDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2355,7 +2358,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 
  Future<void> _confirmDeleteContractor(VendorModel contractor) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Remove contractor?'),
@@ -2398,16 +2401,16 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<ProcurementItemModel?> _showContractScopeDialog({
  ProcurementItemModel? existing,
  }) async {
- final scopeController = TextEditingController(text: existing?.name ?? '');
+ final scopeController = SpellCheckTextEditingController(text: existing?.name ?? '');
  final descriptionController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final contractorsController =
- TextEditingController(text: existing?.notes ?? '');
- final valueController = TextEditingController(
+ SpellCheckTextEditingController(text: existing?.notes ?? '');
+ final valueController = SpellCheckTextEditingController(
  text: existing != null ? existing.budget.toStringAsFixed(0) : '',
  );
  final durationController =
- TextEditingController(text: existing?.comments ?? '');
+ SpellCheckTextEditingController(text: existing?.comments ?? '');
 
  var contractType = (existing?.category ?? '').trim();
  if (!_contractTypeOptions.contains(contractType)) {
@@ -2422,7 +2425,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  startStage = _startStageOptions[1];
  }
 
- final result = await showDialog<ProcurementItemModel>(
+ final result = await showAppDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
  barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -2653,7 +2656,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 
  Future<void> _deleteItem(ProcurementItemModel item) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Delete contracting scope item?'),
@@ -2765,9 +2768,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ) ??
  Future.value(const <VendorModel>[]));
  final candidates = _collectApprovedContractors(const [], scopes, vendors);
- final controller = TextEditingController();
+ final controller = SpellCheckTextEditingController();
  if (!mounted) return;
- final picked = await showDialog<String>(
+ final picked = await showAppDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Select Contractor'),
@@ -2825,7 +2828,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
 
  final selected = <String>{};
  if (!mounted) return;
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -2953,11 +2956,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<void> _openTemplateEditor(ProcurementItemModel item) async {
  final data = ProjectDataHelper.getData(context);
  final key = _templateKeyForScope(item.id);
- final controller = TextEditingController(
+ final controller = SpellCheckTextEditingController(
  text: (data.planningNotes[key] ?? '').toString(),
  );
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: Text(
@@ -3086,7 +3089,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  .trim()
  .isEmpty
  ? const Color(0xFFF59E0B)
- : const Color(0xFF2563EB),
+ : const Color(0xFFFFC812),
  ),
  ],
  ),
@@ -3632,7 +3635,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  );
  }
 
- Widget _statusBadge(String label, {Color tone = const Color(0xFF2563EB)}) {
+ Widget _statusBadge(String label, {Color tone = const Color(0xFFFFC812)}) {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
@@ -3654,8 +3657,8 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Color _trackingStatusTone(String status) {
  final normalized = status.toLowerCase();
  if (normalized.contains('draft')) return const Color(0xFF94A3B8);
- if (normalized.contains('sent')) return const Color(0xFF2563EB);
- if (normalized.contains('response')) return const Color(0xFF14B8A6);
+ if (normalized.contains('sent')) return const Color(0xFFFFC812);
+ if (normalized.contains('response')) return const Color(0xFFD97706);
  if (normalized.contains('evaluation')) return const Color(0xFFF59E0B);
  if (normalized.contains('award') || normalized.contains('signed')) {
  return const Color(0xFF16A34A);
@@ -3667,7 +3670,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final normalized = status.toLowerCase();
  if (normalized.contains('draft')) return const Color(0xFF94A3B8);
  if (normalized.contains('review')) return const Color(0xFFF59E0B);
- if (normalized.contains('approved')) return const Color(0xFF2563EB);
+ if (normalized.contains('approved')) return const Color(0xFFFFC812);
  if (normalized.contains('publish')) return const Color(0xFF16A34A);
  return const Color(0xFF64748B);
  }
@@ -3698,7 +3701,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  status = _trackingStatusOptions.first;
  }
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -3721,9 +3724,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  .toList(),
  onChanged: (value) {
  if (value == null) return;
- final match = scopes.firstWhere(
- (scope) => scope.id == value,
- orElse: () => scopes.first);
+ // Null-safe: scopes can be empty while data re-syncs; never throw
+ // "Bad state: No element" from a dropdown callback.
+ final idx = scopes.indexWhere((scope) => scope.id == value);
+ if (idx == -1) return;
+ final match = scopes[idx];
  setState(() {
  selected = match;
  final next = _trackingStatusForScope(match.id, notes);
@@ -3778,13 +3783,13 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Future<void> _openReportDialog({
  _ContractingReportEntry? existing,
  }) async {
- final titleController = TextEditingController(text: existing?.title ?? '');
- final ownerController = TextEditingController(text: existing?.owner ?? '');
+ final titleController = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final ownerController = SpellCheckTextEditingController(text: existing?.owner ?? '');
  final summaryController =
- TextEditingController(text: existing?.summary ?? '');
+ SpellCheckTextEditingController(text: existing?.summary ?? '');
  var status = existing?.status ?? _reportStatusOptions.first;
 
- final saved = await showDialog<bool>(
+ final saved = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
@@ -3846,10 +3851,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  false;
 
  if (!saved) return;
- final data = ProjectDataHelper.getData(context);
+if (!mounted) return;
+  final data = ProjectDataHelper.getData(context);
  final reports = _loadContractingReports(data);
  final entry = _ContractingReportEntry(
- id: existing?.id ?? 'report_${DateTime.now().microsecondsSinceEpoch}',
+ id: existing?.id ?? newId('report_'),
  title: titleController.text.trim(),
  status: status,
  owner: ownerController.text.trim(),
@@ -3914,75 +3920,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SnackBar(content: Text('Unable to update contractor: $e')),
  );
  }
- }
-
- Future<void> _openContractorActionsDialog({
- required String name,
- required VendorModel? vendor,
- required List<ProcurementItemModel> scopes,
- }) async {
- await showDialog<void>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: Text(name),
- content: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- vendor == null
- ? 'Status: Untracked (not yet in vendors list)'
- : 'Status: ${vendor.status}',
- style: const TextStyle(fontSize: 12.5),
- ),
- const SizedBox(height: 10),
- const Text(
- 'Actions',
- style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
- ),
- ],
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.pop(dialogContext),
- child: const Text('Close'),
- ),
- if (vendor != null) ...[
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _setVendorStatus(vendor, 'Approved');
- },
- child: const Text('Approve'),
- ),
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _setVendorStatus(vendor, 'Denied');
- },
- child: const Text('Deny', style: TextStyle(color: Colors.red)),
- ),
- ] else
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _openAddContractorDialog();
- },
- child: const Text('Add To Vendors'),
- ),
- TextButton(
- onPressed: () async {
- Navigator.pop(dialogContext);
- await _promptAssignContractorToScopes(
- contractorName: name,
- scopes: scopes,
- );
- },
- child: const Text('Assign to Scope'),
- ),
- ],
- ),
- );
  }
 
  List<String> _collectApprovedContractors(
@@ -4056,13 +3993,13 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  vendorByName[vendor.name.trim().toLowerCase()] = vendor;
  }
 
- await showDialog<void>(
+ await showAppDialog<void>(
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
  title: const Row(
  children: [
- Icon(Icons.fact_check_outlined, color: Color(0xFF2563EB)),
+ Icon(Icons.fact_check_outlined, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('Approved Contractor List'),
  ],
@@ -4078,6 +4015,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  constraints: const BoxConstraints(maxHeight: 420),
  child: ListView.separated(
  shrinkWrap: true,
+ physics: const NeverScrollableScrollPhysics(),
  itemCount: contractors.length,
  separatorBuilder: (_, __) =>
  const Divider(height: 12, thickness: 0.5),
@@ -4096,7 +4034,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  const EdgeInsets.symmetric(horizontal: 0),
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFEFF6FF),
+ backgroundColor: const Color(0xFFFFF8E1),
  child: Text(
  name.isEmpty
  ? '?'
@@ -4104,7 +4042,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -4481,7 +4419,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
 
  bool shouldImport = silent;
  if (!silent) {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (ctx) => _AiPreviewDialog(data: generated),
  );
@@ -5081,7 +5019,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Widget _buildMobileScaffold(BuildContext context) {
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: Drawer(
  width: MediaQuery.sizeOf(context).width * 0.88,
  child: const SafeArea(
@@ -5112,7 +5050,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const CircleAvatar(
  radius: 13,
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFFFC812),
  child: Text('Ch',
  style: TextStyle(
  color: Colors.white,
@@ -5261,7 +5199,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  strokeWidth: 2),
  )
  : const Icon(Icons.refresh_rounded,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFFFC812)),
  ),
  ],
  ),
@@ -5283,10 +5221,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  label: const Text('Approved Contractor List'),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF1E3A8A),
+ foregroundColor: const Color(0xFFB8860B),
  side: const BorderSide(
- color: Color(0xFFBFDBFE)),
- backgroundColor: const Color(0xFFEFF6FF),
+ color: Color(0xFFFDE68A)),
+ backgroundColor: const Color(0xFFFFF8E1),
  ),
  ),
  ),
@@ -5333,7 +5271,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  child: const Row(
  children: [
  Icon(Icons.auto_awesome,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -5528,7 +5466,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
 
  return Scaffold(
  key: _scaffoldKey,
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  drawer: null,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SafeArea(
@@ -5558,16 +5496,12 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const AdminEditToggle(),
  SingleChildScrollView(
- padding: const EdgeInsets.symmetric(
- horizontal: 32, vertical: 24),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _ContractingTopBar(
- onBack: _goToPreviousSection,
- onForward: _navigateToProcurement,
- ),
- const SizedBox(height: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Contracting',
@@ -5600,11 +5534,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  style: OutlinedButton.styleFrom(
  foregroundColor:
- const Color(0xFF1E3A8A),
+ const Color(0xFFB8860B),
  side: const BorderSide(
- color: Color(0xFFBFDBFE)),
+ color: Color(0xFFFDE68A)),
  backgroundColor:
- const Color(0xFFEFF6FF),
+ const Color(0xFFFFF8E1),
  padding: const EdgeInsets.symmetric(
  horizontal: 14,
  vertical: 10,
@@ -5977,95 +5911,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }
 }
 
-class _ContractingTopBar extends StatelessWidget {
- const _ContractingTopBar({required this.onBack, required this.onForward});
-
- final VoidCallback onBack;
- final VoidCallback onForward;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(20),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- child: Row(
- children: [
- _circleButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 12),
- _circleButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const Spacer(),
- const _ContractingUserBadge(),
- ],
- ),
- );
- }
-
- Widget _circleButton({required IconData icon, required VoidCallback onTap}) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(999),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _ContractingUserBadge extends StatelessWidget {
- const _ContractingUserBadge();
-
- @override
- Widget build(BuildContext context) {
- final projectName = ProjectDataHelper.getData(context).projectName.trim();
- final displayName = projectName.isEmpty ? 'Contracting Team' : projectName;
- final roleLabel = projectName.isEmpty ? 'Contracting' : 'Contracting Plan';
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(999),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- const CircleAvatar(
- radius: 16,
- backgroundColor: Color(0xFFD1D5DB),
- child: Icon(Icons.person, size: 18, color: Color(0xFF374151)),
- ),
- const SizedBox(width: 10),
- Text(
- displayName,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Color(0xFF111827)),
- ),
- const SizedBox(width: 6),
- Text(
- roleLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- );
- }
-}
-
 class _BottomOverlay extends StatelessWidget {
  const _BottomOverlay({required this.onNext});
 
@@ -6096,13 +5941,13 @@ class _BottomOverlay extends StatelessWidget {
  ),
  child: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text(
  'AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  SizedBox(width: 12),
@@ -6167,11 +6012,11 @@ class _ScopeSectionModeSwitcher extends StatelessWidget {
  curve: Curves.easeOut,
  padding: const EdgeInsets.symmetric(vertical: 10),
  decoration: BoxDecoration(
- color: selected ? const Color(0xFFEFF6FF) : Colors.white,
+ color: selected ? const Color(0xFFFFF8E1) : Colors.white,
  borderRadius: BorderRadius.circular(10),
  border: Border.all(
  color: selected
- ? const Color(0xFF93C5FD)
+ ? const Color(0xFFFFC812)
  : const Color(0xFFE5E7EB),
  ),
  ),
@@ -6182,7 +6027,7 @@ class _ScopeSectionModeSwitcher extends StatelessWidget {
  fontSize: 12.5,
  fontWeight: FontWeight.w700,
  color: selected
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF6B7280),
  ),
  ),
@@ -6282,7 +6127,7 @@ class _ContractScopeDetailsBoard extends StatelessWidget {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  ),
  const SizedBox(height: 4),
@@ -6404,8 +6249,8 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  }
 
  Future<void> _addContractorManually() async {
- final controller = TextEditingController();
- final result = await showDialog<String>(
+ final controller = SpellCheckTextEditingController();
+ final result = await showAppDialog<String>(
  context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Add Potential Contractors'),
@@ -6477,9 +6322,9 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Text(
  item.category.trim().isEmpty
@@ -6488,7 +6333,7 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -6909,7 +6754,7 @@ class _ContractingWorkflowStep {
  : 'week';
 
  return _ContractingWorkflowStep(
- id: id.isEmpty ? 'step_${DateTime.now().microsecondsSinceEpoch}' : id,
+ id: id.isEmpty ? newId('step_') : id,
  name: name.isEmpty ? 'Untitled Step' : name,
  duration: duration,
  unit: unit,
@@ -6953,7 +6798,7 @@ class _ContractingReportEntry {
 
  return _ContractingReportEntry(
  id: (map['id'] ?? '').toString().trim().isEmpty
- ? 'report_${DateTime.now().microsecondsSinceEpoch}'
+ ? newId('report_')
  : (map['id'] ?? '').toString(),
  title: (map['title'] ?? '').toString(),
  status: (map['status'] ?? 'Draft').toString(),
@@ -7013,8 +6858,8 @@ class _SectionHeader extends StatelessWidget {
  icon: const Icon(Icons.add, size: 16),
  label: Text(actionLabel),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFEFF6FF),
- foregroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFF8E1),
+ foregroundColor: const Color(0xFFFFC812),
  elevation: 0,
  shape:
  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -7430,7 +7275,7 @@ class _AiPreviewDialog extends StatelessWidget {
  return AlertDialog(
  title: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 12),
  Text('AI Suggested Contracting Scope'),
  ],
@@ -7499,7 +7344,7 @@ class _AiPreviewDialog extends StatelessWidget {
  ElevatedButton(
  onPressed: () => Navigator.of(context).pop(true),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  child: const Text('Confirm & Save'),

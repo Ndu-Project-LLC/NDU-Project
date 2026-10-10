@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -10,6 +11,7 @@ import 'package:ndu_project/widgets/ai_regenerate_undo_buttons.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ExternalIntegrationsScreen extends StatefulWidget {
  const ExternalIntegrationsScreen({super.key});
  static void open(BuildContext context) => context.push('/external-integrations');
@@ -113,8 +115,8 @@ class _ExternalIntegrationsScreenState
  }
 
  void _openAdd() {
- final name = TextEditingController();
- showDialog(
+ final name = SpellCheckTextEditingController();
+ showAppDialog(
  context: context,
  builder: (c) => AlertDialog(
  title: const Text('Add integration'),

@@ -1,6 +1,10 @@
 library;
 
-/// Accounting Screen — provider picker, mock OAuth, GL code mapping.
+/// GL code mapping for this project's cost estimate.
+///
+/// The accounting connection is an account-level setting and is managed in
+/// Settings (see `AccountingConnectionPanel`). This screen reads that
+/// connection, so the estimate knows which provider its GL codes map to.
 ///
 /// Rendered inside the Cost Estimate module's [ResponsiveScaffold] body —
 /// no Scaffold of its own. Light-mode (white) theme.
@@ -11,6 +15,8 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/cost_estimate/services/accounting_integration_service.dart';
+import 'package:ndu_project/screens/settings_screen.dart';
 
 class AccountingScreen extends StatefulWidget {
   const AccountingScreen({super.key});
@@ -20,7 +26,105 @@ class AccountingScreen extends StatefulWidget {
 }
 
 class _AccountingScreenState extends State<AccountingScreen> {
-  bool _connecting = false;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _syncEstimateWithAccount();
+    });
+  }
+
+  /// Brings the estimate's connection record in line with the account's
+  /// connection, so GL mapping reflects what the user actually connected.
+  Future<void> _syncEstimateWithAccount() async {
+    if (!mounted) return;
+    final provider = context.read<CostEstimateProvider>();
+
+    // A web build may be booting straight out of the provider's redirect.
+    final pending =
+        await AccountingIntegrationService.completePendingBrokerConnect();
+    if (!mounted) return;
+    if (pending != null &&
+        pending.connection.connected &&
+        pending.provider != AccountingProvider.none) {
+      _adoptConnection(provider, pending.provider, pending.connection);
+      return;
+    }
+
+    final record = provider.estimate?.accountingIntegration;
+    if (record != null &&
+        record.connected &&
+        record.provider != AccountingProvider.none) {
+      await _verifyEstimateRecord(provider, record);
+      return;
+    }
+
+    // The estimate has no connection yet: adopt the account's, if any.
+    for (final p in AccountingProvider.values) {
+      if (p == AccountingProvider.none) continue;
+      final connection = await AccountingIntegrationService.load(p);
+      if (!mounted) return;
+      if (connection.connected) {
+        _adoptConnection(provider, p, connection);
+        return;
+      }
+    }
+  }
+
+  /// Renews a live estimate connection, or clears it when the provider has
+  /// withdrawn authorisation.
+  Future<void> _verifyEstimateRecord(
+      CostEstimateProvider provider, AccountingIntegration record) async {
+    final live =
+        await AccountingIntegrationService.loadAndRenew(record.provider);
+    if (!mounted) return;
+
+    if (live.connected) {
+      final renewed =
+          live.expiresAt != null && live.expiresAt != record.expiresAt;
+      if (renewed) {
+        provider.updateAccounting(AccountingIntegration(
+          provider: record.provider,
+          connected: true,
+          connectedAt: live.connectedAt ?? record.connectedAt,
+          glMapping: record.glMapping,
+          accountLabel: record.accountLabel,
+          scopes: live.scopes.isEmpty ? record.scopes : live.scopes,
+          expiresAt: live.expiresAt,
+        ));
+        _showMessage('${record.provider.label} session renewed.');
+      }
+      return;
+    }
+
+    // Only a *verified* "not connected" clears the record: an unreadable
+    // store must never silently drop a real connection.
+    if (live.verified) {
+      provider
+          .updateAccounting(AccountingIntegrationService.disconnectedRecord);
+      _showMessage(
+          '${record.provider.label} is no longer authorised — reconnect it in Settings to resume syncing.');
+    }
+  }
+
+  /// Records [connection] on the estimate, keeping any GL codes already mapped.
+  void _adoptConnection(CostEstimateProvider provider, AccountingProvider p,
+      AccountingConnection connection) {
+    final existingMapping =
+        provider.estimate?.accountingIntegration?.glMapping ??
+            const <AccountingGLMapping>[];
+    provider.updateAccounting(AccountingIntegrationService.toEstimateRecord(
+      provider: p,
+      connection: connection,
+      glMapping: existingMapping,
+    ));
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +151,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
                 children: [
                   Icon(Icons.link, color: LightModeColors.accent, size: 20),
                   SizedBox(width: 8),
-                  Text('Accounting Integration',
+                  Text('GL Code Mapping',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 20,
@@ -55,22 +159,10 @@ class _AccountingScreenState extends State<AccountingScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Connection
-                  Expanded(
-                    child: _buildConnectionSection(
-                        context, provider, integration, canEdit),
-                  ),
-                  const SizedBox(width: 24),
-                  // GL Mapping
-                  Expanded(
-                    child: _buildGLMappingSection(
-                        context, provider, integration, canEdit, glMap),
-                  ),
-                ],
-              ),
+              _buildConnectionNotice(integration),
+              const SizedBox(height: 16),
+              _buildGLMappingSection(
+                  context, provider, integration, canEdit, glMap),
             ],
           ),
         );
@@ -78,182 +170,49 @@ class _AccountingScreenState extends State<AccountingScreen> {
     );
   }
 
-  Widget _buildConnectionSection(
-    BuildContext context,
-    CostEstimateProvider provider,
-    AccountingIntegration integration,
-    bool canEdit,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Connection',
-            style: TextStyle(
-                color: Color(0xFF1A1D1F),
-                fontSize: 16,
-                fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        // Current status
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: integration.connected
-                ? const Color(0xFF16A34A).withValues(alpha: 0.05)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: integration.connected
-                  ? const Color(0xFF16A34A).withValues(alpha: 0.4)
-                  : const Color(0xFFE4E7EC),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(
-                integration.connected ? Icons.cloud_done : Icons.link_off,
-                color: integration.connected
-                    ? const Color(0xFF16A34A)
-                    : const Color(0xFF6B7280),
-                size: 32,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      integration.connected
-                          ? integration.provider.label
-                          : 'Not connected',
-                      style: const TextStyle(
-                          color: Color(0xFF1A1D1F),
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      integration.connected
-                          ? 'Connected ${integration.connectedAt != null ? integration.connectedAt.toString().substring(0, 16) : ""}'
-                          : 'Pick a provider below to connect',
-                      style: const TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              if (integration.connected)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text('LIVE',
-                      style: TextStyle(
-                          color: Color(0xFF16A34A),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold)),
-                ),
-            ],
-          ),
+  /// Shows which account connection this estimate maps to, or points the user
+  /// to Settings to connect one.
+  Widget _buildConnectionNotice(AccountingIntegration integration) {
+    final connected = integration.connected &&
+        integration.provider != AccountingProvider.none;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: connected
+            ? const Color(0xFF16A34A).withValues(alpha: 0.05)
+            : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: connected
+              ? const Color(0xFF16A34A).withValues(alpha: 0.4)
+              : const Color(0xFFE4E7EC),
         ),
-        const SizedBox(height: 16),
-        // Provider picker
-        if (!integration.connected && canEdit)
-          ...AccountingProvider.values
-              .where((p) => p != AccountingProvider.none)
-              .map((p) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _connecting ? null : () => _connect(context, provider, p),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: const Color(0xFFE4E7EC)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.account_balance,
-                                  color: LightModeColors.accent, size: 20),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(p.label,
-                                        style: const TextStyle(
-                                            color: Color(0xFF1A1D1F),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600)),
-                                    const Text('OAuth 2.0 · Secure connection',
-                                        style: TextStyle(
-                                            color: Color(0xFF6B7280),
-                                            fontSize: 11)),
-                                  ],
-                                ),
-                              ),
-                              if (_connecting)
-                                const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: LightModeColors.accent),
-                                )
-                              else
-                                const Icon(Icons.arrow_forward,
-                                    color: Color(0xFF6B7280), size: 16),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  )),
-        if (integration.connected && canEdit)
-          TextButton(
-            onPressed: () => provider.updateAccounting(
-                const AccountingIntegration(
-                    provider: AccountingProvider.none,
-                    connected: false,
-                    glMapping: [])),
-            child: const Text('Disconnect',
-                style: TextStyle(color: Color(0xFFB91C1C))),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            connected ? Icons.cloud_done : Icons.link_off,
+            color: connected ? const Color(0xFF16A34A) : const Color(0xFF6B7280),
+            size: 24,
           ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              connected
+                  ? 'GL codes map to ${integration.provider.label}, your account connection.'
+                  : 'No accounting system is connected to your account yet.',
+              style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 13),
+            ),
+          ),
+          TextButton(
+            onPressed: () => SettingsScreen.open(context),
+            child: Text(connected ? 'Manage in Settings' : 'Connect in Settings',
+                style: const TextStyle(color: LightModeColors.accent)),
+          ),
+        ],
+      ),
     );
-  }
-
-  void _connect(BuildContext context, CostEstimateProvider provider,
-      AccountingProvider p) async {
-    setState(() => _connecting = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    provider.updateAccounting(AccountingIntegration(
-      provider: p,
-      connected: true,
-      connectedAt: DateTime.now(),
-      glMapping: [],
-    ));
-    setState(() => _connecting = false);
   }
 
   Widget _buildGLMappingSection(
@@ -292,6 +251,9 @@ class _AccountingScreenState extends State<AccountingScreen> {
                     connected: true,
                     connectedAt: integration.connectedAt,
                     glMapping: mappings,
+                    accountLabel: integration.accountLabel,
+                    scopes: integration.scopes,
+                    expiresAt: integration.expiresAt,
                   ));
                 },
                 icon: const Icon(Icons.refresh, size: 14),
@@ -321,7 +283,8 @@ class _AccountingScreenState extends State<AccountingScreen> {
               border: Border.all(color: const Color(0xFFE4E7EC)),
             ),
             child: const Center(
-              child: Text('Connect an accounting provider to map GL codes.',
+              child: Text(
+                  'Connect an accounting system in Settings to map GL codes.',
                   style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
             ),
           )

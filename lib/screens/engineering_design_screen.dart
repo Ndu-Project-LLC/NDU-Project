@@ -1,8 +1,9 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -18,6 +19,7 @@ import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
 class _StructuralItem {
@@ -427,17 +429,43 @@ class _Debouncer {
 
 // ─── Panel Shell ─────────────────────────────────────────────────────────────
 
+// Gives a dense table a minimum width and scrolls horizontally when the card
+// is narrower, so columns never overflow the card.
+class _HorizontalTableScroll extends StatelessWidget {
+  final double minWidth;
+  final Widget child;
+
+  const _HorizontalTableScroll({required this.minWidth, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth > minWidth
+            ? constraints.maxWidth
+            : minWidth;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(width: width, child: child),
+        );
+      },
+    );
+  }
+}
+
 class _PanelShell extends StatelessWidget {
  final String title;
  final String subtitle;
  final Widget? trailing;
  final Widget child;
+  final double? minTableWidth;
 
  const _PanelShell({
  required this.title,
  required this.subtitle,
  this.trailing,
  required this.child,
+ this.minTableWidth,
  });
 
  @override
@@ -496,7 +524,9 @@ class _PanelShell extends StatelessWidget {
  ),
  ),
  const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
- child,
+ minTableWidth == null
+            ? child
+            : _HorizontalTableScroll(minWidth: minTableWidth!, child: child),
  ],
  ),
  );
@@ -511,11 +541,12 @@ class EngineeringDesignScreen extends StatefulWidget {
  @override
  State<EngineeringDesignScreen> createState() =>
  _EngineeringDesignScreenState();
-}
-
-class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
- final TextEditingController _notesController = TextEditingController();
- final TextEditingController _keyDecisionsController = TextEditingController();
+}class _EngineeringDesignScreenState extends State<EngineeringDesignScreen>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController _notesController = SpellCheckTextEditingController();
+  late final TabController _registerTabController =
+      TabController(length: 6, vsync: this);
+ final TextEditingController _keyDecisionsController = SpellCheckTextEditingController();
  final _Debouncer _saveDebouncer = _Debouncer();
 
  bool _isLoading = false;
@@ -577,11 +608,18 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  'In Progress',
  'Pending',
  'Not Started',
- ];
+ ];  static const List<String> _peStampOptions = ['Yes', 'No', 'N/A'];
 
- static const List<String> _peStampOptions = ['Yes', 'No', 'N/A'];
+  static const List<String> _registerTabLabels = [
+    'Structural & Architecture',
+    'Components & Interfaces',
+    'Calculations & Analysis',
+    'Compliance & Standards',
+    'Change Notices (ECN)',
+    'Readiness Gates',
+  ];
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  @override
  void initState() {
@@ -604,9 +642,13 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  }
  await _loadFromFirestore();
  });
- _notesController.addListener(_scheduleSave);
- _keyDecisionsController.addListener(_scheduleSave);
- }
+ _notesController.addListener(_scheduleSave);    _keyDecisionsController.addListener(_scheduleSave);
+    _registerTabController.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
 
  
  Future<void> _exportPdf() async {
@@ -616,7 +658,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  screenTitle: 'Engineering Design',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
  ]),
  PdfSection.text('Notes', projectData.planningNotes['engineering_design_screen'] ?? 'No data recorded.'),
  ],
@@ -624,9 +666,9 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  }
 @override
  void dispose() {
- _notesController.dispose();
- _keyDecisionsController.dispose();
- _saveDebouncer.dispose();
+ _notesController.dispose();    _keyDecisionsController.dispose();
+    _registerTabController.dispose();
+    _saveDebouncer.dispose();
  super.dispose();
  }
 
@@ -1071,12 +1113,12 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  return const Color(0xFFF59E0B);
  case 'Draft':
  case 'Pending':
- return const Color(0xFF6366F1);
+ return const Color(0xFFB8860B);
  case 'Planned':
  case 'Not Started':
  return const Color(0xFF6B7280);
  case 'Under Review':
- return const Color(0xFF0EA5E9);
+ return const Color(0xFFFFC812);
  default:
  return const Color(0xFF6B7280);
  }
@@ -1106,11 +1148,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openStructuralItemDialog(
  {_StructuralItem? existing}) async {
  final layerController =
- TextEditingController(text: existing?.layer ?? '');
+ SpellCheckTextEditingController(text: existing?.layer ?? '');
  final descController =
- TextEditingController(text: existing?.description ?? '');
+ SpellCheckTextEditingController(text: existing?.description ?? '');
  final specController =
- TextEditingController(text: existing?.specification ?? '');
+ SpellCheckTextEditingController(text: existing?.specification ?? '');
  String status = existing?.status ?? _structuralStatusOptions.first;
  String owner = existing?.owner ?? 'Owner';
 
@@ -1118,6 +1160,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
  title: Text(existing == null
  ? 'Add architecture layer'
  : 'Edit architecture layer'),
@@ -1171,7 +1214,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1231,11 +1274,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openComponentItemDialog(
  {_ComponentItem? existing}) async {
  final nameController =
- TextEditingController(text: existing?.component ?? '');
+ SpellCheckTextEditingController(text: existing?.component ?? '');
  final respController =
- TextEditingController(text: existing?.responsibility ?? '');
+ SpellCheckTextEditingController(text: existing?.responsibility ?? '');
  final ifaceController =
- TextEditingController(text: existing?.interfaceType ?? '');
+ SpellCheckTextEditingController(text: existing?.interfaceType ?? '');
  String status = existing?.status ?? _componentStatusOptions.first;
  String owner = existing?.owner ?? 'Owner';
 
@@ -1243,6 +1286,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
  title: Text(existing == null
  ? 'Add component'
  : 'Edit component'),
@@ -1296,7 +1340,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1357,11 +1401,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openCalculationItemDialog(
  {_CalculationItem? existing}) async {
  final calcController =
- TextEditingController(text: existing?.calculation ?? '');
+ SpellCheckTextEditingController(text: existing?.calculation ?? '');
  final typeController =
- TextEditingController(text: existing?.type ?? '');
+ SpellCheckTextEditingController(text: existing?.type ?? '');
  final stdController =
- TextEditingController(text: existing?.standard ?? '');
+ SpellCheckTextEditingController(text: existing?.standard ?? '');
  String status = existing?.status ?? _calculationStatusOptions.first;
  String peStamp = existing?.peStamp ?? _peStampOptions.first;
  String reviewer = existing?.reviewer ?? 'Reviewer';
@@ -1370,6 +1414,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
  title: Text(existing == null
  ? 'Add calculation'
  : 'Edit calculation'),
@@ -1439,7 +1484,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: reviewer),
+ controller: SpellCheckTextEditingController(text: reviewer),
  decoration: const InputDecoration(
  labelText: 'Reviewer',
  border: OutlineInputBorder(),
@@ -1501,11 +1546,11 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  Future<void> _openComplianceItemDialog(
  {_ComplianceItem? existing}) async {
  final stdController =
- TextEditingController(text: existing?.standard ?? '');
+ SpellCheckTextEditingController(text: existing?.standard ?? '');
  final scopeController =
- TextEditingController(text: existing?.scope ?? '');
+ SpellCheckTextEditingController(text: existing?.scope ?? '');
  final applController =
- TextEditingController(text: existing?.applicability ?? '');
+ SpellCheckTextEditingController(text: existing?.applicability ?? '');
  String complianceStatus =
  existing?.complianceStatus ?? _complianceStatusOptions.first;
  String evidence = existing?.evidence ?? '';
@@ -1515,6 +1560,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
  title: Text(existing == null
  ? 'Add compliance standard'
  : 'Edit compliance standard'),
@@ -1566,7 +1612,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: evidence),
+ controller: SpellCheckTextEditingController(text: evidence),
  decoration: const InputDecoration(
  labelText: 'Evidence',
  border: OutlineInputBorder(),
@@ -1575,7 +1621,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1637,9 +1683,9 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  Future<void> _openEcnItemDialog({_EcnItem? existing}) async {
  final ecnIdController =
- TextEditingController(text: existing?.ecnId ?? '');
+ SpellCheckTextEditingController(text: existing?.ecnId ?? '');
  final titleController =
- TextEditingController(text: existing?.title ?? '');
+ SpellCheckTextEditingController(text: existing?.title ?? '');
  String priority = existing?.priority ?? _ecnPriorityOptions.first;
  String status = existing?.status ?? _ecnStatusOptions.first;
  String originator = existing?.originator ?? 'Originator';
@@ -1650,6 +1696,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
  title: Text(
  existing == null ? 'Add ECN' : 'Edit ECN'),
  content: SizedBox(
@@ -1710,7 +1757,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: originator),
+ controller: SpellCheckTextEditingController(text: originator),
  decoration: const InputDecoration(
  labelText: 'Originator',
  border: OutlineInputBorder(),
@@ -1719,7 +1766,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: approver),
+ controller: SpellCheckTextEditingController(text: approver),
  decoration: const InputDecoration(
  labelText: 'Approver',
  border: OutlineInputBorder(),
@@ -1728,7 +1775,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: date),
+ controller: SpellCheckTextEditingController(text: date),
  decoration: const InputDecoration(
  labelText: 'Date',
  border: OutlineInputBorder(),
@@ -1790,7 +1837,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  Future<void> _openReadinessGateDialog({_ReadinessGate? existing}) async {
  final gateController =
- TextEditingController(text: existing?.gate ?? '');
+ SpellCheckTextEditingController(text: existing?.gate ?? '');
  String owner = existing?.owner ?? 'Owner';
  String status = existing?.status ?? _readinessStatusOptions.first;
 
@@ -1798,6 +1845,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setModalState) => AlertDialog(
+          scrollable: true,
  title: Text(existing == null
  ? 'Add approval gate'
  : 'Edit approval gate'),
@@ -1815,7 +1863,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  VoiceTextField(
- controller: TextEditingController(text: owner),
+ controller: SpellCheckTextEditingController(text: owner),
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1889,7 +1937,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  return ResponsiveScaffold(
  activeItemLabel: 'Engineering',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -1905,26 +1953,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  if (_isLoading) const SizedBox(height: 16),
  _buildFrameworkGuide(),
- const SizedBox(height: 24),
- _buildStructuralRegister(),
- const SizedBox(height: 20),
- _buildComponentsRegister(),
- const SizedBox(height: 20),
- _buildCalculationsRegister(),
- const SizedBox(height: 20),
- _buildComplianceRegister(),
- const SizedBox(height: 20),
- _buildEcnRegister(),
- const SizedBox(height: 20),
- _buildReadinessGatesPanel(),
- const SizedBox(height: 20),
- _buildEngineeringBriefCard(),
+ const SizedBox(height: 24),_buildRegisterTabs(),
+                                  const SizedBox(height: 20),
+                                  _buildSelectedRegister(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Backend Design',
- nextLabel: 'Next: Technical Development',
- onBack: () => context.go('/backend-design'),
- onNext: () => context.go('/technical-development'),
+ backLabel: PlanningPhaseNavigation.backLabel('engineering_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('engineering_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'engineering_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'engineering_design'),
  ),
  ],
  ),
@@ -1933,9 +1970,51 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  );
- }
+ }  // ─── Register Tabs ─────────────────────────────────────────────────────────
 
- // ─── Framework Guide ───────────────────────────────────────────────────────
+  Widget _buildRegisterTabs() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: TabBar(
+        controller: _registerTabController,
+        isScrollable: true,
+        labelColor: const Color(0xFF111827),
+        unselectedLabelColor: const Color(0xFF6B7280),
+        labelStyle:
+            const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+        unselectedLabelStyle:
+            const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        indicatorColor: const Color(0xFFFFC812),
+        indicatorWeight: 3,
+        tabs: _registerTabLabels.map((l) => Tab(text: l)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSelectedRegister() {
+    switch (_registerTabController.index) {
+      case 1:
+        return _buildComponentsRegister();
+      case 2:
+        return _buildCalculationsRegister();
+      case 3:
+        return _buildComplianceRegister();
+      case 4:
+        return _buildEcnRegister();
+      case 5:
+        return _buildReadinessGatesPanel();
+      default:
+        return _buildStructuralRegister();
+    }
+  }
+
+  // ─── Framework Guide ───────────────────────────────────────────────────────
+
 
  Widget _buildFrameworkGuide() {
  return Container(
@@ -2007,7 +2086,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Define system layers and their responsibilities before detailing '
  'interfaces. Each layer must have a clear specification standard '
  'and designated owner. Verify layer completeness before integration.',
- const Color(0xFF0EA5E9),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -2124,6 +2203,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildStructuralRegister() {
  return _PanelShell(
  title: 'Structural & Architecture Register',
+  minTableWidth: 900,
  subtitle:
  'System layers, specifications, and ownership for architecture control',
  trailing: Row(
@@ -2185,7 +2265,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _tableColHeader('SPECIFICATION', flex: 3),
  _tableColHeader('STATUS', width: 130),
  _tableColHeader('OWNER', flex: 2),
- const SizedBox(width: 60, child: Text('')),
+ const SizedBox(width: 150, child: Text('')),
  ],
  ),
  ),
@@ -2244,7 +2324,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  textAlign: TextAlign.center),
  ),
  SizedBox(
- width: 90,
+ width: 150,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -2253,7 +2333,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _openStructuralItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2302,6 +2382,7 @@ IconButton(
  Widget _buildComponentsRegister() {
  return _PanelShell(
  title: 'Components & Interfaces Register',
+  minTableWidth: 900,
  subtitle:
  'Interface specifications, responsibilities, and ownership for component control',
  trailing: Row(
@@ -2363,7 +2444,7 @@ IconButton(
  _tableColHeader('INTERFACE TYPE', flex: 2),
  _tableColHeader('STATUS', width: 130),
  _tableColHeader('OWNER', flex: 2),
- const SizedBox(width: 60, child: Text('')),
+ const SizedBox(width: 150, child: Text('')),
  ],
  ),
  ),
@@ -2423,7 +2504,7 @@ IconButton(
  textAlign: TextAlign.center),
  ),
  SizedBox(
- width: 90,
+ width: 150,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -2432,7 +2513,7 @@ IconButton(
  _openComponentItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2481,6 +2562,7 @@ IconButton(
  Widget _buildCalculationsRegister() {
  return _PanelShell(
  title: 'Calculations & Analysis Register',
+  minTableWidth: 1100,
  subtitle:
  'Structural, geotechnical, and performance calculations with PE stamp tracking',
  trailing: Row(
@@ -2545,7 +2627,7 @@ IconButton(
  _tableColHeader('STATUS', width: 130),
  _tableColHeader('PE STAMP', width: 110),
  _tableColHeader('REVIEWER', flex: 2),
- const SizedBox(width: 60, child: Text('')),
+ const SizedBox(width: 150, child: Text('')),
  ],
  ),
  ),
@@ -2614,7 +2696,7 @@ IconButton(
  textAlign: TextAlign.center),
  ),
  SizedBox(
- width: 90,
+ width: 150,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -2623,7 +2705,7 @@ IconButton(
  _openCalculationItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2672,6 +2754,7 @@ IconButton(
  Widget _buildComplianceRegister() {
  return _PanelShell(
  title: 'Compliance & Standards Register',
+  minTableWidth: 1100,
  subtitle:
  'Applicable standards, compliance tracking, and evidence mapping',
  trailing: Row(
@@ -2736,7 +2819,7 @@ IconButton(
  _tableColHeader('COMPLIANCE', width: 130),
  _tableColHeader('EVIDENCE', flex: 2),
  _tableColHeader('OWNER', flex: 2),
- const SizedBox(width: 60, child: Text('')),
+ const SizedBox(width: 150, child: Text('')),
  ],
  ),
  ),
@@ -2802,7 +2885,7 @@ IconButton(
  textAlign: TextAlign.center),
  ),
  SizedBox(
- width: 90,
+ width: 150,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -2811,7 +2894,7 @@ IconButton(
  _openComplianceItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2860,6 +2943,7 @@ IconButton(
  Widget _buildEcnRegister() {
  return _PanelShell(
  title: 'Engineering Change Notices Register',
+  minTableWidth: 1100,
  subtitle:
  'Change control tracking aligned with design change management processes',
  trailing: Row(
@@ -2920,14 +3004,14 @@ IconButton(
  const BoxDecoration(color: Color(0xFFF8FAFC)),
  child: Row(
  children: [
- _tableColHeader('ECN ID', width: 110),
+ _tableColHeader('ECN ID', width: 130),
  _tableColHeader('TITLE', flex: 3),
  _tableColHeader('PRIORITY', width: 110),
  _tableColHeader('STATUS', width: 130),
  _tableColHeader('ORIGINATOR', flex: 2),
  _tableColHeader('APPROVER', flex: 2),
  _tableColHeader('DATE', width: 120),
- const SizedBox(width: 60, child: Text('')),
+ const SizedBox(width: 150, child: Text('')),
  ],
  ),
  ),
@@ -2998,7 +3082,7 @@ IconButton(
  color: Color(0xFF64748B))),
  ),
  SizedBox(
- width: 90,
+ width: 150,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -3006,7 +3090,7 @@ IconButton(
  onPressed: () =>
  _openEcnItemDialog(existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -3143,7 +3227,7 @@ IconButton(
  existing: gate),
  icon: const Icon(Icons.edit_outlined,
  size: 14,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(
  minWidth: 24, minHeight: 24),
@@ -3167,10 +3251,11 @@ IconButton(
  size: 14,
  color: Colors.grey[500]),
  const SizedBox(width: 4),
- Text(gate.owner,
+ Expanded(
+                    child: Text(gate.owner,
  style: TextStyle(
- fontSize: 12,
- color: Colors.grey[600])),
+                        fontSize: 12,
+                        color: Colors.grey[600]))),
  ],
  ),
  const SizedBox(height: 8),
@@ -3185,99 +3270,4 @@ IconButton(
  );
  }
 
- // ─── Engineering Brief & Key Decisions ─────────────────────────────────────
-
- Widget _buildEngineeringBriefCard() {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withValues(alpha: 0.04),
- blurRadius: 12,
- offset: const Offset(0, 6),
- ),
- ],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Container(
- padding: const EdgeInsets.all(8),
- decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
- borderRadius: BorderRadius.circular(8),
- ),
- child: const Icon(Icons.edit_note_outlined,
- size: 20, color: Color(0xFF0EA5E9)),
- ),
- const SizedBox(width: 12),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Engineering Brief & Key Decisions',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w800,
- color: Color(0xFF111827),
- ),
- ),
- SizedBox(height: 2),
- Text(
- 'Working notes and technical decision log behind the structured registers',
- style: TextStyle(
- fontSize: 12, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- ),
- ],
- ),
- const SizedBox(height: 16),
- VoiceTextField(
- controller: _notesController,
- maxLines: 3,
- decoration: InputDecoration(
- hintText:
- 'Capture engineering assumptions, code requirements, detailing notes, and unresolved technical questions.',
- filled: true,
- fillColor: const Color(0xFFF8FAFC),
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12)),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12),
- borderSide:
- const BorderSide(color: Color(0xFFE2E8F0)),
- ),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: _keyDecisionsController,
- maxLines: 3,
- decoration: InputDecoration(
- hintText:
- 'Record key approvals, calculation assumptions, sign-off gates, and coordination decisions.',
- filled: true,
- fillColor: const Color(0xFFF8FAFC),
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12)),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12),
- borderSide:
- const BorderSide(color: Color(0xFFE2E8F0)),
- ),
- ),
- ),
- ],
- ),
- );
- }
 }

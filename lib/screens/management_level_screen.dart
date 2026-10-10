@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ndu_project/screens/basic_plan_dashboard_screen.dart';
-import 'program_dashboard_screen.dart';
 import '../widgets/app_logo.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'portfolio_dashboard_screen.dart';
-import 'project_dashboard_screen.dart';
 
 class ManagementLevelScreen extends StatefulWidget {
  const ManagementLevelScreen({super.key});
@@ -18,7 +14,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  @override
  Widget build(BuildContext context) {
  return Scaffold(
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  body: Stack(
  children: [
  SafeArea(

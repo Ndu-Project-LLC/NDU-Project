@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/routing/platform_router.dart';
+import 'package:ndu_project/routing/auth_session_listenable.dart';
 
 // Screens
 import 'package:ndu_project/screens/landing_screen.dart';
@@ -16,6 +17,8 @@ import 'package:ndu_project/screens/mobile_dashboard_screen.dart';
 import 'package:ndu_project/screens/auth/mobile_forgot_password_screen.dart';
 import 'package:ndu_project/screens/project_dashboard_screen.dart';
 import 'package:ndu_project/screens/program_dashboard_screen.dart';
+import 'package:ndu_project/screens/program_teammates_screen.dart';
+import 'package:ndu_project/screens/invitation_accept_screen.dart';
 import 'package:ndu_project/screens/portfolio_dashboard_screen.dart';
 import 'package:ndu_project/screens/launch_checklist_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
@@ -59,9 +62,11 @@ import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.da
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
 import 'package:ndu_project/project_controls/screens/project_controls_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
+import 'package:ndu_project/screens/integration_dashboard_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_work_packages_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
 import 'package:ndu_project/screens/cost_estimate_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
@@ -133,7 +138,7 @@ import 'package:ndu_project/screens/ssher_screen_3.dart';
 import 'package:ndu_project/screens/ssher_screen_4.dart';
 
 // Workspace dashboards & remaining pages
-import 'package:ndu_project/screens/regular_project_dashboard_screen.dart';
+
 import 'package:ndu_project/screens/project_command_center_screen.dart';
 import 'package:ndu_project/screens/program_dashboard_mobile_screen.dart';
 import 'package:ndu_project/screens/project_baseline_screen.dart';
@@ -176,6 +181,7 @@ import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
 import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
 import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
 import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
@@ -231,13 +237,14 @@ import 'package:ndu_project/screens/admin/admin_auth_wrapper.dart';
 import 'package:ndu_project/screens/admin/admin_projects_screen.dart';
 import 'package:ndu_project/screens/admin/admin_users_screen.dart';
 import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
+import 'package:ndu_project/screens/admin/admin_survey_responses_screen.dart';
 import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/utils/continuity_route_observer.dart';
 import 'package:ndu_project/screens/pricing/mobile_pricing_screen.dart';
 import 'package:ndu_project/routing/shimmer_page_transition.dart';
 
@@ -256,6 +263,8 @@ class AppRoutes {
 
   static const dashboard = 'dashboard';
   static const programDashboard = 'program-dashboard';
+  static const programTeammates = 'program-teammates';
+  static const invitationAccept = 'invitation-accept';
   static const portfolioDashboard = 'portfolio-dashboard';
   static const launchChecklist = 'launch-checklist';
 
@@ -288,6 +297,7 @@ class AppRoutes {
   static const pbs = 'product-breakdown-structure';
   static const executionPlan = 'execution-plan';
   static const executionWorkPackages = 'execution-work-packages';
+  static const executionQualityTracking = 'execution-quality-tracking';
   static const executionPlanInterface = 'execution-plan-interface-management';
   static const costEstimate = 'cost-estimate';
   static const costAnalysis = 'cost-analysis';
@@ -302,6 +312,7 @@ class AppRoutes {
   static const scheduleManagementBoard = 'schedule-management';
   static const projectControls = 'project-controls';
   static const changeManagementModule = 'change-management-module';
+  static const integrationDashboard = 'integration-dashboard';
   static const landingPage = 'landing-page';
   static const careersPage = 'careers';
 
@@ -417,6 +428,7 @@ class AppRoutes {
   static const agileKanbanConfig = 'agile-kanban-config';
   static const agileAcceptanceCriteria = 'agile-acceptance-criteria';
   static const agileEpicsFeatures = 'agile-epics-features';
+  static const agileStoriesBacklog = 'agile-stories-backlog';
   static const agileScrumConfig = 'agile-scrum-config';
   static const agileCapacityPlanning = 'agile-capacity-planning';
   static const agileMetricsPlanning = 'agile-metrics-planning';
@@ -480,6 +492,7 @@ class AppRoutes {
   static const adminUsers = 'admin-users';
   static const adminCoupons = 'admin-coupons';
   static const adminSubscriptionLookup = 'admin-subscription-lookup';
+  static const adminSurveyResponses = 'admin-survey-responses';
   static const adminPortal = 'admin';
 }
 
@@ -579,6 +592,14 @@ class AppRouter {
   static final GoRouter main = _guardedRouter('main', () => GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: PlatformRouter.getInitialRoute(),
+    // Refresh the deterministic continuity snapshot on EVERY page push, so
+    // prior-phase data is carried page-to-page with real project data — no
+    // AI involvement. See [ContinuityRouteObserver].
+    observers: [ContinuityRouteObserver.instance],
+    // Re-run the auth guard when a session ends while a page is open (for
+    // example the 30-minute inactivity timeout), so the user is sent to
+    // sign-in instead of staying on a page whose data reads are denied.
+    refreshListenable: AuthSessionListenable.instance,
     redirect: (context, state) async {
       // Enforce admin-host policy if a user is present
       User? user;
@@ -717,6 +738,11 @@ class AppRouter {
         pageBuilder: (context, state) => shimmerTransitionPage(state: state, child: const AdminAuthWrapper(child: AdminSubscriptionLookupScreen())),
       ),
       GoRoute(
+        name: AppRoutes.adminSurveyResponses,
+        path: '/${AppRoutes.adminSurveyResponses}',
+        pageBuilder: (context, state) => shimmerTransitionPage(state: state, child: const AdminAuthWrapper(child: AdminSurveyResponsesScreen())),
+      ),
+      GoRoute(
         name: AppRoutes.signIn,
         path: '/${AppRoutes.signIn}',
         pageBuilder: (context, state) => shimmerTransitionPage(state: state, child: const SignInScreen()),
@@ -758,6 +784,23 @@ class AppRouter {
         pageBuilder: (context, state) {
           final programId = state.uri.queryParameters['programId'];
           return shimmerTransitionPage(state: state, child: ProgramDashboardScreen(programId: programId));
+        },
+      ),
+      GoRoute(
+        name: AppRoutes.programTeammates,
+        path: '/${AppRoutes.programTeammates}',
+        pageBuilder: (context, state) =>
+            shimmerTransitionPage(state: state, child: const ProgramTeammatesScreen()),
+      ),
+      GoRoute(
+        name: AppRoutes.invitationAccept,
+        path: '/${AppRoutes.invitationAccept}',
+        pageBuilder: (context, state) {
+          final invitationId = state.uri.queryParameters['id'] ?? '';
+          return shimmerTransitionPage(
+            state: state,
+            child: InvitationAcceptScreen(invitationId: invitationId),
+          );
         },
       ),
       GoRoute(
@@ -921,6 +964,10 @@ class AppRouter {
           path: '/${AppRoutes.executionWorkPackages}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionWorkPackagesScreen())),
       GoRoute(
+          name: AppRoutes.executionQualityTracking,
+          path: '/${AppRoutes.executionQualityTracking}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionQualityTrackingScreen())),
+      GoRoute(
           name: AppRoutes.executionPlanInterface,
           path: '/${AppRoutes.executionPlanInterface}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanInterfaceManagementOverviewScreen())),
@@ -976,6 +1023,14 @@ class AppRouter {
           name: AppRoutes.projectControls,
           path: '/${AppRoutes.projectControls}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectControlsScreen())),
+      GoRoute(
+          name: AppRoutes.integrationDashboard,
+          path: '/${AppRoutes.integrationDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(
+              state: s,
+              child: const IntegrationDashboardScreen(
+                initialView: IntegrationDashboardView.baseline,
+              ))),
       GoRoute(
           name: AppRoutes.changeManagementModule,
           path: '/${AppRoutes.changeManagementModule}',
@@ -1185,10 +1240,18 @@ class AppRouter {
           path: '/${AppRoutes.termsConditions}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TermsConditionsScreen())),
       // Workspace dashboards & remaining pages
+      // The old standalone Regular Projects dashboard now resolves to the
+      // merged Integration Dashboard, opening on the Workspaces view so
+      // existing bookmarks and the /dashboard stat card keep landing on the
+      // workspace launchpad they always did.
       GoRoute(
           name: AppRoutes.regularProjectDashboard,
           path: '/${AppRoutes.regularProjectDashboard}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RegularProjectDashboardScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(
+              state: s,
+              child: const IntegrationDashboardScreen(
+                initialView: IntegrationDashboardView.workspaces,
+              ))),
       GoRoute(
           name: AppRoutes.projectCommandCenter,
           path: '/${AppRoutes.projectCommandCenter}',
@@ -1394,6 +1457,14 @@ class AppRouter {
           name: AppRoutes.agileEpicsFeatures,
           path: '/${AppRoutes.agileEpicsFeatures}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileEpicsFeaturesScreen())),
+      // The Stories & Backlog breakdown is also a step in the Planning-phase
+      // flow, so it used to be reachable only from that navigator. It needs a
+      // URL of its own: the Agile Project Hub's "Product Backlog" sub-page
+      // opens it, and the hub cards and sidebar sub-pages navigate by path.
+      GoRoute(
+          name: AppRoutes.agileStoriesBacklog,
+          path: '/${AppRoutes.agileStoriesBacklog}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileStoriesBacklogScreen())),
       GoRoute(
           name: AppRoutes.agileScrumConfig,
           path: '/${AppRoutes.agileScrumConfig}',
@@ -1713,6 +1784,11 @@ class AppRouter {
         pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminAuthWrapper(child: AdminSubscriptionLookupScreen())),
       ),
       GoRoute(
+        name: AppRoutes.adminSurveyResponses,
+        path: '/${AppRoutes.adminSurveyResponses}',
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminAuthWrapper(child: AdminSurveyResponsesScreen())),
+      ),
+      GoRoute(
         name: AppRoutes.settings,
         path: '/${AppRoutes.settings}',
         pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminAuthWrapper(child: SettingsScreen())),
@@ -1744,9 +1820,14 @@ class AppRouter {
     if (path == '/dashboard') return ('Project Dashboard', 'Initiation');
     if (path == '/program-dashboard') return ('Program Dashboard', 'Program');
     if (path == '/portfolio-dashboard') return ('Portfolio Dashboard', 'Portfolio');
-    if (path == '/regular-project-dashboard') return ('Regular Projects', 'Project');
+    if (path == '/regular-project-dashboard') {
+      return ('Integration Dashboard · Workspaces', 'Project');
+    }
     if (path == '/project-command-center') return ('Project Command Center', 'Project');
     if (path == '/program-dashboard-mobile') return ('Program Dashboard', 'Program');
+    if (path == '/integration-dashboard') {
+      return ('Integration Dashboard · Baseline', 'Planning');
+    }
 
     // Design phase routes
     if (path.contains('design')) return ('Design Phase', 'Design');

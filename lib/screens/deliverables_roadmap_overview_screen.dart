@@ -14,7 +14,6 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 const Color _kBackground = Color(0xFFF7F8FC);
-const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
 const Color _kMuted = Color(0xFF6B7280);
 const Color _kCardBorder = Color(0xFFE4E7EC);
@@ -527,14 +526,14 @@ class _DeliverablesRoadmapOverviewScreenState
         return _CategoryInfo(
           title: 'Governance',
           icon: Icons.account_balance,
-          color: const Color(0xFF3B82F6),
+          color: const Color(0xFFFFC812),
           category: category,
         );
       case DeliverableCategory.requirements:
         return _CategoryInfo(
           title: 'Requirements',
           icon: Icons.checklist,
-          color: const Color(0xFF8B5CF6),
+          color: const Color(0xFFB8860B),
           category: category,
         );
       case DeliverableCategory.riskCompliance:
@@ -555,14 +554,14 @@ class _DeliverablesRoadmapOverviewScreenState
         return _CategoryInfo(
           title: 'Technical',
           icon: Icons.code,
-          color: const Color(0xFF6366F1),
+          color: const Color(0xFFB8860B),
           category: category,
         );
       case DeliverableCategory.quality:
         return _CategoryInfo(
           title: 'Quality',
           icon: Icons.verified,
-          color: const Color(0xFFEC4899),
+          color: const Color(0xFFD97706),
           category: category,
         );
       case DeliverableCategory.contractsProcurement:
@@ -576,7 +575,7 @@ class _DeliverablesRoadmapOverviewScreenState
         return _CategoryInfo(
           title: 'Schedule & Cost',
           icon: Icons.attach_money,
-          color: const Color(0xFF14B8A6),
+          color: const Color(0xFFD97706),
           category: category,
         );
       case DeliverableCategory.teamStakeholders:
@@ -613,8 +612,8 @@ class _DeliverablesRoadmapOverviewScreenState
       screenTitle: 'Deliverables Roadmap Overview',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',

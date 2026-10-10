@@ -1,12 +1,13 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/status_reports_screen.dart';
-import 'package:ndu_project/screens/vendor_tracking_screen.dart';
 import 'package:ndu_project/services/contract_service.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
@@ -15,9 +16,9 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/contracts_table_widget.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -26,6 +27,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ContractsTrackingScreen extends StatefulWidget {
   const ContractsTrackingScreen({super.key});
 
@@ -371,7 +373,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     ];
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _newId() => newId();
 
   Stream<List<ContractModel>>? _contractStreamForProject() {
     final projectId = _projectId;
@@ -389,7 +391,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
     return ResponsiveScaffold(
       activeItemLabel: 'Contracts Tracking',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(padding),
@@ -403,25 +405,43 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 24),
-            _buildContractManagementGuide(),
-            const SizedBox(height: 24),
-            Column(
-              children: [
-                _buildContractRegister(),
-                const SizedBox(height: 20),
-                _buildRenewalPanel(),
-                const SizedBox(height: 20),
-                _buildSignalsPanel(),
-                const SizedBox(height: 20),
-                _buildApprovalsPanel(),
+            // The four registers used to be stacked in one long column, so
+            // reaching the last one meant scrolling past the other three. They
+            // now sit behind the same tab navigator the Launch Phase screens
+            // use, with the control framework as the leading Overview tab.
+            LaunchPhaseTableTabs(
+              overview: _buildContractManagementGuide(),
+              tabs: const [
+                LaunchPhaseTableTab(
+                  label: 'Contract register',
+                  icon: Icons.description_outlined,
+                ),
+                LaunchPhaseTableTab(
+                  label: 'Renewal pipeline',
+                  icon: Icons.autorenew_rounded,
+                ),
+                LaunchPhaseTableTab(
+                  label: 'Risk signals',
+                  icon: Icons.warning_amber_rounded,
+                ),
+                LaunchPhaseTableTab(
+                  label: 'Approval readiness',
+                  icon: Icons.verified_outlined,
+                ),
               ],
+              builders: {
+                'Contract register': _buildContractRegister,
+                'Renewal pipeline': _buildRenewalPanel,
+                'Risk signals': _buildSignalsPanel,
+                'Approval readiness': _buildApprovalsPanel,
+              },
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Status Reports',
-              nextLabel: 'Next: Vendor Tracking',
-              onBack: () => StatusReportsScreen.open(context),
-              onNext: () => VendorTrackingScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('contracts_tracking'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('contracts_tracking'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'contracts_tracking'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'contracts_tracking'),
             ),
           ],
         ),
@@ -435,7 +455,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -455,7 +475,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Contract control framework',
                       style: TextStyle(
@@ -470,7 +490,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 22,
-                    color: Color(0xFF6B7280),
+                    color: const Color(0xFF6B7280),
                   ),
                 ],
               ),
@@ -505,7 +525,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                             'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
                                 'Each contract should be tracked from initiation through close-out. '
                                 'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
-                            const Color(0xFF2563EB),
+                            const Color(0xFFFFC812),
                           ),
                           const SizedBox(height: 12),
                           _buildGuideCard(
@@ -599,10 +619,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   Widget _buildContractRegister() {
     final contractsStream = _contractStreamForProject();
     if (contractsStream == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Contract register',
         subtitle: 'Track scope, owners, and renewal milestones',
-        child: const Center(
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: Text('No project selected. Please open a project first.',
@@ -675,13 +695,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Widget _buildRenewalPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Renewal pipeline',
         subtitle:
             'Contract renewal tracker aligned with PMI PMBOK Control Procurements. '
             'Monitor contracts approaching expiry, assign renewal owners, and track '
             'renegotiation progress across urgency windows.',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -689,7 +709,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -706,11 +726,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Renewal pipeline',
                         style: TextStyle(
                           fontSize: 16,
@@ -718,12 +738,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'Contract renewal tracker aligned with PMI PMBOK Control '
                         'Procurements. Monitor contracts approaching expiry, assign '
                         'renewal owners, and track renegotiation progress across urgency windows.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF6B7280),
@@ -754,15 +774,15 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           if (_renewalLanes.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
+            const Padding(
+              padding: EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.autorenew_outlined,
+                    Icon(Icons.autorenew_outlined,
                         color: Color(0xFF9CA3AF), size: 32),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'No contracts in the renewal pipeline. Add contracts to start tracking renewals.',
                       style: TextStyle(
                         fontSize: 13,
@@ -895,10 +915,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Widget _buildSignalsPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Risk signals',
         subtitle: 'Items that need attention this week',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -926,13 +946,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Widget _buildApprovalsPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Approval readiness',
         subtitle:
             'Contract approval gates aligned with PMI PMBOK Close Procurements '
             'and organizational authority matrices. Each gate must be cleared '
             'before the contract advances to the next stage.',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -940,7 +960,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -958,11 +978,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Approval readiness',
                         style: TextStyle(
                           fontSize: 16,
@@ -970,12 +990,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'Contract approval gates aligned with PMI PMBOK Close Procurements '
                         'and organizational authority matrices. Each gate must be cleared '
                         'before the contract advances to the next stage.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF6B7280),
@@ -1007,15 +1027,15 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           // Table
           if (_approvalCheckpoints.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
+            const Padding(
+              padding: EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.verified_outlined,
+                    Icon(Icons.verified_outlined,
                         color: Color(0xFF9CA3AF), size: 32),
-                    const SizedBox(height: 12),
-                    const Text(
+                    SizedBox(height: 12),
+                    Text(
                       'No approval gates defined. Add gates to set up the approval workflow.',
                       style: TextStyle(
                         fontSize: 13,
@@ -1167,7 +1187,8 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     } catch (e) {
       debugPrint('Error deleting contract: $e');
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Contract Model');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Contract Model');
   }
 
   // ignore: unused_element
@@ -1227,9 +1248,9 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1382,7 +1403,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   Future<void> _showRenewalEntryEditor({_RenewalLaneData? entry}) async {
     final isEdit = entry != null;
     final nameController =
-        TextEditingController(text: entry?.contractName ?? '');
+        SpellCheckTextEditingController(text: entry?.contractName ?? '');
     var selectedType = _contractTypeOptions.contains(entry?.contractType)
         ? entry!.contractType
         : _contractTypeOptions.first;
@@ -1399,12 +1420,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     var selectedStatus = _renewalStatusOptions.contains(entry?.status)
         ? (entry?.status ?? 'Not Started')
         : 'Not Started';
-    final ownerController = TextEditingController(text: entry?.owner ?? '');
+    final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
     final valueController =
-        TextEditingController(text: entry?.committedValue ?? '');
-    final notesController = TextEditingController(text: entry?.notes ?? '');
+        SpellCheckTextEditingController(text: entry?.committedValue ?? '');
+    final notesController = SpellCheckTextEditingController(text: entry?.notes ?? '');
 
-    final saved = await showDialog<_RenewalLaneData>(
+    final saved = await showAppDialog<_RenewalLaneData>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1432,7 +1453,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedType,
+                              initialValue: selectedType,
                               decoration: const InputDecoration(
                                 labelText: 'Contract type',
                                 isDense: true,
@@ -1453,7 +1474,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedAction,
+                              initialValue: selectedAction,
                               decoration: const InputDecoration(
                                 labelText: 'Renewal action',
                                 isDense: true,
@@ -1517,7 +1538,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<int>(
-                              value: _daysLeftOptions.contains(selectedDaysLeft)
+                              initialValue: _daysLeftOptions.contains(selectedDaysLeft)
                                   ? selectedDaysLeft
                                   : null,
                               decoration: const InputDecoration(
@@ -1534,9 +1555,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                                       ))
                                   .toList(),
                               onChanged: (value) {
-                                if (value != null)
+                                if (value != null) {
                                   setDialogState(
                                       () => selectedDaysLeft = value);
+                                }
                               },
                             ),
                           ),
@@ -1570,7 +1592,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: selectedStatus,
+                        initialValue: selectedStatus,
                         decoration: const InputDecoration(
                           labelText: 'Renewal status',
                           isDense: true,
@@ -1660,7 +1682,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   }
 
   Future<void> _confirmDeleteRenewalEntry(_RenewalLaneData entry) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Remove from pipeline?'),
@@ -1692,14 +1714,14 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Future<void> _showRiskSignalEditor({_RiskSignalData? signal}) async {
     final formKey = GlobalKey<FormState>();
-    final titleController = TextEditingController(text: signal?.title ?? '');
-    final detailController = TextEditingController(text: signal?.detail ?? '');
-    final ownerController = TextEditingController(text: signal?.owner ?? '');
+    final titleController = SpellCheckTextEditingController(text: signal?.title ?? '');
+    final detailController = SpellCheckTextEditingController(text: signal?.detail ?? '');
+    final ownerController = SpellCheckTextEditingController(text: signal?.owner ?? '');
     var selectedStatus = _riskStatusOptions.contains(signal?.status)
         ? signal!.status
         : _riskStatusOptions.first;
 
-    final saved = await showDialog<_RiskSignalData>(
+    final saved = await showAppDialog<_RiskSignalData>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1754,7 +1776,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedStatus,
+                              initialValue: selectedStatus,
                               decoration: const InputDecoration(
                                 labelText: 'Status',
                               ),
@@ -1826,7 +1848,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   }
 
   Future<void> _confirmDeleteRiskSignal(_RiskSignalData signal) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete risk signal?'),
@@ -1885,11 +1907,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   Future<void> _showApprovalCheckpointEditor(
       {_ApprovalCheckpointData? checkpoint}) async {
     final isEdit = checkpoint != null;
-    final gateController = TextEditingController(text: checkpoint?.gate ?? '');
+    final gateController = SpellCheckTextEditingController(text: checkpoint?.gate ?? '');
     final descController =
-        TextEditingController(text: checkpoint?.description ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.description ?? '');
     final approverController =
-        TextEditingController(text: checkpoint?.approver ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.approver ?? '');
     var selectedDepartment =
         _approvalDepartmentOptions.contains(checkpoint?.department)
             ? checkpoint!.department
@@ -1902,11 +1924,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
         ? checkpoint!.status
         : _gateStatusOptions.first;
     final targetDateController =
-        TextEditingController(text: checkpoint?.targetDate ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.targetDate ?? '');
     final notesController =
-        TextEditingController(text: checkpoint?.notes ?? '');
+        SpellCheckTextEditingController(text: checkpoint?.notes ?? '');
 
-    final saved = await showDialog<_ApprovalCheckpointData>(
+    final saved = await showAppDialog<_ApprovalCheckpointData>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1956,7 +1978,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedDepartment,
+                              initialValue: selectedDepartment,
                               decoration: const InputDecoration(
                                 labelText: 'Department',
                                 isDense: true,
@@ -1982,7 +2004,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedPriority,
+                              initialValue: selectedPriority,
                               decoration: const InputDecoration(
                                 labelText: 'Priority',
                                 isDense: true,
@@ -2003,7 +2025,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedStatus,
+                              initialValue: selectedStatus,
                               decoration: const InputDecoration(
                                 labelText: 'Status',
                                 isDense: true,
@@ -2104,7 +2126,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
   Future<void> _confirmDeleteApprovalCheckpoint(
       _ApprovalCheckpointData checkpoint) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete approval gate?'),
@@ -2180,16 +2202,16 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
 
     if (!mounted) return;
 
-    final nameController = TextEditingController(text: contract?.name ?? '');
+    final nameController = SpellCheckTextEditingController(text: contract?.name ?? '');
     final descriptionController =
-        TextEditingController(text: contract?.description ?? '');
+        SpellCheckTextEditingController(text: contract?.description ?? '');
     final contractTypeController =
-        TextEditingController(text: contract?.contractType ?? '');
+        SpellCheckTextEditingController(text: contract?.contractType ?? '');
     final paymentTypeController =
-        TextEditingController(text: contract?.paymentType ?? '');
+        SpellCheckTextEditingController(text: contract?.paymentType ?? '');
     var selectedStatus = contract?.status ?? 'Draft';
     var selectedStartPhase = contract?.contractStartPhase ?? 'Not Sure';
-    final estimatedValueController = TextEditingController(
+    final estimatedValueController = SpellCheckTextEditingController(
         text: contract?.estimatedValue != null && contract!.estimatedValue > 0
             ? contract.estimatedValue.toStringAsFixed(0)
             : '');
@@ -2199,7 +2221,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             ? AutoBulletTextController(text: contract.scope)
             : AutoBulletTextController();
     final disciplineController =
-        TextEditingController(text: contract?.discipline ?? '');
+        SpellCheckTextEditingController(text: contract?.discipline ?? '');
     // Contract Notes - regular TextEditingController (prose)
     final notesController =
         RichTextEditingController(text: contract?.notes ?? '');
@@ -2207,7 +2229,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     DateTime? endDate = contract?.endDate;
 
     try {
-      await showDialog(
+      await showAppDialog(
         context: context,
         builder: (context) => StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
@@ -2259,7 +2281,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: contractTypeController.text.isEmpty
+                    initialValue: contractTypeController.text.isEmpty
                         ? null
                         : contractTypeController.text,
                     decoration: const InputDecoration(
@@ -2295,7 +2317,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedStatus.isEmpty ? null : selectedStatus,
+                    initialValue: selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       isDense: true,
@@ -2331,7 +2353,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   // the contract is expected to kick off in. May not be known
                   // in initiation; can be left as 'Not Sure' for bidding.
                   DropdownButtonFormField<String>(
-                    value: selectedStartPhase,
+                    initialValue: selectedStartPhase,
                     decoration: const InputDecoration(
                       labelText: 'Phase for Contract Start',
                       isDense: true,
@@ -2554,7 +2576,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Contract'),
@@ -2601,8 +2623,8 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       screenTitle: 'Contracts Tracking',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
         ]),
         PdfSection.text(
             'Notes',
@@ -2633,7 +2655,7 @@ class _PanelShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2693,7 +2715,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
       case 'High':
         return const Color(0xFFF59E0B);
       case 'Medium':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Low':
         return const Color(0xFF6B7280);
       default:
@@ -2706,13 +2728,13 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
       case 'Approved':
         return const Color(0xFF10B981);
       case 'In Review':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Pending':
         return const Color(0xFFF59E0B);
       case 'Rejected':
         return const Color(0xFFEF4444);
       case 'Waived':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'Not Started':
         return const Color(0xFF9CA3AF);
       default:
@@ -2742,17 +2764,17 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
   Color _deptColor(String dept) {
     switch (dept) {
       case 'Legal':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'Finance':
         return const Color(0xFF059669);
       case 'Executive':
         return const Color(0xFFDC2626);
       case 'Engineering':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Risk':
         return const Color(0xFFEA580C);
       case 'Compliance':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Project Office':
         return const Color(0xFF4F46E5);
       case 'Operations':
@@ -3017,19 +3039,19 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
   Color _typeColor(String type) {
     switch (type) {
       case 'SLA':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'NDA':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'MSA':
         return const Color(0xFF059669);
       case 'License':
         return const Color(0xFFEA580C);
       case 'Lease':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'Insurance':
         return const Color(0xFFDC2626);
       case 'Warranty':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'Subscription':
         return const Color(0xFF4F46E5);
       default:
@@ -3046,11 +3068,11 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
       case 'Terminate':
         return const Color(0xFFEF4444);
       case 'Extend':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'Consolidate':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'Transfer':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF64748B);
     }
@@ -3061,7 +3083,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
       case 'On Track':
         return const Color(0xFF10B981);
       case 'In Progress':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'At Risk':
         return const Color(0xFFF59E0B);
       case 'Overdue':
@@ -3428,7 +3450,7 @@ class _RenewalLaneData {
     if (days <= 0) return const Color(0xFFDC2626);
     if (days <= 30) return const Color(0xFFEF4444);
     if (days <= 60) return const Color(0xFFF97316);
-    if (days <= 90) return const Color(0xFF2563EB);
+    if (days <= 90) return const Color(0xFFFFC812);
     return const Color(0xFF10B981);
   }
 
@@ -3478,7 +3500,7 @@ class _RenewalLaneData {
       final oldLabel = map['label']?.toString() ?? '';
       return _RenewalLaneData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         contractName: map['contractName']?.toString() ??
             (oldLabel.isNotEmpty ? oldLabel : ''),
         contractType: map['contractType']?.toString() ?? 'SLA',
@@ -3536,7 +3558,7 @@ class _RiskSignalData {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _RiskSignalData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         title: map['title']?.toString() ?? '',
         detail: map['detail']?.toString() ?? '',
         owner: map['owner']?.toString() ?? '',
@@ -3610,7 +3632,7 @@ class _ApprovalCheckpointData {
       final map = Map<String, dynamic>.from(item as Map? ?? {});
       return _ApprovalCheckpointData(
         id: map['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
+            newId(),
         gate: map['gate']?.toString() ?? map['title']?.toString() ?? '',
         description: map['description']?.toString() ?? '',
         approver: map['approver']?.toString() ?? map['owner']?.toString() ?? '',

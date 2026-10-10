@@ -29,11 +29,11 @@ enum ScheduleDomain {
       };
 
   int get color => switch (this) {
-        ScheduleDomain.engineering => 0xFF3B82F6, // blue
+        ScheduleDomain.engineering => 0xFFFFC812, // blue
         ScheduleDomain.procurement => 0xFF22C55E, // green
         ScheduleDomain.execution => 0xFFF8BD2A, // yellow/gold
         ScheduleDomain.construction => 0xFF909096, // gray
-        ScheduleDomain.commissioning => 0xFFC084FC, // purple
+        ScheduleDomain.commissioning => 0xFFFBBF24, // purple
       };
 
   String get icon => switch (this) {
@@ -144,11 +144,17 @@ enum TShirtSize { xs, s, m, l, xl }
 /// - [controlAccountId] — FK to `WorkPackageControl.id` so a schedule
 ///   activity can be tied to the Project Controls control account that
 ///   tracks its EVM metrics (CPI / SPI / EAC / actuals).
+/// - [workPackageId] — FK to `WorkPackage.id` (the integrated work package
+///   this row was generated from). Without it a schedule row generated from a
+///   work package is indistinguishable from one a planner typed by hand, so
+///   re-running "From Work Packages" cannot tell what it already imported and
+///   stacks a second copy of the same package on every press.
 class ScheduleActivity {
   final String id;
   final String? wbsNodeId;
   final String? wbsCode;
   final String? controlAccountId;
+  final String? workPackageId;
   final String? agileTaskId;
   final String? costLineId;
   final String? sprintId;
@@ -189,6 +195,7 @@ class ScheduleActivity {
     this.wbsNodeId,
     this.wbsCode,
     this.controlAccountId,
+    this.workPackageId,
     this.agileTaskId,
     this.costLineId,
     this.sprintId,
@@ -237,6 +244,8 @@ class ScheduleActivity {
         if (wbsCode != null && wbsCode!.isNotEmpty) 'wbsCode': wbsCode,
         if (controlAccountId != null && controlAccountId!.isNotEmpty)
           'controlAccountId': controlAccountId,
+        if (workPackageId != null && workPackageId!.isNotEmpty)
+          'workPackageId': workPackageId,
         if (agileTaskId != null) 'agileTaskId': agileTaskId,
         if (costLineId != null) 'costLineId': costLineId,
         if (sprintId != null) 'sprintId': sprintId,
@@ -280,6 +289,7 @@ class ScheduleActivity {
       wbsNodeId: json['wbsNodeId'] as String?,
       wbsCode: json['wbsCode'] as String?,
       controlAccountId: json['controlAccountId'] as String?,
+      workPackageId: json['workPackageId'] as String?,
       agileTaskId: json['agileTaskId'] as String?,
       costLineId: json['costLineId'] as String?,
       sprintId: json['sprintId'] as String?,
@@ -339,6 +349,7 @@ class ScheduleActivity {
     String? wbsNodeId,
     String? wbsCode,
     String? controlAccountId,
+    String? workPackageId,
     String? agileTaskId,
     String? costLineId,
     String? sprintId,
@@ -379,6 +390,7 @@ class ScheduleActivity {
       wbsNodeId: wbsNodeId ?? this.wbsNodeId,
       wbsCode: wbsCode ?? this.wbsCode,
       controlAccountId: controlAccountId ?? this.controlAccountId,
+      workPackageId: workPackageId ?? this.workPackageId,
       agileTaskId: agileTaskId ?? this.agileTaskId,
       costLineId: costLineId ?? this.costLineId,
       sprintId: sprintId ?? this.sprintId,
@@ -451,6 +463,7 @@ class ScheduleBasis {
   final String deliveryModel; // 'AGILE' | 'WATERFALL' | 'HYBRID'
   final int? sprintDurationWeeks;
   final String? releaseCadence;
+  final String? incrementStrategy;
   final String? definitionOfReady;
   final String? definitionOfDone;
   final List<String> assumptions;
@@ -462,6 +475,7 @@ class ScheduleBasis {
     required this.deliveryModel,
     this.sprintDurationWeeks,
     this.releaseCadence,
+    this.incrementStrategy,
     this.definitionOfReady,
     this.definitionOfDone,
     required this.assumptions,
@@ -474,6 +488,7 @@ class ScheduleBasis {
     String? deliveryModel,
     int? sprintDurationWeeks,
     String? releaseCadence,
+    String? incrementStrategy,
     String? definitionOfReady,
     String? definitionOfDone,
     List<String>? assumptions,
@@ -485,6 +500,7 @@ class ScheduleBasis {
       deliveryModel: deliveryModel ?? this.deliveryModel,
       sprintDurationWeeks: sprintDurationWeeks ?? this.sprintDurationWeeks,
       releaseCadence: releaseCadence ?? this.releaseCadence,
+      incrementStrategy: incrementStrategy ?? this.incrementStrategy,
       definitionOfReady: definitionOfReady ?? this.definitionOfReady,
       definitionOfDone: definitionOfDone ?? this.definitionOfDone,
       assumptions: assumptions ?? this.assumptions,
@@ -711,6 +727,9 @@ ScheduleBasis createEmptyBasis(String deliveryModel) => ScheduleBasis(
       deliveryModel: deliveryModel,
       sprintDurationWeeks: deliveryModel == 'AGILE' ? 2 : null,
       releaseCadence: deliveryModel == 'AGILE' ? 'Monthly' : null,
+      incrementStrategy: deliveryModel == 'AGILE'
+          ? 'Feature-based increments, delivered end of every sprint'
+          : null,
       definitionOfReady: '',
       definitionOfDone: '',
       assumptions: [],
@@ -747,11 +766,12 @@ EstimateBasis createEmptyEstimateBasis() => const EstimateBasis(
 Schedule createEmptySchedule({
   required String projectName,
   required String deliveryModel,
+  String projectId = 'default',
 }) {
   final now = DateTime.now();
   return Schedule(
     id: newSchedId('sched'),
-    projectId: 'default',
+    projectId: projectId,
     projectName: projectName,
     basis: createEmptyBasis(deliveryModel),
     activities: [

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -32,6 +33,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
@@ -44,7 +46,7 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
   final List<_ScheduleRow> _activityRows = [];
 
   String _selectedMethodology = 'Waterfall';
@@ -62,7 +64,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       0; // 0: Master Schedule, 1: Gantt Chart, 2: List View, 3: Board View, 4: Work Packages, 5: Procurement Timeline, 6: Cost vs Schedule
   String _timelineSearchQuery = '';
   String _workPackageSearchQuery = '';
-  final String _ganttSearchQuery = '';
   String _workPackageSortField = 'title'; // title, status, owner, phase, budget
   bool _workPackageSortAscending = true;
   String _listSortField =
@@ -253,7 +254,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final rows = data.scheduleActivities.map((activity) {
       var id = activity.wbsId.isNotEmpty ? activity.wbsId : activity.id;
       if (id.trim().isEmpty || usedIds.contains(id)) {
-        id = DateTime.now().microsecondsSinceEpoch.toString();
+        id = newId();
       }
       usedIds.add(id);
       // Track the ID change if the activity's original ID was remapped
@@ -487,7 +488,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     if (showConfirm && _activityRows.isNotEmpty) {
-      final shouldContinue = await showDialog<bool>(
+      final shouldContinue = await showAppDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Replace schedule activities?'),
@@ -523,7 +524,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     String ensureId(String raw) {
       var candidate = raw.trim().isNotEmpty
           ? raw.trim()
-          : DateTime.now().microsecondsSinceEpoch.toString();
+          : newId();
       if (!usedIds.contains(candidate)) {
         usedIds.add(candidate);
         return candidate;
@@ -713,7 +714,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     _handleActivityChanged();
   }
 
-  String _nextTaskId() => DateTime.now().microsecondsSinceEpoch.toString();
+  String _nextTaskId() => newId();
 
   String _generateWbsId({String? preferred}) {
     final preferredValue = (preferred ?? '').trim();
@@ -783,45 +784,45 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     String status = _normalizeScheduleStatus(row?.status ?? 'pending');
     String priority = _normalizeSchedulePriority(row?.priority ?? 'medium');
 
-    final titleController = TextEditingController(
+    final titleController = SpellCheckTextEditingController(
       text: row?.titleController.text.trim() ?? '',
     );
-    final durationController = TextEditingController(
+    final durationController = SpellCheckTextEditingController(
       text: row?.durationController.text.trim().isNotEmpty == true
           ? row!.durationController.text.trim()
           : '5',
     );
-    final assigneeController = TextEditingController(
+    final assigneeController = SpellCheckTextEditingController(
       text: row?.assigneeController.text.trim() ?? '',
     );
-    final disciplineController = TextEditingController(
+    final disciplineController = SpellCheckTextEditingController(
       text: row?.disciplineController.text.trim() ?? '',
     );
-    final progressController = TextEditingController(
+    final progressController = SpellCheckTextEditingController(
       text: row?.progressController.text.trim().isNotEmpty == true
           ? row!.progressController.text.trim()
           : '0',
     );
-    final startDateController = TextEditingController(
+    final startDateController = SpellCheckTextEditingController(
       text: row?.startDateController.text.trim() ?? '',
     );
-    final dueDateController = TextEditingController(
+    final dueDateController = SpellCheckTextEditingController(
       text: row?.dueDateController.text.trim() ?? '',
     );
-    final hoursController = TextEditingController(
+    final hoursController = SpellCheckTextEditingController(
       text: row?.hoursController.text.trim() ?? '',
     );
-    final estimatingBasisController = TextEditingController(
+    final estimatingBasisController = SpellCheckTextEditingController(
       text: row?.estimatingBasisController.text.trim() ?? '',
     );
-    final milestoneController = TextEditingController(
+    final milestoneController = SpellCheckTextEditingController(
       text: row?.milestoneController.text.trim() ?? '',
     );
-    final dependencyIdsController = TextEditingController(
+    final dependencyIdsController = SpellCheckTextEditingController(
       text: row?.normalizedDependencyIds.join(', ') ?? '',
     );
 
-    final result = await showDialog<_TaskDraft>(
+    final result = await showAppDialog<_TaskDraft>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -1192,7 +1193,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Future<void> _validateSchedule() async {
     final report = _buildValidationReport();
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (context) => _ScheduleValidationDialog(report: report),
     );
@@ -1647,7 +1648,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         wbsLevel2Options: wbsLevel2Ids,
@@ -1672,7 +1673,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         initialWorkPackage: wp,
@@ -1693,7 +1694,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _deleteWorkPackage(String wpId) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Work Package'),
@@ -1720,7 +1721,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _saveWorkPackages(data.workPackages);
       _showInfo('Work package deleted.');
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
@@ -1728,7 +1730,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final activities =
         data.scheduleActivities.where((a) => a.workPackageId == wp.id).toList();
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => WorkPackageDetailView(
         workPackage: wp,
@@ -1749,12 +1751,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   .toList(),
             );
             setState(() {});
-            if (mounted) {
+            if (context.mounted) {
               _showInfo('EWP "${wp.title}" released for execution.');
             }
           } on StateError catch (e) {
-            Navigator.of(context).pop();
-            if (mounted) {
+            if (context.mounted) Navigator.of(context).pop();
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(e.message),
@@ -1780,7 +1782,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _importWorkPackagesFromDesignAndExecution() async {
-    final data = ProjectDataHelper.getData(context);
+    try {
+      final data = ProjectDataHelper.getData(context);
     final newPackages = <WorkPackage>[];
 
     // Import from Design Planning Document
@@ -1867,7 +1870,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       return;
     }
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Import Work Packages'),
@@ -1898,8 +1901,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       showSnackbar: false,
     );
 
-    setState(() {});
-    _showInfo('Imported ${newPackages.length} Work Packages.');
+      setState(() {});
+      _showInfo('Imported ${newPackages.length} Work Packages.');
+    } catch (error, stackTrace) {
+      debugPrint('Work package import failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        _showInfo('Could not import Work Packages. Please try again.');
+      }
+    }
   }
 
   Future<void> _generateIntegratedPackageChainsFromWbs() async {
@@ -1940,8 +1950,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
 
     final existingIds = data.workPackages.map((wp) => wp.id).toSet();
-    final newPackages =
-        generated.where((wp) => !existingIds.contains(wp.id)).toList();
+    // The id filter keeps saves honest; the identity pass beneath also drops
+    // packages that restate an existing one under a fresh id — which is what
+    // regenerating after a rebuilt WBS does (new node ids, same names).
+    final newPackages = IntegratedWorkPackageService.dedupePackagesAgainst(
+      generated.where((wp) => !existingIds.contains(wp.id)).toList(),
+      data.workPackages,
+    );
     if (newPackages.isEmpty) {
       _showInfo('Integrated package chains are already generated.');
       return;
@@ -1956,7 +1971,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         .where((d) => d.linkedSpecificationIds.isNotEmpty)
         .length;
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Generate Integrated Package Chains'),
@@ -2016,7 +2031,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     bool shouldImport = true;
     if (showConfirm) {
-      shouldImport = await showDialog<bool>(
+      shouldImport = await showAppDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Create Integrated Schedule Network'),
@@ -2754,8 +2769,8 @@ class _WbsAndSummaryCard extends StatelessWidget {
         rows.where((row) => row.priority.toLowerCase() == 'critical').length;
     final totalHours = rows.fold<double>(
       0,
-      (sum, row) =>
-          sum + (double.tryParse(row.hoursController.text.trim()) ?? 0),
+      (total, row) =>
+          total + (double.tryParse(row.hoursController.text.trim()) ?? 0),
     );
     final done =
         rows.where((row) => row.status.toLowerCase() == 'completed').length;
@@ -2938,7 +2953,7 @@ class _WbsNodeTile extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -2946,7 +2961,7 @@ class _WbsNodeTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1D4ED8),
+                      color: Color(0xFFFFC812),
                     ),
                   ),
                 ),
@@ -3983,7 +3998,7 @@ class _BoardColumn extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(12),
             border: isActive
-                ? Border.all(color: const Color(0xFF3B82F6), width: 2)
+                ? Border.all(color: const Color(0xFFFFC812), width: 2)
                 : null,
           ),
           child: Column(
@@ -4151,7 +4166,7 @@ class _BoardTaskCard extends StatelessWidget {
               minHeight: 6,
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF3B82F6),
+                Color(0xFFFFC812),
               ),
             ),
           ),
@@ -4228,22 +4243,22 @@ class _ScheduleRow {
     this.onChanged,
   })  : status = _normalizeScheduleStatus(status),
         priority = _normalizeSchedulePriority(priority),
-        titleController = TextEditingController(text: title),
+        titleController = SpellCheckTextEditingController(text: title),
         durationController =
-            TextEditingController(text: durationDays.toString()),
-        assigneeController = TextEditingController(text: assignee),
-        disciplineController = TextEditingController(text: discipline),
-        progressController = TextEditingController(
+            SpellCheckTextEditingController(text: durationDays.toString()),
+        assigneeController = SpellCheckTextEditingController(text: assignee),
+        disciplineController = SpellCheckTextEditingController(text: discipline),
+        progressController = SpellCheckTextEditingController(
           text: ((progressPercent * 100).clamp(0, 100)).round().toString(),
         ),
-        startDateController = TextEditingController(text: startDate),
-        dueDateController = TextEditingController(text: dueDate),
-        hoursController = TextEditingController(
+        startDateController = SpellCheckTextEditingController(text: startDate),
+        dueDateController = SpellCheckTextEditingController(text: dueDate),
+        hoursController = SpellCheckTextEditingController(
           text: estimatedHours == 0 ? '' : estimatedHours.toStringAsFixed(1),
         ),
         estimatingBasisController =
-            TextEditingController(text: estimatingBasis),
-        milestoneController = TextEditingController(text: milestone),
+            SpellCheckTextEditingController(text: estimatingBasis),
+        milestoneController = SpellCheckTextEditingController(text: milestone),
         dependencyIds = dependencyIds ??
             (predecessorId == null ? <String>[] : <String>[predecessorId]) {
     if (onChanged != null) {
@@ -4496,7 +4511,7 @@ class _ScheduleValidationDialog extends StatelessWidget {
                   _ValidationStat(
                     label: 'Tasks',
                     value: report.taskCount.toString(),
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFFFC812),
                   ),
                   _ValidationStat(
                     label: 'Unassigned',
@@ -4516,7 +4531,7 @@ class _ScheduleValidationDialog extends StatelessWidget {
                   _ValidationStat(
                     label: 'Readiness Warnings',
                     value: report.packageWarnings
-                        .fold<int>(0, (sum, item) => sum + item.warnings.length)
+                        .fold<int>(0, (total, item) => total + item.warnings.length)
                         .toString(),
                     color: const Color(0xFFEF4444),
                   ),
@@ -4543,12 +4558,12 @@ class _ScheduleValidationDialog extends StatelessWidget {
                   _ValidationStat(
                     label: 'Critical Path',
                     value: report.cpm.criticalPathIds.length.toString(),
-                    color: const Color(0xFF7C3AED),
+                    color: const Color(0xFFB8860B),
                   ),
                   _ValidationStat(
                     label: 'Spec Coverage',
                     value: report.specCoverageWarnings.length.toString(),
-                    color: const Color(0xFF0891B2),
+                    color: const Color(0xFFD97706),
                   ),
                   _ValidationStat(
                     label: 'Resource Conflicts',
@@ -5346,7 +5361,7 @@ class _WorkPackageCardState extends State<_WorkPackageCard> {
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -5619,7 +5634,7 @@ class _WorkPackageCardState extends State<_WorkPackageCard> {
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE5E7EB),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
               ),
             ),
           ],
@@ -5814,7 +5829,7 @@ class _ProcurementActivityCard extends StatelessWidget {
               minHeight: 6,
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
             ),
           ),
         ],
@@ -5827,9 +5842,9 @@ class _ProcurementActivityCard extends StatelessWidget {
       case 'rfq':
         return const Color(0xFFF59E0B);
       case 'evaluating':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'awarded':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'contracted':
         return const Color(0xFF10B981);
       default:
@@ -5913,17 +5928,17 @@ class _CostVsScheduleTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalBudget = workPackages.fold<double>(
       0,
-      (sum, wp) => sum + wp.budgetedCost,
+      (total, wp) => total + wp.budgetedCost,
     );
     final totalActual = workPackages.fold<double>(
       0,
-      (sum, wp) => sum + wp.actualCost,
+      (total, wp) => total + wp.actualCost,
     );
     final totalEstimate = costEstimateItems
         .where(
           (item) => item.costState == 'forecast' && !item.isBaseline,
         )
-        .fold<double>(0, (sum, item) => sum + item.amount);
+        .fold<double>(0, (total, item) => total + item.amount);
 
     final variance = totalBudget - totalActual;
     final variancePercent =
@@ -5959,7 +5974,7 @@ class _CostVsScheduleTab extends StatelessWidget {
               _CostStatCard(
                 title: 'Total Budget',
                 amount: totalBudget,
-                color: const Color(0xFF3B82F6),
+                color: const Color(0xFFFFC812),
               ),
               const SizedBox(width: 12),
               _CostStatCard(
@@ -5971,7 +5986,7 @@ class _CostVsScheduleTab extends StatelessWidget {
               _CostStatCard(
                 title: 'Cost Estimates',
                 amount: totalEstimate,
-                color: const Color(0xFF8B5CF6),
+                color: const Color(0xFFB8860B),
               ),
               const SizedBox(width: 12),
               _CostStatCard(

@@ -1,8 +1,7 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
@@ -11,6 +10,8 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Section 3 — FAT, Mechanical Completion & Commission Solution
 ///
@@ -35,7 +36,7 @@ class FatMechanicalCompletionScreen extends StatefulWidget {
 
 class _FatMechanicalCompletionScreenState
     extends State<FatMechanicalCompletionScreen> {
-  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _notesController = SpellCheckTextEditingController();
 
   // Subsection 1 — Mechanical Completion
   final List<_CompletionItem> _mechanicalCompletionItems = [];
@@ -184,7 +185,7 @@ class _FatMechanicalCompletionScreenState
 
     return ResponsiveScaffold(
       activeItemLabel: '3. FAT, Mechanical Completion & Commission Solution',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -203,63 +204,76 @@ class _FatMechanicalCompletionScreenState
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),
-            _buildInsightsHeader(),
-            const SizedBox(height: 16),
-            _buildKanbanBoard(),
-            const SizedBox(height: 16),
-            _buildSubsectionPanel(
-              title: 'Mechanical Completion',
-              description:
-                  'Track mechanical completion packages, turnover packages, equipment status, system completion, walkdowns, and work package references.',
-              items: _mechanicalCompletionItems,
-              onStatusChanged: (index, status) {
-                setState(() {
-                  _mechanicalCompletionItems[index] =
-                      _mechanicalCompletionItems[index]
-                          .copyWith(status: status);
-                });
-                _scheduleSave();
+            LaunchPhaseTableTabs(
+              overview: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInsightsHeader(),
+                  const SizedBox(height: 16),
+                  _buildKanbanBoard(),
+                  const SizedBox(height: 16),
+                  LaunchNotesSection(
+                    controller: _notesController,
+                    onChanged: (v) {},
+                  ),
+                ],
+              ),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Mechanical Completion'),
+                LaunchPhaseTableTab(label: 'FAT / SAT / Commissioning'),
+                LaunchPhaseTableTab(label: 'Final Turnover'),
+              ],
+              builders: {
+                'Mechanical Completion': () => _buildSubsectionPanel(
+                      title: 'Mechanical Completion',
+                      description:
+                          'Track mechanical completion packages, turnover packages, equipment status, system completion, walkdowns, and work package references.',
+                      items: _mechanicalCompletionItems,
+                      onStatusChanged: (index, status) {
+                        setState(() {
+                          _mechanicalCompletionItems[index] =
+                              _mechanicalCompletionItems[index]
+                                  .copyWith(status: status);
+                        });
+                        _scheduleSave();
+                      },
+                    ),
+                'FAT / SAT / Commissioning': () => _buildSubsectionPanel(
+                      title: 'FAT / SAT / Commissioning',
+                      description:
+                          'Factory Acceptance Tests, Site Acceptance Tests, commissioning activities, functional testing, integrated system testing, performance verification, and operational readiness.',
+                      items: _fatSatCommissioningItems,
+                      onStatusChanged: (index, status) {
+                        setState(() {
+                          _fatSatCommissioningItems[index] =
+                              _fatSatCommissioningItems[index]
+                                  .copyWith(status: status);
+                        });
+                        _scheduleSave();
+                      },
+                    ),
+                'Final Turnover': () => _buildSubsectionPanel(
+                      title: 'Final Turnover',
+                      description:
+                          'Punch list closeout, as-built drawings, operating manuals, equipment handover, asset registration, owner acceptance, and final certificates.',
+                      items: _finalTurnoverItems,
+                      onStatusChanged: (index, status) {
+                        setState(() {
+                          _finalTurnoverItems[index] =
+                              _finalTurnoverItems[index]
+                                  .copyWith(status: status);
+                        });
+                        _scheduleSave();
+                      },
+                    ),
               },
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionPanel(
-              title: 'FAT / SAT / Commissioning',
-              description:
-                  'Factory Acceptance Tests, Site Acceptance Tests, commissioning activities, functional testing, integrated system testing, performance verification, and operational readiness.',
-              items: _fatSatCommissioningItems,
-              onStatusChanged: (index, status) {
-                setState(() {
-                  _fatSatCommissioningItems[index] =
-                      _fatSatCommissioningItems[index].copyWith(status: status);
-                });
-                _scheduleSave();
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildSubsectionPanel(
-              title: 'Final Turnover',
-              description:
-                  'Punch list closeout, as-built drawings, operating manuals, equipment handover, asset registration, owner acceptance, and final certificates.',
-              items: _finalTurnoverItems,
-              onStatusChanged: (index, status) {
-                setState(() {
-                  _finalTurnoverItems[index] =
-                      _finalTurnoverItems[index].copyWith(status: status);
-                });
-                _scheduleSave();
-              },
-            ),
-            const SizedBox(height: 16),
-            LaunchNotesSection(
-              controller: _notesController,
-              onChanged: (v) {},
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Deployment Transfer, Certification & Release',
-              nextLabel: 'Next: Vendor & Contract Closeout',
-              onBack: () => TransitionToProdTeamScreen.open(context),
-              onNext: () => ContractCloseOutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('fat_mechanical_completion'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('fat_mechanical_completion'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'fat_mechanical_completion'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'fat_mechanical_completion'),
             ),
             const SizedBox(height: 48),
           ],
@@ -309,7 +323,7 @@ class _FatMechanicalCompletionScreenState
           label: 'Total Items',
           value: '$total',
           icon: Icons.checklist_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'across 3 subsections',
         ),
         LaunchKpiTile(
@@ -389,9 +403,9 @@ class _FatMechanicalCompletionScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFFCD34D)),
+        border: Border.all(color: const Color(0xFFFCD34D)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +448,7 @@ class _FatMechanicalCompletionScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -512,9 +526,9 @@ class _StatusDropdown extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(

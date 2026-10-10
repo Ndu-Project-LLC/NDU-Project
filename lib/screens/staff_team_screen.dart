@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,13 +8,12 @@ import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/models/team_management_plan.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/team_management_service.dart';
-import 'package:ndu_project/screens/design_deliverables_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -74,7 +74,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
       screenTitle: 'Staff Team',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
         ]),
         PdfSection.text(
             'Notes',
@@ -365,7 +365,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
     final double horizontalPadding = isMobile ? 20 : 40;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: const KazAiChatBubble(positioned: false),
       body: SafeArea(
         child: isMobile
@@ -412,36 +412,25 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
               child: CircularProgressIndicator(),
             ))
           else ...[
-            StaffTeamResourceGrid(
-              rows: _staffingRows,
-              onRowsChanged: _onStaffingRowsChanged,
-            ),
-            const SizedBox(height: 28),
-            _buildMobilizationBoard(),
-            const SizedBox(height: 28),
-            launch.LaunchEditableSection(
-              title: 'Onboarding actions',
-              description:
-                  'List onboarding steps and owners to get people productive.',
-              entries: _onboardingActions,
-              onAdd: () => _addOnboardingAction(),
-              onRemove: (i) {
-                setState(() => _onboardingActions.removeAt(i));
-                _autoSave();
+            // The staffing grid, the mobilization board and the two registers
+            // below them used to be one long column; they are now tabs, the
+            // same arrangement the Launch Phase screens use.
+            LaunchPhaseTableTabs(
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Staffing grid'),
+                LaunchPhaseTableTab(label: 'Team mobilization'),
+                LaunchPhaseTableTab(label: 'Onboarding actions'),
+                LaunchPhaseTableTab(label: 'Coverage risks'),
+              ],
+              builders: {
+                'Staffing grid': () => StaffTeamResourceGrid(
+                      rows: _staffingRows,
+                      onRowsChanged: _onStaffingRowsChanged,
+                    ),
+                'Team mobilization': _buildMobilizationBoard,
+                'Onboarding actions': _buildOnboardingActions,
+                'Coverage risks': _buildCoverageRisks,
               },
-              onEdit: (i, entry) => _editOnboardingAction(i, entry),
-            ),
-            const SizedBox(height: 20),
-            launch.LaunchEditableSection(
-              title: 'Coverage risks',
-              description: 'Document gaps or risks in team coverage.',
-              entries: _coverageRisks,
-              onAdd: () => _addCoverageRisk(),
-              onRemove: (i) {
-                setState(() => _coverageRisks.removeAt(i));
-                _autoSave();
-              },
-              onEdit: (i, entry) => _editCoverageRisk(i, entry),
             ),
           ],
           const SizedBox(height: 36),
@@ -449,6 +438,38 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
           const SizedBox(height: 56),
         ],
       ),
+    );
+  }
+
+  /// Onboarding actions register, extracted so the staff-team tab host can
+  /// take it as a bare tear-off.
+  Widget _buildOnboardingActions() {
+    return launch.LaunchEditableSection(
+      title: 'Onboarding actions',
+      description:
+          'List onboarding steps and owners to get people productive.',
+      entries: _onboardingActions,
+      onAdd: () => _addOnboardingAction(),
+      onRemove: (i) {
+        setState(() => _onboardingActions.removeAt(i));
+        _autoSave();
+      },
+      onEdit: (i, entry) => _editOnboardingAction(i, entry),
+    );
+  }
+
+  /// Coverage risks register, extracted for the same reason.
+  Widget _buildCoverageRisks() {
+    return launch.LaunchEditableSection(
+      title: 'Coverage risks',
+      description: 'Document gaps or risks in team coverage.',
+      entries: _coverageRisks,
+      onAdd: () => _addCoverageRisk(),
+      onRemove: (i) {
+        setState(() => _coverageRisks.removeAt(i));
+        _autoSave();
+      },
+      onEdit: (i, entry) => _editCoverageRisk(i, entry),
     );
   }
 
@@ -556,17 +577,17 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                     size: 20, color: Color(0xFFD97706)),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Team Mobilization',
+                    Text('Team Mobilization',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF111827))),
-                    const SizedBox(height: 2),
-                    const Text(
+                    SizedBox(height: 2),
+                    Text(
                       'Per-member onboarding checklists from the Team Management '
                       'plan. Complete all items to mobilize each member for Execution.',
                       style: TextStyle(
@@ -686,7 +707,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                     radius: 16,
                     backgroundColor: isMobilized
                         ? const Color(0xFFDCFCE7)
-                        : const Color(0xFFEEF2FF),
+                        : const Color(0xFFFFF8E1),
                     child: Text(
                       (member.name.isNotEmpty ? member.name : '?')[0]
                           .toUpperCase(),
@@ -818,18 +839,18 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Color(0xFFEEF2FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.groups_rounded,
                   size: 22, color: Color(0xFF4338CA)),
             ),
             const SizedBox(width: 14),
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Staff Plan',
                     style: TextStyle(
                       fontSize: 22,
@@ -837,10 +858,10 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                       color: Color(0xFF111827),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     "Strategize your project's human capital requirements. Identify core roles, determine resource allocation, and align staffing costs with your project's execution timeline.",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF6B7280),
@@ -862,17 +883,17 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 16, offset: Offset(0, 8)),
         ],
       ),
       child: LaunchPhaseNavigation(
-        backLabel: 'Back: Design Deliverables',
-        nextLabel: 'Next: Team Meetings',
-        onBack: () => DesignDeliverablesScreen.open(context),
-        onNext: () => TeamMeetingsScreen.open(context),
+        backLabel: PlanningPhaseNavigation.backLabel('staff_team'),
+        nextLabel: PlanningPhaseNavigation.nextLabel('staff_team'),
+        onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'staff_team'),
+        onNext: () => PlanningPhaseNavigation.goToNext(context, 'staff_team'),
       ),
     );
   }

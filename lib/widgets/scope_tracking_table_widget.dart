@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/scope_tracking_item.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -193,7 +194,7 @@ class ScopeTrackingTableWidget extends StatelessWidget {
             top: BorderSide(color: dividerColor, width: 0.8),
             bottom: BorderSide(color: dividerColor, width: 0.8),
             horizontalInside:
-                BorderSide(color: dividerColor.withOpacity(0.6), width: 0.6),
+                BorderSide(color: dividerColor.withValues(alpha: 0.6), width: 0.6),
           ),
           children: [headerRow, ...dataRows],
         );
@@ -235,7 +236,7 @@ class ScopeTrackingTableWidget extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -610,7 +611,7 @@ class _StatusPill extends StatelessWidget {
       case 'Not Started':
         return const Color(0xFF9CA3AF); // Grey
       case 'In-Progress':
-        return const Color(0xFF2563EB); // Blue
+        return const Color(0xFFFFC812); // Blue
       case 'Verified':
         return const Color(0xFF10B981); // Green
       case 'Out-of-Scope':
@@ -625,7 +626,7 @@ class _StatusPill extends StatelessWidget {
     final color = _getStatusColor(status);
     return GestureDetector(
       onTap: () {
-        showDialog(
+        showAppDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Select Status'),
@@ -649,7 +650,7 @@ class _StatusPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

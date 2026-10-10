@@ -1,0 +1,86 @@
+name: Local AI E2E
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Verifies that the app generates AI-shaped content entirely in code — no
+# provider, no key, no network — so `AI_MODE=local` stays working for demos,
+# offline use, and the web-lite E2E path.
+#
+# Two gates:
+#   1. service level — drives the real AI service with the network forced
+#      offline and asserts every surface still returns usable content;
+#   2. bundle level — builds the web app with AI_MODE=local, serves it, and
+#      boots it in headless Chrome, asserting the app mounts and never
+#      contacts the AI proxy.
+#
+# Kept separate from build_web.yml so the deploy artifact pipeline is untouched.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main, ci-pipeline, staging]
+  pull_request:
+    branches: [main, staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-ai-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-generation:
+    name: Local (no-AI) generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter Pub Get
+        run: flutter pub get
+
+      - name: Service-level local AI tests
+        run: |
+          flutter test \
+            test/services/local_ai_engine_test.dart \
+            test/services/local_ai_client_test.dart \
+            test/services/local_ai_e2e_test.dart
+
+      - name: Build web with AI_MODE=local
+        run: |
+          flutter build web --release --no-tree-shake-icons \
+            --dart-define=AI_MODE=local \
+            --output=build/web-lite
+
+      - name: Serve the bundle
+        run: |
+          # NDU_STRICT_PORT makes a busy port a hard error instead of moving to
+          # the next free port — the smoke test below polls 8099 specifically,
+          # so a silent port change would fail there confusingly.
+          NDU_STRICT_PORT=1 python3 scripts/serve_lite.py build/web-lite 8099 &
+          for _ in $(seq 1 30); do
+            if curl -sf -o /dev/null http://127.0.0.1:8099/; then
+              echo "Server is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not start" >&2
+          exit 1
+
+      - name: Headless browser smoke test
+        run: |
+          # GitHub's ubuntu runners ship Chrome; fall back to any Chromium.
+          export CHROME_BIN="$(command -v google-chrome \
+            || command -v google-chrome-stable \
+            || command -v chromium \
+            || command -v chromium-browser || true)"
+          echo "CHROME_BIN=$CHROME_BIN"
+          node scripts/e2e_local_ai_web.mjs --url http://127.0.0.1:8099

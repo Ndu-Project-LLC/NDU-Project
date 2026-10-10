@@ -1,0 +1,55 @@
+# Self-hosted LLM stack for the NDU Project KAZ AI features.
+#
+# Deploys on the Oracle Cloud Always-Free ARM VM (Ampere A1: 4 OCPU / 24 GB
+# RAM) or any Docker host. Two services:
+#   - ollama: runs the model inference server
+#   - gate:   tiny Node token-gate that exposes Ollama's OpenAI-compatible
+#             API to the internet without exposing Ollama itself
+#
+# Usage (from this directory, after `cp .env.example .env` and editing):
+#   docker compose up -d --build
+#
+# The Firebase openaiProxy must be pointed at this host (see README.md).
+
+services:
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    image: ndu-llm-ollama:latest
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b-instruct}
+      # Authenticates hf.co model pulls (e.g. LLM_MODEL=hf.co/Qwen/Qwen2.5-7B-Instruct-GGUF:q4_k_m).
+      HF_TOKEN: ${HF_TOKEN:-}
+    # Never expose Ollama's port to the internet — the gate is the only
+    # public entry point.
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  gate:
+    build:
+      context: ./gate
+    image: ndu-llm-gate:latest
+    ports:
+      - "8080:8080"
+    environment:
+      LLM_API_TOKEN: ${LLM_API_TOKEN:?set LLM_API_TOKEN in .env (openssl rand -hex 32)}
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b-instruct}
+      HOST: 0.0.0.0
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_models:

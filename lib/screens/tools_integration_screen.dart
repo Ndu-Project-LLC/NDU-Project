@@ -1,16 +1,19 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/unique_id.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/providers/user_role_provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/integration_oauth_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -20,6 +23,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
@@ -35,6 +39,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  bool _isLoading = false;
  bool _suspendSave = false;
  String? _loadError;
+ String? _connectingProvider;
 
  List<_IntegrationRow> _integrations = [];
  List<_KpiRow> _customKpiRows = [];
@@ -214,6 +219,25 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  return IntegrationProvider.miro;
  case 'whiteboard':
  return IntegrationProvider.whiteboard;
+ case 'slack':
+ return IntegrationProvider.slack;
+ case 'microsoft teams':
+ case 'teams':
+ return IntegrationProvider.microsoftTeams;
+ case 'microsoft 365':
+ case 'microsoft365':
+ case 'm365':
+ return IntegrationProvider.microsoft365;
+ case 'quickbooks':
+ case 'quick books':
+ return IntegrationProvider.quickBooks;
+ case 'xero':
+ return IntegrationProvider.xero;
+ case 'salesforce':
+ return IntegrationProvider.salesforce;
+ case 'hubspot':
+ case 'hub spot':
+ return IntegrationProvider.hubSpot;
  default:
  return null;
  }
@@ -225,6 +249,141 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
  if (diff.inHours < 24) return '${diff.inHours} hr ago';
  return '${diff.inDays} days ago';
+ }
+
+ // ---------------------------------------------------------------------------
+ // OAuth connect / disconnect
+ // ---------------------------------------------------------------------------
+
+ /// Runs the provider OAuth flow after the user supplies the client
+ /// credentials registered in that provider's developer console. A row is only
+ /// ever shown as connected once the provider returns a usable access token.
+ Future<void> _connectProvider(IntegrationProvider provider) async {
+ final label = _providerLabel(provider);
+ final clientIdController = TextEditingController();
+ final secretController = TextEditingController();
+ final existing = await IntegrationOAuthService.instance.loadClientConfig(provider);
+ clientIdController.text = existing.clientId ?? '';
+ secretController.text = existing.clientSecret ?? '';
+ if (!mounted) {
+ clientIdController.dispose();
+ secretController.dispose();
+ return;
+ }
+
+ final confirmed = await showAppDialog<bool>(
+ context: context,
+ builder: (dialogContext) => AlertDialog(
+ title: Text('Connect $label'),
+ content: SizedBox(
+ width: 460,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text('Register this redirect URI in your $label developer app:\n${IntegrationOAuthService.redirectUri}', style: const TextStyle(fontSize: 12)),
+ const SizedBox(height: 14),
+ TextField(controller: clientIdController, decoration: const InputDecoration(labelText: 'OAuth client ID', border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ TextField(controller: secretController, obscureText: true, decoration: const InputDecoration(labelText: 'OAuth client secret (if required)', border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ Text('Requested scopes: ${IntegrationOAuthService.instance.configFor(provider).scopes.join(', ')}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+ const SizedBox(height: 8),
+ const Text('Credentials are stored in secure platform storage. No integration is shown as connected until the provider completes OAuth.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+ FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Continue to provider')),
+ ],
+ ),
+ );
+
+ final clientId = clientIdController.text.trim();
+ final clientSecret = secretController.text;
+ if (confirmed != true) {
+ clientIdController.dispose();
+ secretController.dispose();
+ return;
+ }
+ if (clientId.isEmpty) {
+ clientIdController.dispose();
+ secretController.dispose();
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter the OAuth client ID registered with the provider.')));
+ }
+ return;
+ }
+
+ setState(() => _connectingProvider = provider.name);
+ try {
+ await IntegrationOAuthService.instance.saveClientConfig(
+ provider: provider,
+ clientId: clientId,
+ clientSecret: clientSecret,
+ );
+ final state = await IntegrationOAuthService.instance.connect(
+ provider: provider,
+ clientId: clientId,
+ clientSecret: clientSecret,
+ );
+ if (!mounted) return;
+ final status = state.connected ? 'Connected' : 'Expired';
+ final lastSync = state.updatedAt == null ? 'Never' : _formatRelativeTime(state.updatedAt!);
+ final idx = _integrations.indexWhere((row) => row.provider.toLowerCase() == label.toLowerCase());
+ setState(() {
+ if (idx == -1) {
+ _integrations = [
+ ..._integrations,
+ _IntegrationRow(
+ id: provider.name, name: label, subtitle: _providerSubtitle(label),
+ provider: label, status: status, scopes: _providerScopes(label),
+ mapsTo: _providerMapping(label), lastSync: lastSync,
+ icon: _providerIcon(label), iconColor: _providerColor(label),
+ features: _providerFeatureHint(label), autoHandoff: null, syncMode: null, errorInfo: null,
+ ),
+ ];
+ } else {
+ _integrations[idx] = _integrations[idx].copyWith(
+ status: status, scopes: _providerScopes(label), lastSync: lastSync, errorInfo: null,
+ );
+ }
+ });
+ _scheduleSave();
+ _logActivity('Connected tool via OAuth', details: {'provider': provider.name, 'scopes': _providerScopes(label)});
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label connected.')));
+ }
+ } catch (error) {
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not connect $label: ${error.toString()}')));
+ }
+ } finally {
+ clientIdController.dispose();
+ secretController.dispose();
+ if (mounted) setState(() => _connectingProvider = null);
+ }
+ }
+
+ Future<void> _disconnectProvider(IntegrationProvider provider) async {
+ final label = _providerLabel(provider);
+ setState(() => _connectingProvider = provider.name);
+ try {
+ await IntegrationOAuthService.instance.disconnect(provider);
+ if (!mounted) return;
+ final idx = _integrations.indexWhere((row) => row.provider.toLowerCase() == label.toLowerCase());
+ if (idx != -1) {
+ setState(() => _integrations[idx] = _integrations[idx].copyWith(status: 'Not connected', lastSync: 'Never', errorInfo: null));
+ }
+ _scheduleSave();
+ _logActivity('Disconnected tool integration', details: {'provider': provider.name});
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label disconnected.')));
+ }
+ } finally {
+ if (mounted) setState(() => _connectingProvider = null);
+ }
  }
 
  // ---------------------------------------------------------------------------
@@ -275,8 +434,26 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  icon: Icons.code, iconColor: Color(0xFF24292F),
  features: 'PR-to-task linking and CI pipeline triggers.', autoHandoff: null, syncMode: null, errorInfo: null,
  ),
+ _catalogIntegration('slack', 'Slack', 'Channels & project communications'),
+ _catalogIntegration('teams', 'Microsoft Teams', 'Channels, chats & collaboration'),
+ _catalogIntegration('m365', 'Microsoft 365', 'Files, SharePoint & documents'),
+ _catalogIntegration('quickbooks', 'QuickBooks', 'Accounting & ledgers'),
+ _catalogIntegration('xero', 'Xero', 'Accounting & invoicing'),
+ _catalogIntegration('salesforce', 'Salesforce', 'CRM & opportunities'),
+ _catalogIntegration('hubspot', 'HubSpot', 'CRM & contacts'),
  ];
  }
+
+ /// Builds a catalogue row for a provider that is available to connect but
+ /// not connected on this project yet. Scope/mapping/icon text comes from the
+ /// shared provider helpers so the register and the OAuth config agree.
+ _IntegrationRow _catalogIntegration(String id, String name, String subtitle) => _IntegrationRow(
+ id: id, name: name, subtitle: subtitle,
+ provider: name, status: 'Not connected',
+ scopes: _providerScopes(name), mapsTo: _providerMapping(name), lastSync: 'Never',
+ icon: _providerIcon(name), iconColor: _providerColor(name),
+ features: _providerFeatureHint(name), autoHandoff: null, syncMode: null, errorInfo: null,
+ );
 
  List<_RiskSignalRow> _defaultRiskSignals() {
  return [
@@ -382,7 +559,7 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  // CRUD helpers
  // ---------------------------------------------------------------------------
 
- String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
+ String _newId() => newId();
 
  void _logActivity(String action, {Map<String, dynamic>? details}) {
  final projectId = _projectId?.trim() ?? '';
@@ -445,12 +622,11 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  @override
  Widget build(BuildContext context) {
- final isNarrow = MediaQuery.sizeOf(context).width < 980;
  final padding = AppBreakpoints.pagePadding(context);
 
  return ResponsiveScaffold(
  activeItemLabel: 'Tools Integration',
- backgroundColor: Colors.white,
+ backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [
@@ -491,10 +667,10 @@ showNavigationButtons: false,
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Development',
- nextLabel: 'Next: Long Lead Equipment',
- onBack: () => context.go('/${AppRoutes.technicalDevelopment}'),
- onNext: () => context.go('/${AppRoutes.longLeadEquipmentOrdering}'),
+ backLabel: PlanningPhaseNavigation.backLabel('tools_integration'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('tools_integration'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'tools_integration'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'tools_integration'),
  ),
  ],
  ),
@@ -572,30 +748,6 @@ showNavigationButtons: false,
  );
  }
 
- Widget _buildHeaderActions() {
- final policy = _crudPolicy;
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: [
- _actionButton(Icons.add, 'Add tool',
- onPressed: policy.canCreate ? () => _showIntegrationDialog() : null),
- _actionButton(Icons.upload_outlined, 'Export inventory', onPressed: () {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Inventory export queued. All integration records will be included.')),
- );
- }),
- _actionButton(Icons.health_and_safety_outlined, 'Start health check', onPressed: () {
- _refreshIntegrationStatuses();
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Health check initiated. All integration statuses are being refreshed.')),
- );
- }),
- _primaryButton('Run manual sync'),
- ],
- );
- }
-
  Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
  final enabled = onPressed != null;
  return OutlinedButton.icon(
@@ -614,210 +766,17 @@ showNavigationButtons: false,
  );
  }
 
- Widget _primaryButton(String label) {
- return ElevatedButton.icon(
- onPressed: () {
- _refreshIntegrationStatuses();
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Manual sync triggered. Refreshing all integration statuses.')),
- );
- },
- icon: const Icon(Icons.sync, size: 18),
- label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
- foregroundColor: Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
- ),
- );
- }
-
  // ---------------------------------------------------------------------------
  // Filter chips
  // ---------------------------------------------------------------------------
-
- Widget _buildFilterChips() {
- const filters = ['All tools', 'Connected', 'Degraded', 'Not connected', 'Expired'];
- return Wrap(
- spacing: 10,
- runSpacing: 10,
- children: filters.map((filter) {
- final selected = _selectedFilters.contains(filter);
- return GestureDetector(
- onTap: () {
- setState(() {
- if (filter == 'All tools') {
- _selectedFilters
- ..clear()
- ..add(filter);
- } else {
- if (selected) {
- _selectedFilters.remove(filter);
- } else {
- _selectedFilters
- ..remove('All tools')
- ..add(filter);
- }
- if (_selectedFilters.isEmpty) _selectedFilters.add('All tools');
- }
- });
- },
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
- decoration: BoxDecoration(
- color: selected ? const Color(0xFF111827) : Colors.white,
- borderRadius: BorderRadius.circular(20),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Text(
- filter,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: selected ? Colors.white : const Color(0xFF475569),
- ),
- ),
- ),
- );
- }).toList(),
- );
- }
 
  // ---------------------------------------------------------------------------
  // Governance strip
  // ---------------------------------------------------------------------------
 
- Widget _buildGovernanceStrip() {
- final policy = _crudPolicy;
- final items = [
- _GovernanceItem(Icons.verified_user_outlined, 'Access', policy.roleLabel, policy.roleColor),
- _GovernanceItem(Icons.add_circle_outline, 'Create',
- policy.canCreate ? 'Enabled' : 'Restricted',
- policy.canCreate ? const Color(0xFF10B981) : const Color(0xFF94A3B8)),
- _GovernanceItem(Icons.edit_outlined, 'Update',
- policy.canUpdate ? 'Enabled' : 'Read-only',
- policy.canUpdate ? const Color(0xFF0EA5E9) : const Color(0xFF94A3B8)),
- _GovernanceItem(Icons.delete_outline, 'Delete',
- policy.canDelete ? 'Admin only' : 'Restricted',
- policy.canDelete ? const Color(0xFFEF4444) : const Color(0xFF94A3B8)),
- ];
-
- return Container(
- width: double.infinity,
- padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- child: Wrap(
- spacing: 10,
- runSpacing: 10,
- alignment: WrapAlignment.spaceBetween,
- children: [
- ...items.map(_buildGovernancePill),
- Text(
- policy.hasProject
- ? 'Integration, scope, health, risk, and action controls are separated by access level per ISO 27001 A.9.'
- : 'Open a project to enable tools integration governance controls.',
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
- ),
- ],
- ),
- );
- }
-
- Widget _buildGovernancePill(_GovernanceItem item) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
- decoration: BoxDecoration(
- color: item.color.withValues(alpha: 0.08),
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: item.color.withValues(alpha: 0.18)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(item.icon, size: 16, color: item.color),
- const SizedBox(width: 8),
- Text('${item.label}: ',
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
- Text(item.value,
- style: TextStyle(fontSize: 12, color: item.color, fontWeight: FontWeight.w700)),
- ],
- ),
- );
- }
-
  // ---------------------------------------------------------------------------
  // Stats row
  // ---------------------------------------------------------------------------
-
- Widget _buildStatsRow(bool isNarrow) {
- final connected = _integrations.where((i) => i.status == 'Connected').length;
- final degraded = _integrations.where((i) => i.status == 'Degraded').length;
- final notConnected = _integrations.where((i) => i.status == 'Not connected').length;
- final total = _integrations.length;
-
- final healthScore = total == 0 ? 0 : ((connected / total) * 100).round();
- final syncStatus = notConnected > 0 ? '$notConnected pending' : 'All synced';
- final openIssues = degraded + _riskSignals.where((s) => s.status == 'Open').length;
-
- final stats = [
- _StatCardData('$connected', 'Connected Tools',
- '$total total · $degraded degraded', const Color(0xFF0EA5E9)),
- _StatCardData('$healthScore%', 'Health Score',
- healthScore >= 80 ? 'Above threshold' : 'Below 80% target', healthScore >= 80 ? const Color(0xFF10B981) : const Color(0xFFF59E0B)),
- _StatCardData(syncStatus, 'Data Sync Status',
- notConnected == 0 ? 'All integrations synced' : '$notConnected not connected',
- notConnected == 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
- _StatCardData('$openIssues', 'Open Issues',
- openIssues > 0 ? 'Require attention' : 'All clear',
- openIssues > 0 ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
- ];
-
- if (isNarrow) {
- return Wrap(
- spacing: 12,
- runSpacing: 12,
- children: stats.map(_buildStatCard).toList(),
- );
- }
-
- return Row(
- children: stats
- .map((stat) => Expanded(
- child: Padding(
- padding: const EdgeInsets.only(right: 12),
- child: _buildStatCard(stat),
- )))
- .toList(),
- );
- }
-
- Widget _buildStatCard(_StatCardData data) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(data.value,
- style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: data.color)),
- const SizedBox(height: 6),
- Text(data.label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
- const SizedBox(height: 6),
- Text(data.supporting,
- style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: data.color)),
- ],
- ),
- );
- }
 
  // ---------------------------------------------------------------------------
  // Framework guide
@@ -888,7 +847,7 @@ showNavigationButtons: false,
  'Connected → Syncing → Active → Degraded → Expired. '
  'Each integration should be tracked from initial connection through operational maturity. '
  'Set automated health checks at regular intervals and configure alerts for status transitions.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -1008,7 +967,7 @@ showNavigationButtons: false,
  Expanded(flex: 2, child: Text('SCOPES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5))),
  Expanded(flex: 2, child: Text('MAPS TO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5))),
  Expanded(flex: 2, child: Text('LAST SYNC', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5))),
- SizedBox(width: 64, child: Text('ACTIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5), textAlign: TextAlign.center)),
+ SizedBox(width: 112, child: Text('ACTIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD1D5DB), letterSpacing: 0.5), textAlign: TextAlign.center)),
  ],
  ),
  ),
@@ -1096,10 +1055,11 @@ showNavigationButtons: false,
  ),
  // ACTIONS
  SizedBox(
- width: 88,
+ width: 112,
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
+ _buildConnectAction(item),
  Tooltip(
  message: 'KAZ AI – Auto-fill this integration',
  child: InkWell(
@@ -1144,6 +1104,30 @@ showNavigationButtons: false,
  }).toList();
  }
 
+ /// Connect / disconnect affordance for a register row. Providers without a
+ /// configured OAuth connection (catalogue-only entries such as Jira or
+ /// GitHub) render nothing so the action column stays honest.
+ Widget _buildConnectAction(_IntegrationRow item) {
+ final provider = _providerForName(item.provider);
+ if (provider == null || !_crudPolicy.canUpdate) return const SizedBox.shrink();
+ final isConnected = item.status == 'Connected' || item.status == 'Expired';
+ final busy = _connectingProvider == provider.name;
+ return Padding(
+ padding: const EdgeInsets.only(right: 4),
+ child: Tooltip(
+ message: isConnected ? 'Disconnect ${item.name}' : 'Connect ${item.name} via OAuth',
+ child: InkWell(
+ onTap: busy
+ ? null
+ : () => isConnected ? _disconnectProvider(provider) : _connectProvider(provider),
+ child: busy
+ ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF2563EB)))
+ : Icon(isConnected ? Icons.link_off : Icons.link, size: 14, color: const Color(0xFF2563EB)),
+ ),
+ ),
+ );
+ }
+
  Widget _buildStatusBadge(String status) {
  Color bgColor;
  Color textColor;
@@ -1171,8 +1155,8 @@ showNavigationButtons: false,
  case 'In Review':
  case 'In Progress':
  case 'Pending':
- bgColor = const Color(0xFFEFF6FF);
- textColor = const Color(0xFF2563EB);
+ bgColor = const Color(0xFFFFF8E1);
+ textColor = const Color(0xFFFFC812);
  break;
  case 'Not Started':
  bgColor = const Color(0xFFF9FAFB);
@@ -1490,8 +1474,8 @@ showNavigationButtons: false,
  textColor = const Color(0xFFD97706);
  break;
  case 'Medium':
- bgColor = const Color(0xFFEFF6FF);
- textColor = const Color(0xFF2563EB);
+ bgColor = const Color(0xFFFFF8E1);
+ textColor = const Color(0xFFFFC812);
  break;
  default:
  bgColor = const Color(0xFFF3F4F6);
@@ -1652,7 +1636,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI integration generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI generation failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI generation failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  } finally {
@@ -1681,7 +1665,7 @@ showNavigationButtons: false,
  debugPrint('KAZ AI field generation failed: $e');
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+ SnackBar(content: Text('KAZ AI failed: ${aiErrorMessage(e)}'), backgroundColor: const Color(0xFFDC2626)),
  );
  }
  }
@@ -1734,17 +1718,17 @@ showNavigationButtons: false,
 
  void _showIntegrationDialog({_IntegrationRow? existing}) {
  final isEdit = existing != null;
- final nameCtl = TextEditingController(text: existing?.name ?? '');
- final subtitleCtl = TextEditingController(text: existing?.subtitle ?? '');
- final providerCtl = TextEditingController(text: existing?.provider ?? 'Figma');
- final scopesCtl = TextEditingController(text: existing?.scopes ?? '');
- final mapsToCtl = TextEditingController(text: existing?.mapsTo ?? '');
- final featuresCtl = TextEditingController(text: existing?.features ?? '');
+ final nameCtl = SpellCheckTextEditingController(text: existing?.name ?? '');
+ final subtitleCtl = SpellCheckTextEditingController(text: existing?.subtitle ?? '');
+ final providerCtl = SpellCheckTextEditingController(text: existing?.provider ?? 'Figma');
+ final scopesCtl = SpellCheckTextEditingController(text: existing?.scopes ?? '');
+ final mapsToCtl = SpellCheckTextEditingController(text: existing?.mapsTo ?? '');
+ final featuresCtl = SpellCheckTextEditingController(text: existing?.features ?? '');
  String status = existing?.status ?? 'Not connected';
  IconData icon = existing?.icon ?? Icons.extension;
  Color iconColor = existing?.iconColor ?? const Color(0xFF64748B);
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -1861,7 +1845,7 @@ showNavigationButtons: false,
  }
 
  void _confirmDeleteIntegration(_IntegrationRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Integration'),
@@ -1887,13 +1871,13 @@ showNavigationButtons: false,
 
  void _showKpiEntryDialog({_KpiRow? existing}) {
  final isEdit = existing != null;
- final metricCtl = TextEditingController(text: existing?.metric ?? '');
- final valueCtl = TextEditingController(text: existing != null ? '${(existing.value * 100).round()}' : '');
- final targetCtl = TextEditingController(text: existing != null ? '${(existing.target * 100).round()}' : '90');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
- final trendCtl = TextEditingController(text: existing?.trend ?? '');
+ final metricCtl = SpellCheckTextEditingController(text: existing?.metric ?? '');
+ final valueCtl = SpellCheckTextEditingController(text: existing != null ? '${(existing.value * 100).round()}' : '');
+ final targetCtl = SpellCheckTextEditingController(text: existing != null ? '${(existing.target * 100).round()}' : '90');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final trendCtl = SpellCheckTextEditingController(text: existing?.trend ?? '');
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: Row(
@@ -1930,8 +1914,7 @@ showNavigationButtons: false,
  onPressed: () {
  final val = (int.tryParse(valueCtl.text.trim()) ?? 0).clamp(0, 100) / 100.0;
  final tgt = (int.tryParse(targetCtl.text.trim()) ?? 90).clamp(0, 100) / 100.0;
- final row = _KpiRow(
- id: existing?.id ?? 'custom_${DateTime.now().millisecondsSinceEpoch}',
+ final row = _KpiRow(    id: existing?.id ?? newId('custom_'),
  metric: metricCtl.text.trim(),
  value: val,
  target: tgt,
@@ -1965,14 +1948,14 @@ showNavigationButtons: false,
 
  void _showRiskSignalDialog({_RiskSignalRow? existing}) {
  final isEdit = existing != null;
- final signalCtl = TextEditingController(text: existing?.signal ?? '');
- final descCtl = TextEditingController(text: existing?.description ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final signalCtl = SpellCheckTextEditingController(text: existing?.signal ?? '');
+ final descCtl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
  String severity = existing?.severity ?? 'Medium';
  String category = existing?.category ?? 'Governance';
  String status = existing?.status ?? 'Open';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2070,13 +2053,13 @@ showNavigationButtons: false,
 
  void _showActionDialog({_ActionRow? existing}) {
  final isEdit = existing != null;
- final titleCtl = TextEditingController(text: existing?.title ?? '');
- final ownerCtl = TextEditingController(text: existing?.owner ?? '');
- final dueDateCtl = TextEditingController(text: existing?.dueDate ?? 'TBD');
+ final titleCtl = SpellCheckTextEditingController(text: existing?.title ?? '');
+ final ownerCtl = SpellCheckTextEditingController(text: existing?.owner ?? '');
+ final dueDateCtl = SpellCheckTextEditingController(text: existing?.dueDate ?? 'TBD');
  String priority = existing?.priority ?? 'Medium';
  String status = existing?.status ?? 'Not Started';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2419,15 +2402,15 @@ showNavigationButtons: false,
 
  void _showApprovalGateDialog({_ApprovalGateData? existing}) {
  final isEdit = existing != null;
- final gateCtl = TextEditingController(text: existing?.gate ?? '');
- final descCtl = TextEditingController(text: existing?.description ?? '');
- final approverCtl = TextEditingController(text: existing?.approver ?? '');
- final targetDateCtl = TextEditingController(text: existing?.targetDate ?? 'TBD');
+ final gateCtl = SpellCheckTextEditingController(text: existing?.gate ?? '');
+ final descCtl = SpellCheckTextEditingController(text: existing?.description ?? '');
+ final approverCtl = SpellCheckTextEditingController(text: existing?.approver ?? '');
+ final targetDateCtl = SpellCheckTextEditingController(text: existing?.targetDate ?? 'TBD');
  String department = existing?.department ?? 'Security';
  String priority = existing?.priority ?? 'High';
  String status = existing?.status ?? 'Not Started';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2523,7 +2506,7 @@ showNavigationButtons: false,
  }
 
  void _confirmDeleteApprovalGate(_ApprovalGateData item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Approval Gate'),
@@ -2549,15 +2532,15 @@ showNavigationButtons: false,
 
  void _showDataFlowDialog({_DataFlowRow? existing}) {
  final isEdit = existing != null;
- final sourceCtl = TextEditingController(text: existing?.source ?? '');
- final targetCtl = TextEditingController(text: existing?.target ?? '');
- final dataTypeCtl = TextEditingController(text: existing?.dataType ?? '');
- final apiMethodCtl = TextEditingController(text: existing?.apiMethod ?? 'REST GET');
- final frequencyCtl = TextEditingController(text: existing?.frequency ?? '');
- final transformCtl = TextEditingController(text: existing?.transformation ?? '');
+ final sourceCtl = SpellCheckTextEditingController(text: existing?.source ?? '');
+ final targetCtl = SpellCheckTextEditingController(text: existing?.target ?? '');
+ final dataTypeCtl = SpellCheckTextEditingController(text: existing?.dataType ?? '');
+ final apiMethodCtl = SpellCheckTextEditingController(text: existing?.apiMethod ?? 'REST GET');
+ final frequencyCtl = SpellCheckTextEditingController(text: existing?.frequency ?? '');
+ final transformCtl = SpellCheckTextEditingController(text: existing?.transformation ?? '');
  String status = existing?.status ?? 'Active';
 
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
@@ -2655,7 +2638,7 @@ showNavigationButtons: false,
  }
 
  void _confirmDeleteDataFlow(_DataFlowRow item) {
- showDialog(
+ showAppDialog(
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Data Flow'),
@@ -2685,8 +2668,16 @@ showNavigationButtons: false,
  case IntegrationProvider.drawio: return 'Draw.io';
  case IntegrationProvider.miro: return 'Miro';
  case IntegrationProvider.whiteboard: return 'Whiteboard';
- }
- }
+ case IntegrationProvider.slack: return 'Slack';
+ case IntegrationProvider.microsoftTeams: return 'Microsoft Teams';
+ case IntegrationProvider.microsoft365: return 'Microsoft 365';
+ case IntegrationProvider.quickBooks: return 'QuickBooks';
+ case IntegrationProvider.xero: return 'Xero';      case IntegrationProvider.salesforce: return 'Salesforce';
+      case IntegrationProvider.hubSpot: return 'HubSpot';
+      case IntegrationProvider.sage: return 'Sage Intacct';
+      case IntegrationProvider.sap: return 'SAP S/4HANA';
+    }
+  }
 
  String _providerSubtitle(String provider) {
  switch (provider) {
@@ -2696,6 +2687,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'Live sessions';
  case 'Jira': return 'Sprint & backlog tracking';
  case 'GitHub': return 'Source code & CI/CD';
+ case 'Slack': return 'Channels & project communications';
+ case 'Microsoft Teams': return 'Channels, chats & collaboration';
+ case 'Microsoft 365': return 'Files, SharePoint & documents';
+ case 'QuickBooks': return 'Accounting & ledgers';
+ case 'Xero': return 'Accounting & invoicing';
+ case 'Salesforce': return 'CRM & opportunities';
+ case 'HubSpot': return 'CRM & contacts';
  default: return 'Custom integration';
  }
  }
@@ -2708,6 +2706,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'sessions:read';
  case 'Jira': return 'issues:read, issues:write';
  case 'GitHub': return 'repo:read, repo:write';
+ case 'Slack': return 'channels:read, chat:write';
+ case 'Microsoft Teams': return 'Channel.ReadBasic.All';
+ case 'Microsoft 365': return 'Files.ReadWrite';
+ case 'QuickBooks': return 'com.intuit.quickbooks.accounting';
+ case 'Xero': return 'accounting.transactions';
+ case 'Salesforce': return 'api';
+ case 'HubSpot': return 'crm.objects.contacts.read';
  default: return 'read';
  }
  }
@@ -2720,6 +2725,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'Decisions, actions';
  case 'Jira': return 'Tasks, bugs';
  case 'GitHub': return 'Code, PRs';
+ case 'Slack': return 'Channels, messages';
+ case 'Microsoft Teams': return 'Channels, meetings';
+ case 'Microsoft 365': return 'Files, SharePoint';
+ case 'QuickBooks': return 'Invoices, expenses';
+ case 'Xero': return 'Invoices, bills';
+ case 'Salesforce': return 'Accounts, opportunities';
+ case 'HubSpot': return 'Contacts, deals';
  default: return 'Project data';
  }
  }
@@ -2732,6 +2744,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return 'Outputs pushed to notes and actions.';
  case 'Jira': return 'Sprint sync with auto-epic linking.';
  case 'GitHub': return 'PR-to-task linking and CI pipeline triggers.';
+ case 'Slack': return 'Channel sync with project notifications.';
+ case 'Microsoft Teams': return 'Channel and chat sync with meeting capture.';
+ case 'Microsoft 365': return 'SharePoint and OneDrive document sync.';
+ case 'QuickBooks': return 'Invoice and expense sync.';
+ case 'Xero': return 'Invoice and bill sync.';
+ case 'Salesforce': return 'Account and opportunity sync.';
+ case 'HubSpot': return 'Contact and deal sync.';
  default: return 'Custom integration features.';
  }
  }
@@ -2744,6 +2763,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return const Color(0xFF0078D4);
  case 'Jira': return const Color(0xFF0052CC);
  case 'GitHub': return const Color(0xFF24292F);
+ case 'Slack': return const Color(0xFF611F69);
+ case 'Microsoft Teams': return const Color(0xFF6264A7);
+ case 'Microsoft 365': return const Color(0xFFD83B01);
+ case 'QuickBooks': return const Color(0xFF2CA01C);
+ case 'Xero': return const Color(0xFF13B5EA);
+ case 'Salesforce': return const Color(0xFF00A1E0);
+ case 'HubSpot': return const Color(0xFFFF7A59);
  default: return const Color(0xFF64748B);
  }
  }
@@ -2756,6 +2782,13 @@ showNavigationButtons: false,
  case 'Whiteboard': return Icons.sticky_note_2;
  case 'Jira': return Icons.track_changes;
  case 'GitHub': return Icons.code;
+ case 'Slack': return Icons.forum_outlined;
+ case 'Microsoft Teams': return Icons.groups_outlined;
+ case 'Microsoft 365': return Icons.cloud_outlined;
+ case 'QuickBooks': return Icons.account_balance_wallet_outlined;
+ case 'Xero': return Icons.receipt_long_outlined;
+ case 'Salesforce': return Icons.hub_outlined;
+ case 'HubSpot': return Icons.contacts_outlined;
  default: return Icons.extension;
  }
  }
@@ -3143,22 +3176,6 @@ class _DataFlowRow {
  }
 }
 
-class _StatCardData {
- final String value;
- final String label;
- final String supporting;
- final Color color;
- const _StatCardData(this.value, this.label, this.supporting, this.color);
-}
-
-class _GovernanceItem {
- final IconData icon;
- final String label;
- final String value;
- final Color color;
- const _GovernanceItem(this.icon, this.label, this.value, this.color);
-}
-
 class _ToolsCrudPolicy {
  final SiteRole role;
  final bool hasProject;
@@ -3218,7 +3235,7 @@ class _ToolsCrudPolicy {
  canExport: hasProject,
  canAudit: hasProject,
  roleLabel: 'Editor',
- roleColor: const Color(0xFF0EA5E9),
+ roleColor: const Color(0xFFFFC812),
  );
  case SiteRole.user:
  return _ToolsCrudPolicy(

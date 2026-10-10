@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/checkpoint_labels.dart';
 import 'package:ndu_project/utils/dashboard_palette.dart';
 
 import '../models/program_model.dart';
@@ -15,10 +16,7 @@ import '../services/navigation_context_service.dart';
 import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
 import '../services/profile_onboarding_service.dart';
-import '../services/dashboard_metrics_service.dart';
 import '../screens/profile_onboarding_screen.dart';
-import '../widgets/dashboard_metrics_cards.dart';
-import '../widgets/collapsible_section.dart';
 import '../services/project_service.dart';
 import '../services/user_service.dart';
 import '../services/project_navigation_service.dart';
@@ -30,6 +28,7 @@ import 'project_dashboard_mobile_shell.dart';
 import 'project_activities_log_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 class ProjectDashboardScreen extends StatefulWidget {
  const ProjectDashboardScreen({super.key, this.isBasicPlan = false});
 
@@ -41,8 +40,16 @@ class ProjectDashboardScreen extends StatefulWidget {
 
 class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  late final ValueNotifier<Set<String>> _selectedProjectIds;
- DashboardMetrics? _metrics;
- bool _isLoadingMetrics = true;
+
+ // Streams are created once per signed-in owner and reused across rebuilds.
+ // Building them inline in build() produced a new Stream instance on every
+ // rebuild, so each StreamBuilder cancelled and re-subscribed — re-issuing
+ // Firestore queries and repeating the "StreamProjects" debug log.
+ String? _streamsOwnerId;
+ Stream<List<ProjectRecord>>? _workspacesProjects$;
+ Stream<List<ProjectRecord>>? _statusProjects$;
+ Stream<List<ProgramModel>>? _statusPrograms$;
+ Stream<List<PortfolioModel>>? _statusPortfolios$;
 
  @override
  void initState() {
@@ -53,23 +60,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  // Runs once, post-frame, so we don't block the build.
  WidgetsBinding.instance.addPostFrameCallback((_) {
  _checkProfileOnboarding();
- _loadMetrics();
  });
- }
-
- Future<void> _loadMetrics() async {
- try {
- final m = await DashboardMetricsService.load();
- if (mounted) {
- setState(() {
- _metrics = m;
- _isLoadingMetrics = false;
- });
- }
- } catch (e) {
- debugPrint('[ProjectDashboardScreen] metrics load failed: $e');
- if (mounted) setState(() => _isLoadingMetrics = false);
- }
  }
 
  Future<void> _checkProfileOnboarding() async {
@@ -114,15 +105,29 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  _selectedProjectIds.value = current;
  }
 
+ void _ensureStreams(String ownerId) {
+ if (_streamsOwnerId == ownerId) return;
+ _workspacesProjects$ = ProjectService.streamProjects(
+ ownerId: ownerId,
+ filterByOwner: true,
+ limit: 200,
+ );
+ _statusProjects$ =
+ ProjectService.streamProjects(ownerId: ownerId, limit: 100);
+ _statusPrograms$ = ProgramService.streamPrograms(ownerId: ownerId);
+ _statusPortfolios$ = PortfolioService.streamPortfolios(ownerId: ownerId);
+ _streamsOwnerId = ownerId;
+ }
+
  void _clearSelection() {
  _selectedProjectIds.value = {};
  }
 
  Future<void> _handleAddProject() async {
- final nameController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
- final projectName = await showDialog<String>(
+ final projectName = await showAppDialog<String>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -134,12 +139,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  return Dialog(
  backgroundColor: Colors.transparent,
  insetPadding:
- const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
- child: Container(
- padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
+ const EdgeInsets.symmetric(horizontal: 18, vertical: 24), child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
  color: Colors.black.withValues(alpha: 0.14),
@@ -384,7 +388,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  }
 
  // Show loading indicator while creating the project
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => Center(
@@ -393,7 +397,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  height: 100,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: Colors.white,
+ // Dialog loading box: resolved from the theme because a dialog is
+ // mounted above DashboardPaletteScope.
+ color: Theme.of(context).colorScheme.surface,
  borderRadius: BorderRadius.circular(12),
  boxShadow: [
  BoxShadow(
@@ -492,6 +498,10 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       );
     }
 
+    if (user != null) {
+      _ensureStreams(user.uid);
+    }
+
     final palette = DashboardPalette.forPlan(widget.isBasicPlan);
 
     return DashboardPaletteScope(
@@ -520,10 +530,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           error: error,
                           isBasicPlan: widget.isBasicPlan,
                         ),
-                        if (!widget.isBasicPlan) ...[
-                          const SizedBox(height: 22),
-                          const _ProgramsSummaryCard(),
-                        ],
                       ],
                     );
                   }
@@ -540,7 +546,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           isBasicPlan: widget.isBasicPlan,
                         ),
                         const SizedBox(height: 20),
-                        const _StatusStrip(),
+                        _StatusStrip(
+                          projectsStream: _statusProjects$,
+                          programsStream: _statusPrograms$,
+                          portfoliosStream: _statusPortfolios$,
+                        ),
                         const SizedBox(height: 20),
                         // ── Quick actions (standard plan) ──
                         if (!widget.isBasicPlan)
@@ -585,46 +595,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                               ),
                             ],
                           ),
-                        // ── Live activity metrics ──
-                        if (_isLoadingMetrics || _metrics != null)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(2, 22, 2, 12),
-                            child: _SectionEyebrow(
-                              title: 'LIVE ACTIVITY',
-                              icon: Icons.monitor_heart_outlined,
-                              tint: palette.primaryDeep,
-                            ),
-                          ),
-                        if (_isLoadingMetrics)
-                          _buildMetricsSkeleton()
-                        else if (_metrics != null) ...[
-                          if (_metrics!.totalPastDue > 0) ...[
-                            PastDueActivitiesCard(
-                                activities: _metrics!.pastDue),
-                            const SizedBox(height: 14),
-                          ],
-                          AssignedActivitiesCard(
-                              activities: _metrics!.assignedToMe),
-                          const SizedBox(height: 14),
-                          if (_metrics!.projectStatuses.isNotEmpty) ...[
-                            CollapsibleSection(
-                              title: 'Project status',
-                              itemCount: _metrics!.projectStatuses.length,
-                              initiallyExpanded: false,
-                              child: Wrap(
-                                spacing: 16,
-                                runSpacing: 16,
-                                children: _metrics!.projectStatuses
-                                    .map((r) => ProjectMetricsCard(
-                                          rollup: r,
-                                          level: 'Project',
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                          ],
-                        ],
                         // ── Workspaces table ──
                         Padding(
                           padding: const EdgeInsets.fromLTRB(2, 24, 2, 12),
@@ -641,11 +611,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                               projects: const [], isLoading: false)
                         else
                           StreamBuilder<List<ProjectRecord>>(
-                            stream: ProjectService.streamProjects(
-                              ownerId: user.uid,
-                              filterByOwner: true,
-                              limit: 200,
-                            ),
+                            stream: _workspacesProjects$!,
                             builder: (context, snapshot) {
                               final projects =
                                   snapshot.data ?? const <ProjectRecord>[];
@@ -674,81 +640,20 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       ),
     );
   }
-  /// World-class metrics loading skeleton — fills space so the dashboard
-  /// never has empty gaps during data fetch.
-  /// World-class metrics loading skeleton — fills space so the dashboard
-  /// never has empty gaps during data fetch.
-  Widget _buildMetricsSkeleton() {
-    final palette = DashboardPalette.forPlan(widget.isBasicPlan);
-    return Column(
-      children: [
-        Container(
-          height: 100,
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: BorderRadius.circular(palette.cardRadius),
-            border: Border.all(color: palette.outline),
-          ),
-          child: Row(
-            children: List.generate(3, (i) => Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _shimmerBox(width: 80, height: 10),
-                    _shimmerBox(width: 120, height: 22),
-                    _shimmerBox(width: 60, height: 8),
-                  ],
-                ),
-              ),
-            )),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Container(
-          height: 76,
-          decoration: BoxDecoration(
-            color: palette.surface,
-            borderRadius: BorderRadius.circular(palette.cardRadius),
-            border: Border.all(color: palette.outline),
-          ),
-          child: Row(
-            children: List.generate(4, (i) => Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _shimmerBox(width: 60, height: 10),
-                    _shimmerBox(width: 100, height: 18),
-                    _shimmerBox(width: 40, height: 8),
-                  ],
-                ),
-              ),
-            )),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _shimmerBox({required double width, required double height, double radius = 6}) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE4E7EC),
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    );
-  }
 }
 
 class _StatusStrip extends StatelessWidget {
-  const _StatusStrip();
+  const _StatusStrip({
+    this.projectsStream,
+    this.programsStream,
+    this.portfoliosStream,
+  });
+
+  /// Optional pre-built streams, passed down by the dashboard state so the
+  /// widget does not rebuild (and re-subscribe to) them on every rebuild.
+  final Stream<List<ProjectRecord>>? projectsStream;
+  final Stream<List<ProgramModel>>? programsStream;
+  final Stream<List<PortfolioModel>>? portfoliosStream;
 
   @override
   Widget build(BuildContext context) {
@@ -756,6 +661,8 @@ class _StatusStrip extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     void openRegularProjects() {
+      // Regular Projects now lives on the Integration Dashboard's Workspaces
+      // view; the route is kept stable so this deep link stays valid.
       context.push('/regular-project-dashboard');
     }
 
@@ -809,7 +716,8 @@ class _StatusStrip extends StatelessWidget {
     }
 
     return StreamBuilder<List<ProjectRecord>>(
-      stream: ProjectService.streamProjects(ownerId: user.uid, limit: 100),
+      stream: projectsStream ??
+          ProjectService.streamProjects(ownerId: user.uid, limit: 100),
       builder: (context, projectSnapshot) {
         final projects = projectSnapshot.data ?? const <ProjectRecord>[];
         final projectCount =
@@ -818,12 +726,14 @@ class _StatusStrip extends StatelessWidget {
             projects.where((p) => p.isBasicPlanProject).length;
 
         return StreamBuilder<List<ProgramModel>>(
-          stream: ProgramService.streamPrograms(ownerId: user.uid),
+          stream: programsStream ??
+              ProgramService.streamPrograms(ownerId: user.uid),
           builder: (context, programSnapshot) {
             final programCount =
                 programSnapshot.hasData ? programSnapshot.data!.length : 0;
             return StreamBuilder<List<PortfolioModel>>(
-              stream: PortfolioService.streamPortfolios(ownerId: user.uid),
+              stream: portfoliosStream ??
+                  PortfolioService.streamPortfolios(ownerId: user.uid),
               builder: (context, portfolioSnapshot) {
                 final portfolioCount = portfolioSnapshot.hasData
                     ? portfolioSnapshot.data!.length
@@ -918,7 +828,7 @@ class _SingleProjectsCard extends StatefulWidget {
 
 class _SingleProjectsCardState extends State<_SingleProjectsCard> {
  bool _showAll = false;
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String _searchQuery = '';
 
  @override
@@ -1373,7 +1283,7 @@ class _GroupProjectsCard extends StatefulWidget {
 
 class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  bool _showAll = false;
- final TextEditingController _searchController = TextEditingController();
+ final TextEditingController _searchController = SpellCheckTextEditingController();
  String _searchQuery = '';
 
  @override
@@ -1407,10 +1317,10 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  }
 
  Future<void> _handleCreateProgram() async {
- final nameController = TextEditingController();
+ final nameController = SpellCheckTextEditingController();
  final formKey = GlobalKey<FormState>();
 
- final programName = await showDialog<String>(
+ final programName = await showAppDialog<String>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -1910,147 +1820,6 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
   }
 }
 
-class _ProgramsSummaryCard extends StatelessWidget {
-  const _ProgramsSummaryCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = DashboardPaletteScope.of(context);
-    final textTheme = Theme.of(context).textTheme;
-    final user = FirebaseAuth.instance.currentUser;
-
-    return _FrostedSurface(
-      padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Programs and portfolios',
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 22,
-              color: palette.ink,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'High-level containers for your grouped work.',
-            style: textTheme.bodyMedium?.copyWith(
-              color: palette.muted,
-              fontSize: 14.5,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 18),
-          if (user == null)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final stats = [
-                  const _SummaryStat(
-                    label: 'Programs',
-                    value: '—',
-                    caption: 'Sign in to view your programs.',
-                  ),
-                  const _SummaryStat(
-                    label: 'Portfolios',
-                    value: '—',
-                    caption: 'Sign in to view your portfolios.',
-                  ),
-                  const _SummaryStat(
-                    label: 'Projects per program',
-                    value: 'Max 3',
-                    caption:
-                        'Keep scope focused and interfaces manageable.',
-                  ),
-                ];
-                return _buildStatsLayout(constraints, stats);
-              },
-            )
-          else
-            StreamBuilder<List<ProgramModel>>(
-              stream: ProgramService.streamPrograms(ownerId: user.uid),
-              builder: (context, programSnapshot) {
-                final programCount =
-                    programSnapshot.hasData ? programSnapshot.data!.length : 0;
-                return StreamBuilder<List<PortfolioModel>>(
-                  stream: PortfolioService.streamPortfolios(ownerId: user.uid),
-                  builder: (context, portfolioSnapshot) {
-                    final portfolioCount = portfolioSnapshot.hasData
-                        ? portfolioSnapshot.data!.length
-                        : 0;
-
-                    final stats = [
-                      _SummaryStat(
-                        label: 'Programs',
-                        value: '$programCount',
-                        caption: programCount == 0
-                            ? 'Add three projects to unlock a program dashboard.'
-                            : 'Grouped projects',
-                      ),
-                      _SummaryStat(
-                        label: 'Portfolios',
-                        value: '$portfolioCount',
-                        caption:
-                            'Roll multiple programs into an executive view.',
-                      ),
-                      const _SummaryStat(
-                        label: 'Projects per program',
-                        value: 'Max 3',
-                        caption:
-                            'Keep scope focused and interfaces manageable.',
-                      ),
-                    ];
-
-                    return LayoutBuilder(
-                      builder: (context, constraints) =>
-                          _buildStatsLayout(constraints, stats),
-                    );
-                  },
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsLayout(
-      BoxConstraints constraints, List<_SummaryStat> stats) {
-    if (constraints.maxWidth < 620) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < stats.length; i++) ...[
-            stats[i],
-            if (i < stats.length - 1) const SizedBox(height: 14),
-          ],
-        ],
-      );
-    }
-
-    if (constraints.maxWidth < 1024) {
-      final double cardWidth =
-          ((constraints.maxWidth - 18) / 2).clamp(260.0, constraints.maxWidth);
-      return Wrap(
-        spacing: 18,
-        runSpacing: 18,
-        children: [
-          for (final stat in stats) SizedBox(width: cardWidth, child: stat),
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        for (int i = 0; i < stats.length; i++) ...[
-          Expanded(child: stats[i]),
-          if (i < stats.length - 1) const SizedBox(width: 18),
-        ],
-      ],
-    );
-  }
-}
 
 class _SingleProjectsExpandedScreen extends StatelessWidget {
   const _SingleProjectsExpandedScreen({
@@ -2177,17 +1946,18 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  email.split('@').first.replaceAll(RegExp(r'[._-]+'), ' ');
  return username
  .split(' ')
- .map((part) => part.isEmpty
- ? ''
- : '${part[0].toUpperCase()}${part.substring(1)}')
+ .where((part) => part.isNotEmpty)
+ .map((part) => part[0].toUpperCase() + part.substring(1))
  .join(' ');
  }
  return 'Unknown';
- }
-
- String _relativeTimeString(DateTime? time) {
- if (time == null) return 'moments ago';
- final diff = DateTime.now().difference(time);
+ }  String _relativeTimeString(DateTime? time) {
+    if (time == null) return 'moments ago';
+    // A Firestore serverTimestamp that has not resolved yet arrives as epoch 0.
+    // Rendering that as a relative time produced "20736 days ago" on freshly
+    // created projects, so treat a pre-1970/epoch value as "just now".
+    if (time.millisecondsSinceEpoch <= 0) return 'moments ago';
+    final diff = DateTime.now().difference(time);
  if (diff.isNegative) {
  return 'just now';
  }
@@ -2211,8 +1981,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('planning')) return const Color(0xFFFFF1CC);
  if (normalized.contains('front end')) return const Color(0xFFFFF8E1);
  if (normalized.contains('design')) return const Color(0xFFE8E6FF);
- if (normalized.contains('launch')) return const Color(0xFFE0F2FE);
- if (normalized.contains('close')) return const Color(0xFFEFF6FF);
+ if (normalized.contains('launch')) return const Color(0xFFFFF8E1);
+ if (normalized.contains('close')) return const Color(0xFFFFF8E1);
  if (normalized.contains('completed')) return const Color(0xFFE8F0FF);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFFF3F4F8);
@@ -2227,8 +1997,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('front end')) return const Color(0xFF9A6700);
  if (normalized.contains('design')) return const Color(0xFF5941C6);
  if (normalized.contains('launch')) return const Color(0xFF075985);
- if (normalized.contains('close')) return const Color(0xFF1D4ED8);
- if (normalized.contains('completed')) return const Color(0xFF1D4ED8);
+ if (normalized.contains('close')) return const Color(0xFFFFC812);
+ if (normalized.contains('completed')) return const Color(0xFFFFC812);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFF4A4D57);
  }
@@ -2251,7 +2021,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  Color _progressStatusForeground(ProjectProgressHealth status) {
  switch (status) {
  case ProjectProgressHealth.completed:
- return const Color(0xFF1E40AF);
+ return const Color(0xFFFFC812);
  case ProjectProgressHealth.onTrack:
  return const Color(0xFF166534);
  case ProjectProgressHealth.behind:
@@ -2293,7 +2063,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  loadingDialogVisible = false;
  }
 
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  useRootNavigator: true,
@@ -2303,7 +2073,9 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  height: 140,
  padding: const EdgeInsets.all(24),
  decoration: BoxDecoration(
- color: Colors.white,
+ // Dialog loading box: resolved from the theme because a dialog is
+ // mounted above DashboardPaletteScope.
+ color: Theme.of(context).colorScheme.surface,
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(
@@ -2363,7 +2135,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
   );
  } else {
  debugPrint('Failed to load project: ${provider.lastError}');
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape:
@@ -2443,7 +2215,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
 
  if (!context.mounted) return;
  dismissLoadingDialog();
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape:
@@ -2487,7 +2259,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
 
  if (!context.mounted) return;
  dismissLoadingDialog();
- showDialog(
+ showAppDialog(
  context: context,
  builder: (dialogContext) => AlertDialog(
  shape:
@@ -2547,10 +2319,10 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  }
 
  Future<void> _renameProject(BuildContext context) async {
- final nameController = TextEditingController(text: project.name);
+ final nameController = SpellCheckTextEditingController(text: project.name);
  final formKey = GlobalKey<FormState>();
 
- final newName = await showDialog<String>(
+ final newName = await showAppDialog<String>(
  context: context,
  barrierDismissible: false,
  builder: (dialogContext) {
@@ -2648,7 +2420,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (newName == null || newName == project.name || !context.mounted) return;
 
  // Show loading indicator
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => const Center(child: CircularProgressIndicator()),
@@ -2688,7 +2460,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  }
 
  Future<void> _deleteProject(BuildContext context) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await showAppDialog<bool>(
  context: context,
  builder: (dialogContext) {
  return AlertDialog(
@@ -2750,7 +2522,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (confirmed != true || !context.mounted) return;
 
  // Show loading indicator
- showDialog(
+ showAppDialog(
  context: context,
  barrierDismissible: false,
  builder: (context) => const Center(child: CircularProgressIndicator()),
@@ -2795,8 +2567,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
     final phaseLabel = project.progressSnapshot.currentPhase.trim().isEmpty
         ? (project.status.isNotEmpty ? project.status : 'Initiation')
         : project.progressSnapshot.currentPhase.trim();
-    final milestoneLabel =
-        project.milestone.isNotEmpty ? project.milestone : 'Starting up';
+    final milestoneLabel = friendlyCheckpointLabel(project.milestone);
     final progressValue = project.progressSnapshot.completion.clamp(0.0, 1.0);
     final progressPercent = project.progressSnapshot.completionPercent;
     final progressDetail = project.progressSnapshot.totalActivities > 0
@@ -2829,8 +2600,6 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                       color: palette.primaryDeep,
                       letterSpacing: -0.1,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -2841,15 +2610,11 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                     color: palette.muted,
                     letterSpacing: 0.2,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 5),
                 Text(
                   'Last edited by ${_lastEditorName()} · ${_relativeTimeString(project.updatedAt)}',
                   style: TextStyle(fontSize: 11, color: palette.mutedSoft),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -2872,8 +2637,6 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                       fontSize: 12,
                       color: _stageForegroundColor(phaseLabel),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -2906,8 +2669,6 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                               color: palette.muted,
                               fontWeight: FontWeight.w600),
                           textAlign: TextAlign.right,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -3132,9 +2893,8 @@ class _OwnerNameCellState extends State<_OwnerNameCell> {
  final beforeAt = email.split('@').first;
  final cleaned = beforeAt.replaceAll(RegExp(r'[._-]+'), ' ').trim();
  if (cleaned.isEmpty) return 'Unknown';
- final parts = cleaned.split(RegExp(r'\s+'));
+ final parts = cleaned.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
  final cased = parts.map((p) {
- if (p.isEmpty) return p;
  final lower = p.toLowerCase();
  return lower[0].toUpperCase() + lower.substring(1);
  }).join(' ');
@@ -3197,8 +2957,6 @@ class _OwnerNameCellState extends State<_OwnerNameCell> {
           fontSize: 15,
           color: DashboardPaletteScope.of(context).ink,
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
       ),
     );
@@ -3283,8 +3041,6 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: 15.5,
                         color: palette.ink),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -3293,8 +3049,6 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
                         color: palette.muted,
                         fontSize: 13,
                         fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -3326,59 +3080,6 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
   }
 }
 
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
-    required this.label,
-    required this.value,
-    required this.caption,
-  });
-
-  final String label;
-  final String value;
-  final String caption;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = DashboardPaletteScope.of(context);
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: palette.canvas,
-        borderRadius: BorderRadius.circular(palette.cardRadius),
-        border: Border.all(color: palette.outline, width: 1.2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: palette.muted,
-              fontSize: 13,
-              letterSpacing: 0.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 28,
-              color: palette.ink,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            caption,
-            style: TextStyle(color: palette.muted, fontSize: 13.5, height: 1.45),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _TableHeaderLabel extends StatelessWidget {
   const _TableHeaderLabel(this.label, {this.alignment = Alignment.centerLeft});
@@ -3674,3 +3375,4 @@ class _WorldClassStatCard extends StatelessWidget {
     );
   }
 }
+

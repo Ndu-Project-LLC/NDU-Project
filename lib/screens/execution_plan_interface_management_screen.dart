@@ -17,6 +17,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -69,14 +70,23 @@ class ExecutionPlanInterfaceManagementScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const CrossReferenceNote(standalonePage: 'Interface Management'),
             const SizedBox(height: 24),
-            const ExecutionPlanForm(
-              title: 'Execution Interface Management',
-              hintText:
-                  'Summarize interface dependencies, coordination protocols, and governance.',
-              noteKey: 'execution_interface_management',
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Plan notes',
+                  builder: (_) => const ExecutionPlanForm(
+                    title: 'Execution Interface Management',
+                    hintText:
+                        'Summarize interface dependencies, coordination protocols, and governance.',
+                    noteKey: 'execution_interface_management',
+                  ),
+                ),
+                SectionTab(
+                  label: 'Interface management',
+                  builder: (_) => const _InterfaceManagementSection(),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            const _InterfaceManagementSection(),
             const SizedBox(height: 56),
           ],
         ),

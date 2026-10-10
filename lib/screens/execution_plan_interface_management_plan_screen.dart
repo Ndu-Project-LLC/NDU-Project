@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 Future<void> _exportInterfaceManagementPlanPdf(BuildContext context) async {
@@ -66,16 +67,27 @@ class ExecutionPlanInterfaceManagementPlanScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const CrossReferenceNote(standalonePage: 'Interface Management'),
             const SizedBox(height: 24),
-            const ExecutionPlanForm(
-              title: 'Execution Interface Management Plan',
-              hintText:
-                  'Summarize interface management plan objectives and control points.',
-              noteKey: 'execution_interface_management_plan',
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Plan notes',
+                  builder: (_) => const ExecutionPlanForm(
+                    title: 'Execution Interface Management Plan',
+                    hintText:
+                        'Summarize interface management plan objectives and control points.',
+                    noteKey: 'execution_interface_management_plan',
+                  ),
+                ),
+                SectionTab(
+                  label: 'Interface plan',
+                  builder: (_) => const _InterfaceManagementPlanForm(),
+                ),
+                SectionTab(
+                  label: 'Interface register',
+                  builder: (_) => const _InterfaceManagementPlanSection(),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            const _InterfaceManagementPlanForm(),
-            const SizedBox(height: 48),
-            const _InterfaceManagementPlanSection(),
             const SizedBox(height: 56),
           ],
         ),

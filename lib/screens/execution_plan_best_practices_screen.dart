@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -64,14 +65,23 @@ class ExecutionPlanBestPracticesScreen extends StatelessWidget {
             const SizedBox(height: 32),
             const SectionIntro(title: 'Execution Plan - Best Practices'),
             const SizedBox(height: 24),
-            const ExecutionPlanForm(
-              title: 'Execution Plan - Best Practices',
-              hintText:
-                  'Document the best practices to follow during execution.',
-              noteKey: 'execution_best_practices',
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Plan notes',
+                  builder: (_) => const ExecutionPlanForm(
+                    title: 'Execution Plan - Best Practices',
+                    hintText:
+                        'Document the best practices to follow during execution.',
+                    noteKey: 'execution_best_practices',
+                  ),
+                ),
+                SectionTab(
+                  label: 'Best practices',
+                  builder: (_) => const _BestPracticesSection(),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            const _BestPracticesSection(),
             const SizedBox(height: 56),
           ],
         ),

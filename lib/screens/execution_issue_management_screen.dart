@@ -21,6 +21,7 @@ import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -75,14 +76,23 @@ class ExecutionIssueManagementScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const CrossReferenceNote(standalonePage: 'Issue Management'),
             const SizedBox(height: 24),
-            const ExecutionPlanForm(
-              title: 'Execution Issue Management',
-              hintText:
-                  'Summarize issue tracking, escalation paths, and mitigation cadence.',
-              noteKey: 'execution_issue_management',
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Plan notes',
+                  builder: (_) => const ExecutionPlanForm(
+                    title: 'Execution Issue Management',
+                    hintText:
+                        'Summarize issue tracking, escalation paths, and mitigation cadence.',
+                    noteKey: 'execution_issue_management',
+                  ),
+                ),
+                SectionTab(
+                  label: 'Issues',
+                  builder: (_) => const _IssuesManagementSection(),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            const _IssuesManagementSection(),
             const SizedBox(height: 56),
           ],
         ),

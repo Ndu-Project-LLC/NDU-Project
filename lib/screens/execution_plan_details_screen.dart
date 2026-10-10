@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -199,14 +200,23 @@ class _ExecutionPlanDetailsScreenState
             if (widget.showEarlyWorks) ...[
               const SectionIntro(title: 'Execution Early Works'),
               const SizedBox(height: 24),
-              const ExecutionPlanForm(
-                title: 'Execution Early Works',
-                hintText:
-                    'Outline early works scope, sequencing, and handoffs.',
-                noteKey: 'execution_early_works',
+              ExecutionSectionTabs(
+                tabs: [
+                  SectionTab(
+                    label: 'Early works notes',
+                    builder: (_) => const ExecutionPlanForm(
+                      title: 'Execution Early Works',
+                      hintText:
+                          'Outline early works scope, sequencing, and handoffs.',
+                      noteKey: 'execution_early_works',
+                    ),
+                  ),
+                  SectionTab(
+                    label: 'Early works',
+                    builder: (_) => const _EarlyWorksSection(),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-              const _EarlyWorksSection(),
               const SizedBox(height: 56),
             ],
           ],

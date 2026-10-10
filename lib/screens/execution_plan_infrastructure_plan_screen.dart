@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -68,17 +69,28 @@ class ExecutionPlanInfrastructurePlanScreen extends StatelessWidget {
             const SizedBox(height: 32),
             const SectionIntro(title: 'Execution Plan - Infrastructure Plan'),
             const SizedBox(height: 24),
-            const ExecutionPlanForm(
-              title: 'Execution Plan - Infrastructure Plan',
-              hintText:
-                  'Outline infrastructure dependencies, scope, and delivery approach.',
-              noteKey: 'execution_infrastructure_plan',
-              showDiagram: false,
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Plan notes',
+                  builder: (_) => const ExecutionPlanForm(
+                    title: 'Execution Plan - Infrastructure Plan',
+                    hintText:
+                        'Outline infrastructure dependencies, scope, and delivery approach.',
+                    noteKey: 'execution_infrastructure_plan',
+                    showDiagram: false,
+                  ),
+                ),
+                SectionTab(
+                  label: 'Infrastructure plan',
+                  builder: (_) => const _InfrastructurePlanSection(),
+                ),
+                SectionTab(
+                  label: 'Infrastructure cost',
+                  builder: (_) => const _PlanningInfrastructureCostSection(),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            const _InfrastructurePlanSection(),
-            const SizedBox(height: 24),
-            const _PlanningInfrastructureCostSection(),
             const SizedBox(height: 56),
           ],
         ),

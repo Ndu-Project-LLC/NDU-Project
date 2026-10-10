@@ -11,6 +11,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/collapsible_notes_section.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
   const ExecutionPlanInterfaceManagementOverviewScreen({super.key});
@@ -38,9 +39,18 @@ class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const CrossReferenceNote(standalonePage: 'Interface Management'),
             const SizedBox(height: 24),
-            const _ExecutionPlanDetailsSection(),
-            const SizedBox(height: 32),
-            const _InterfaceManagementSection(),
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Execution plan details',
+                  builder: (_) => const _ExecutionPlanDetailsSection(),
+                ),
+                SectionTab(
+                  label: 'Interface management',
+                  builder: (_) => const _InterfaceManagementSection(),
+                ),
+              ],
+            ),
             const SizedBox(height: 48),
             Align(
               alignment: Alignment.centerRight,

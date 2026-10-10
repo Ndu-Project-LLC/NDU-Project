@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 
 Future<void> _exportPdf(BuildContext context) async {
@@ -54,17 +55,26 @@ class ExecutionPlanConstructionPlanScreen extends StatelessWidget {
  context, 'execution_plan_construction_plan'), onExportPdf: () => _exportPdf(context)),
  const SizedBox(height: 32),
  const SectionIntro(
- title: 'Execution Plan - Construction Plan'),
- const SizedBox(height: 24),
- const ExecutionPlanForm(
- title: 'Execution Plan - Construction Plan',
- hintText:
- 'Summarize construction sequencing, logistics, and safety constraints.',
- noteKey: 'execution_construction_plan',
- showDiagram: false,
- ),
- const SizedBox(height: 32),
- const _ConstructionPlanSection(),
+ title: 'Execution Plan - Construction Plan'),            const SizedBox(height: 24),
+            ExecutionSectionTabs(
+              tabs: [
+                SectionTab(
+                  label: 'Plan notes',
+                  builder: (_) => const ExecutionPlanForm(
+                    title: 'Execution Plan - Construction Plan',
+                    hintText:
+                        'Summarize construction sequencing, logistics, and safety constraints.',
+                    noteKey: 'execution_construction_plan',
+                    showDiagram: false,
+                  ),
+                ),
+                SectionTab(
+                  label: 'Construction plan',
+                  builder: (_) => const _ConstructionPlanSection(),
+                ),
+              ],
+            ),
+
  const SizedBox(height: 56),
  ],
  ),

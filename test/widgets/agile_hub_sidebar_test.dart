@@ -96,7 +96,7 @@ void main() {
       await pumpSidebar(tester, 'Agile Project Hub');
 
       expect(find.text('Agile Project Hub'), findsOneWidget);
-      expect(find.text('Hub Overview'), findsOneWidget);
+      expect(find.text('Hub Overview'), findsNothing);
       for (final section in agileHubSections) {
         expect(
           find.text(section.sidebarTitle),
@@ -110,12 +110,11 @@ void main() {
     testWidgets('collapses the sub-pages when the header is tapped',
         (tester) async {
       await pumpSidebar(tester, 'Agile Project Hub');
-      expect(find.text('Hub Overview'), findsOneWidget);
+      expect(find.text(agileHubSections.first.sidebarTitle), findsOneWidget);
 
       await tester.tap(find.text('Agile Project Hub'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Hub Overview'), findsNothing);
       expect(find.text(agileHubSections.first.sidebarTitle), findsNothing);
     });
 

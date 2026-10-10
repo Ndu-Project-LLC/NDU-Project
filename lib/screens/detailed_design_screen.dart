@@ -6,6 +6,7 @@ import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -532,20 +533,27 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 20),
-            _buildMetricsGrid(),
-            const SizedBox(height: 24),
-            // ── Collapsible Sections ──
-            _buildArchitectureSection(),
-            const SizedBox(height: 20),
-            _buildSpecificationRegister(),
-            const SizedBox(height: 20),
-            _buildSecuritySection(),
-            const SizedBox(height: 20),
-            _buildNFRSection(),
-            const SizedBox(height: 20),
-            _buildADRSection(),
-            const SizedBox(height: 20),
-            _buildArtifactReadiness(),
+            // Six stacked sections became six tabs, with the metrics band as
+            // the leading Overview tab — the Launch Phase arrangement.
+            LaunchPhaseTableTabs(
+              overview: _buildMetricsGrid(),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Architecture & System Design'),
+                LaunchPhaseTableTab(label: 'Design Specification Register'),
+                LaunchPhaseTableTab(label: 'Security & Compliance Controls'),
+                LaunchPhaseTableTab(label: 'Non-Functional Requirements'),
+                LaunchPhaseTableTab(label: 'Design Decision Log'),
+                LaunchPhaseTableTab(label: 'Artifact Readiness'),
+              ],
+              builders: {
+                'Architecture & System Design': _buildArchitectureSection,
+                'Design Specification Register': _buildSpecificationRegister,
+                'Security & Compliance Controls': _buildSecuritySection,
+                'Non-Functional Requirements': _buildNFRSection,
+                'Design Decision Log': _buildADRSection,
+                'Artifact Readiness': _buildArtifactReadiness,
+              },
+            ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('detailed_design'),

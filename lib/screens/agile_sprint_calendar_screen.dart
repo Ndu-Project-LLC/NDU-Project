@@ -733,6 +733,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     final weeks = (_sprintDays / 7).round().clamp(1, 1000);
     final sprintHours = plan.totalSprintMinutes / 60;
     final weeklyHours = sprintHours / weeks;
+    final groomingCoverage = _groomingCoverage();
 
     return Container(
       width: double.infinity,
@@ -755,7 +756,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
           ),
           const SizedBox(height: 12),
           for (final rule in AgileCeremonyRules.all)
-            _buildCeremonyRow(rule, plan),
+            _buildCeremonyRow(rule, plan, grooming: groomingCoverage),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -801,7 +802,11 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     );
   }
 
-  Widget _buildCeremonyRow(AgileCeremonyRule rule, AgileCeremonyPlan plan) {
+  Widget _buildCeremonyRow(
+    AgileCeremonyRule rule,
+    AgileCeremonyPlan plan, {
+    GroomingCoverage? grooming,
+  }) {
     final entry = _ceremonies[rule.ceremony] ?? const AgileCeremonyEntry();
     final maxMinutes = AgileCeremonyRules.maxMinutesFor(rule, _sprintDays);
     final options = <int>{
@@ -911,7 +916,91 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
               ),
             ],
           ),
+          if (rule.ceremony == AgileCeremony.backlogGrooming &&
+              grooming != null &&
+              entry.enabled) ...[
+            const SizedBox(height: 8),
+            _buildGroomingCoverage(grooming),
+          ],
         ],
+      ),
+    );
+  }
+
+  /// Groomed-backlog depth from the stories on the page: the delivery model
+  /// wants at least two sprints of stories at 'Ready for Sprint', about twice
+  /// the team's velocity, and a third grooming day when the backlog is short.
+  GroomingCoverage _groomingCoverage() {
+    final groomedPoints = _storyCache
+        .where((s) => s.readinessStatus == 'Ready for Sprint' &&
+            s.status.trim().toLowerCase() != 'done')
+        .fold<int>(0, (sum, s) => sum + s.storyPoints);
+    final velocity = buildVelocityForecast(
+      stories: _storyCache,
+      sprints: _sprints,
+      today: DateTime.now(),
+    ).velocity;
+    return GroomingCoverage(
+      groomedPoints: groomedPoints,
+      velocityPerSprint: velocity,
+      groomingDaysPerWeek:
+          _ceremonies[AgileCeremony.backlogGrooming]?.weekdays.length ?? 0,
+    );
+  }
+
+  /// Two-sprint cover line plus the "groom 3 times a week" action the delivery
+  /// model calls for when the groomed backlog is too shallow.
+  Widget _buildGroomingCoverage(GroomingCoverage g) {
+    final sprints = g.sprintsGroomed;
+    if (sprints == null) {
+      return const Text(
+        'Sprints of cover: set sprint capacity (or finish a sprint) to compare '
+        'the groomed backlog with two sprints of velocity.',
+        style: TextStyle(fontSize: 12, color: _kMuted),
+      );
+    }
+    final ok = g.coversTwoSprints;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          ok
+              ? 'Sprints of cover: ${sprints.toStringAsFixed(1)} of groomed work '
+                  '(target 2).'
+              : 'Sprints of cover: only ${sprints.toStringAsFixed(1)} — groom '
+                  'toward 2 sprints (about twice velocity, ${g.targetPoints} pts).',
+          style: TextStyle(
+            fontSize: 12,
+            color: ok ? const Color(0xFF166534) : const Color(0xFF9A3412),
+          ),
+        ),
+        if (g.needsThirdDay)
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Groom 3 times a week until two sprints are covered.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+                ),
+              ),
+              TextButton(
+                onPressed: _useThreeGroomingDays,
+                child: const Text('Use 3 days a week'),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  /// Sets grooming to three weekdays (Mon/Wed/Fri) in one click.
+  void _useThreeGroomingDays() {
+    final entry = _ceremonies[AgileCeremony.backlogGrooming];
+    if (entry == null) return;
+    _updateCeremony(
+      AgileCeremony.backlogGrooming,
+      entry.copyWith(
+        weekdays: {DateTime.monday, DateTime.wednesday, DateTime.friday},
       ),
     );
   }

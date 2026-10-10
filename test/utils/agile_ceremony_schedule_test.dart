@@ -123,4 +123,50 @@ void main() {
       expect(restored.enabled, isTrue);
     });
   });
+
+  group('grooming coverage', () {
+    test('two sprints of groomed work satisfies the rule', () {
+      const coverage = GroomingCoverage(
+        groomedPoints: 40,
+        velocityPerSprint: 20,
+        groomingDaysPerWeek: 2,
+      );
+      expect(coverage.sprintsGroomed, 2);
+      expect(coverage.targetPoints, 40);
+      expect(coverage.coversTwoSprints, isTrue);
+      expect(coverage.needsThirdDay, isFalse);
+    });
+
+    test('a shallow backlog calls for a third grooming day', () {
+      const coverage = GroomingCoverage(
+        groomedPoints: 25,
+        velocityPerSprint: 20,
+        groomingDaysPerWeek: 2,
+      );
+      expect(coverage.sprintsGroomed, 1.25);
+      expect(coverage.targetPoints, 40);
+      expect(coverage.coversTwoSprints, isFalse);
+      expect(coverage.needsThirdDay, isTrue);
+    });
+
+    test('a shallow backlog already grooming three days needs no action', () {
+      const coverage = GroomingCoverage(
+        groomedPoints: 25,
+        velocityPerSprint: 20,
+        groomingDaysPerWeek: 3,
+      );
+      expect(coverage.needsThirdDay, isFalse);
+    });
+
+    test('no velocity leaves the check inconclusive rather than failing', () {
+      const coverage = GroomingCoverage(
+        groomedPoints: 25,
+        velocityPerSprint: 0,
+        groomingDaysPerWeek: 2,
+      );
+      expect(coverage.sprintsGroomed, isNull);
+      expect(coverage.targetPoints, isNull);
+      expect(coverage.coversTwoSprints, isFalse);
+    });
+  });
 }

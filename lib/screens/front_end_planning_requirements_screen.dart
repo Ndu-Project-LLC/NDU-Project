@@ -27,6 +27,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/wbs_mapping_selectors.dart';
+import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:go_router/go_router.dart';
@@ -276,6 +277,7 @@ class _FrontEndPlanningRequirementsScreenState
           row.selectedWbsGoal =
               item.wbsGoalId.trim().isEmpty ? null : item.wbsGoalId.trim();
           row.selectedWbsElements = List<String>.from(item.wbsElementIds);
+          row.selectedCodesStandards = List<String>.from(item.codesStandards);
           return row;
         }).toList(),
       );
@@ -691,9 +693,7 @@ class _FrontEndPlanningRequirementsScreenState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     CharterLockBanner(visible: charterLocked),
-                                    CharterLockBanner.applyLock(
-                                      locked: charterLocked,
-                                      child: Column(
+                                    Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           CollapsibleNotesSection(
@@ -702,6 +702,7 @@ class _FrontEndPlanningRequirementsScreenState
                                       controller: _notesController,
                                       hint: 'Input your notes here...',
                                       minLines: 3,
+                                      readOnly: charterLocked,
                                     ),
                                     ),
                                     const SizedBox(height: 20),
@@ -778,7 +779,6 @@ class _FrontEndPlanningRequirementsScreenState
                                     const SizedBox(height: 24),
                                         ],
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -912,6 +912,12 @@ class _FrontEndPlanningRequirementsScreenState
     );
   }
 
+  /// Charter approval locks editing only. The page and table stay scrollable,
+  /// so the lock is applied per control instead of wrapping the whole page in
+  /// an AbsorbPointer (which also swallowed scroll gestures).
+  bool _isCharterLocked(BuildContext context) =>
+      ProjectDataHelper.isCharterApproved(context);
+
   Widget _buildRequirementsTable(BuildContext context) {
     final hasAnyRowData = _rows.any((row) {
       return row.descriptionController.text.trim().isNotEmpty ||
@@ -968,7 +974,8 @@ class _FrontEndPlanningRequirementsScreenState
         context,
         message: 'Add your first requirement to get started.',
         actionLabel: 'Add requirement',
-        onAction: _addRequirementViaEditor,
+        onAction:
+            _isCharterLocked(context) ? null : _addRequirementViaEditor,
       );
     }
 
@@ -987,7 +994,11 @@ class _FrontEndPlanningRequirementsScreenState
       );
     }
 
-    return Column(
+    // Cards are not yet locked per control, so they keep the absorbing lock.
+    // The table view is the one that stays scrollable under the lock.
+    return CharterLockBanner.applyLock(
+      locked: _isCharterLocked(context),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showErrorBanner)
@@ -1019,6 +1030,7 @@ class _FrontEndPlanningRequirementsScreenState
           );
         }),
       ],
+    ),
     );
   }
 
@@ -1040,6 +1052,7 @@ class _FrontEndPlanningRequirementsScreenState
       fontWeight: FontWeight.w700,
       color: Color(0xFF4B5563),
     );
+    final locked = _isCharterLocked(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -1075,10 +1088,11 @@ class _FrontEndPlanningRequirementsScreenState
                       _tableHeaderCell('Person', 120, headerStyle),
                       _tableHeaderCell('Phase', 100, headerStyle),
                       _tableHeaderCell('Source', 160, headerStyle),
-                      _tableHeaderCell('WBS Mapping (Goal)', 180, headerStyle),
+                      _tableHeaderCell('WBS Mapping', 180, headerStyle),
                       _tableHeaderCell('Sub WBS', 200, headerStyle),
+                      _tableHeaderCell('Codes / Standards', 220, headerStyle),
                       _tableHeaderCell('Comments', 200, headerStyle),
-                      _tableHeaderCell('Actions', 80, headerStyle),
+                      _tableHeaderCell('Actions', 96, headerStyle),
                     ],
                   ),
                 ),
@@ -1136,8 +1150,9 @@ class _FrontEndPlanningRequirementsScreenState
                               : row.sourceController.text.trim(),
                           160,
                         ),
-                        _tableDataCell(_wbsGoalLabel(row), 180),
-                        _tableDataCell(_wbsElementsLabel(row), 200),
+                        _wbsGoalCell(row),
+                        _wbsElementsCell(row),
+                        _codesStandardsCell(row),
                         _tableDataCell(
                           row.commentsController.text.trim().isEmpty
                               ? '—'
@@ -1145,7 +1160,7 @@ class _FrontEndPlanningRequirementsScreenState
                           200,
                         ),
                         SizedBox(
-                          width: 80,
+                          width: 96,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1157,7 +1172,9 @@ class _FrontEndPlanningRequirementsScreenState
                                   color: Color(0xFFFFC812),
                                 ),
                                 tooltip: 'Edit',
-                                onPressed: () => _openMobileRequirementEditor(
+                                onPressed: locked
+                                    ? null
+                                    : () => _openMobileRequirementEditor(
                                   context,
                                   index,
                                   row,
@@ -1175,7 +1192,8 @@ class _FrontEndPlanningRequirementsScreenState
                                   color: Color(0xFFEF4444),
                                 ),
                                 tooltip: 'Delete',
-                                onPressed: () => _deleteRow(index),
+                                onPressed:
+                                    locked ? null : () => _deleteRow(index),
                                 padding: const EdgeInsets.all(4),
                                 constraints: const BoxConstraints(
                                   minWidth: 32,
@@ -1197,19 +1215,67 @@ class _FrontEndPlanningRequirementsScreenState
     );
   }
 
-  String _wbsGoalLabel(_RequirementRow row) {
-    final goal = row.selectedWbsGoal;
-    if (goal == null || goal.isEmpty) return '—';
-    return goal == 'ALL' ? 'ALL — Entire project' : goal;
+  /// WBS Mapping column: pick the Level-1 goal, or ALL for the whole project.
+  Widget _wbsGoalCell(_RequirementRow row) {
+    return SizedBox(
+      width: 180,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: WbsGoalDropdown(
+          value: row.selectedWbsGoal,
+          enabled: !_isCharterLocked(context),
+          onChanged: (value) {
+            setState(() {
+              row.selectedWbsGoal = value;
+              row.selectedWbsElements = [];
+            });
+            _scheduleAutoSave(showSnack: false);
+          },
+        ),
+      ),
+    );
   }
 
-  String _wbsElementsLabel(_RequirementRow row) {
-    if (row.selectedWbsGoal == null ||
-        row.selectedWbsGoal == 'ALL' ||
-        row.selectedWbsElements.isEmpty) {
-      return '—';
-    }
-    return row.selectedWbsElements.join(', ');
+  /// Sub WBS column: the Level-2 elements under the chosen goal. Blank when
+  /// the requirement applies to the entire project (ALL).
+  Widget _wbsElementsCell(_RequirementRow row) {
+    final goal = row.selectedWbsGoal;
+    return SizedBox(
+      width: 200,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: goal == 'ALL'
+            ? const SizedBox.shrink()
+            : WbsElementMultiSelect(
+                goalId: goal,
+                selectedIds: row.selectedWbsElements,
+                enabled: goal != null && !_isCharterLocked(context),
+                onChanged: (ids) {
+                  setState(() => row.selectedWbsElements = ids);
+                  _scheduleAutoSave(showSnack: false);
+                },
+              ),
+      ),
+    );
+  }
+
+  /// Codes / Standards column: the codes and standards the requirement must
+  /// satisfy, picked from the standards captured in Quality Management.
+  Widget _codesStandardsCell(_RequirementRow row) {
+    return SizedBox(
+      width: 220,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: CodesStandardsMultiSelect(
+          selected: row.selectedCodesStandards,
+          enabled: !_isCharterLocked(context),
+          onChanged: (codes) {
+            setState(() => row.selectedCodesStandards = codes);
+            _scheduleAutoSave(showSnack: false);
+          },
+        ),
+      ),
+    );
   }
 
   Widget _tableHeaderCell(String text, double width, TextStyle style) {
@@ -1778,6 +1844,8 @@ class _FrontEndPlanningRequirementsScreenState
     String? selectedWbsGoal = row.selectedWbsGoal;
     List<String> selectedWbsElements =
         List<String>.from(row.selectedWbsElements);
+    List<String> selectedCodesStandards =
+        List<String>.from(row.selectedCodesStandards);
 
     await showDialog<void>(
       context: context,
@@ -1974,6 +2042,17 @@ class _FrontEndPlanningRequirementsScreenState
                             setLocalState(() => selectedWbsElements = ids),
                       ),
                       const SizedBox(height: 12),
+                      const Text(
+                        'Codes / Standards',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      CodesStandardsMultiSelect(
+                        selected: selectedCodesStandards,
+                        onChanged: (codes) =>
+                            setLocalState(() => selectedCodesStandards = codes),
+                      ),
+                      const SizedBox(height: 12),
                       VoiceTextField(
                         controller: commentsController,
                         decoration: const InputDecoration(
@@ -2029,6 +2108,8 @@ class _FrontEndPlanningRequirementsScreenState
                                           'ALL'
                                       ? <String>[]
                                       : List<String>.from(selectedWbsElements);
+                                  row.selectedCodesStandards =
+                                      List<String>.from(selectedCodesStandards);
                                 });
                                 _scheduleAutoSave(showSnack: false);
                               }
@@ -2141,7 +2222,9 @@ if (!mounted) return;
     return SizedBox(
       height: 44,
       child: OutlinedButton.icon(
-        onPressed: () async {
+        onPressed: _isCharterLocked(context)
+            ? null
+            : () async {
           final rows = await showCsvImportDialog(
             context,
             tableTitle: 'Project Requirements',
@@ -2221,7 +2304,8 @@ if (!mounted) return;
     return SizedBox(
       height: 44,
       child: OutlinedButton(
-        onPressed: _addRequirementViaEditor,
+        onPressed:
+            _isCharterLocked(context) ? null : _addRequirementViaEditor,
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFF2F4F7),
           foregroundColor: const Color(0xFF111827),
@@ -2429,6 +2513,7 @@ if (!mounted) return;
               comments: row.commentsController.text.trim(),
               wbsGoalId: row.selectedWbsGoal ?? '',
               wbsElementIds: List<String>.from(row.selectedWbsElements),
+              codesStandards: List<String>.from(row.selectedCodesStandards),
             ))
         .where((item) =>
             item.description.isNotEmpty ||
@@ -2439,7 +2524,8 @@ if (!mounted) return;
             item.phase.isNotEmpty ||
             item.requirementSource.isNotEmpty ||
             item.comments.isNotEmpty ||
-            item.wbsGoalId.isNotEmpty)
+            item.wbsGoalId.isNotEmpty ||
+            item.codesStandards.isNotEmpty)
         .toList();
   }
 
@@ -2814,6 +2900,9 @@ class _RequirementRow {
   /// Level-2 elements under it ("G1.1", "G1.4"). Blank Sub WBS when ALL.
   String? selectedWbsGoal;
   List<String> selectedWbsElements = [];
+
+  /// Codes / standards the requirement must satisfy (Lusaka 14).
+  List<String> selectedCodesStandards = [];
 
   final TextEditingController descriptionController;
   final TextEditingController commentsController;
@@ -3950,7 +4039,8 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
 Widget _roundedField(
     {required TextEditingController controller,
     required String hint,
-    int minLines = 1}) {
+    int minLines = 1,
+    bool readOnly = false}) {
   return Container(
     width: double.infinity,
     decoration: BoxDecoration(
@@ -3965,6 +4055,7 @@ Widget _roundedField(
         const SizedBox(height: 8),
         VoiceTextField(
           controller: controller,
+          readOnly: readOnly,
           minLines: minLines,
           maxLines: null,
           decoration: InputDecoration(

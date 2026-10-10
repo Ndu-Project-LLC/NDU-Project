@@ -648,6 +648,7 @@ class ProjectService {
     String status = 'Initiation',
     String milestone = 'Initiation',
     List<String> tags = const [],
+    bool isBasicPlanProject = false,
     String checkpointRoute = 'project_decision_summary',
   }) async {
     final now = FieldValue.serverTimestamp();
@@ -681,6 +682,9 @@ class ProjectService {
       'progress': progress,
       'investmentMillions': investmentMillions,
       'milestone': milestone,
+      // Persist the plan so the project is listed under the surface it was
+      // created from (Regular Projects filters on this flag).
+      'isBasicPlanProject': isBasicPlanProject,
       'tags': normalizedTags,
       'createdAt': now,
       'updatedAt': now,

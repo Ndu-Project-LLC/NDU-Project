@@ -60,9 +60,25 @@
     (function() {
       var started = Date.now();
       var reported = false;
+      var appStarted = false;
+
+      // This is a boot diagnostic, not a general runtime error banner. Once
+      // Flutter has drawn its first frame, later app exceptions must not make
+      // a working screen look like it failed to start.
+      window.addEventListener('flutter-first-frame', function() {
+        appStarted = true;
+      }, { once: true });
+      // Defensive fallback for engine versions that do not dispatch the event.
+      window.addEventListener('load', function() {
+        window.setTimeout(function() {
+          if (document.querySelector('flutter-view, flt-glass-pane, canvas')) {
+            appStarted = true;
+          }
+        }, 0);
+      }, { once: true });
 
       function fail(title, detail) {
-        if (reported) return;
+        if (reported || appStarted) return;
         reported = true;
         try {
           var box = document.createElement('div');

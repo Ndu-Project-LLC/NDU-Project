@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/services/ops_service.dart';
@@ -89,20 +90,24 @@ class _IdentifyStaffOpsTeamScreenState
             const SizedBox(height: 16),
             _buildHeader(isNarrow),
             const SizedBox(height: 18),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildRosterPanel(),
-                const SizedBox(height: 20),
-                _buildChecklistPanel(),
-                const SizedBox(height: 24),
-                LaunchPhaseNavigation(
-                  backLabel: PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
-                  nextLabel: PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
-                  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'identify_staff_ops_team'),
-                  onNext: () => PlanningPhaseNavigation.goToNext(context, 'identify_staff_ops_team'),
-                ),
+            // The roster and the checklist used to be stacked; they are now a
+            // tab apart, matching the Launch Phase screens.
+            LaunchPhaseTableTabs(
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Ops roster'),
+                LaunchPhaseTableTab(label: 'Readiness checklist'),
               ],
+              builders: {
+                'Ops roster': _buildRosterPanel,
+                'Readiness checklist': _buildChecklistPanel,
+              },
+            ),
+            const SizedBox(height: 24),
+            LaunchPhaseNavigation(
+              backLabel: PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'identify_staff_ops_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'identify_staff_ops_team'),
             ),
           ],
         ),

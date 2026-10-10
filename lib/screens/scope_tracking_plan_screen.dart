@@ -274,8 +274,12 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
                 noteKey: 'planning_scope_tracking_notes',
                 checkpoint: 'scope_tracking_plan',
                 description:
-                    'Summarise how scope will be planned and tracked on this project.',
+                    'Summarise how scope will be transferred into the project: '
+                    'what is in and out of scope, who owns each area, and how '
+                    'it maps to the WBS.',
               ),
+              const SizedBox(height: 20),
+              _buildScopeTransferSummary(),
               if (_showChangeControlTabs) ...[
                 const SizedBox(height: 20),
                 _buildTabs(),
@@ -320,9 +324,101 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ),
  ),
  );
- }
+ }  /// Lusaka 14: in Planning this page is a scope-transfer plan, not the
+  /// Execution scope tracking. It states how scope is handed into the project
+  /// and points change management to its own module rather than duplicating it.
+  Widget _buildScopeTransferSummary() {
+    const points = <(String, String)>[
+      (
+        'Scope the transfer',
+        'Confirm what is in scope and explicitly out of scope for this project, '
+            'and where each part came from (business case, charter, requirements).',
+      ),
+      (
+        'Assign ownership',
+        'Name the owner who accepts each scope area so nothing enters the '
+            'project unowned.',
+      ),
+      (
+        'Map to the WBS',
+        'Tie each scope area to a WBS goal (level 1) and element (level 2) so it '
+            'is traceable through design, work packages, cost and schedule.',
+      ),
+      (
+        'Plan the handover',
+        'Sequence when each scope area is taken on, and the evidence that shows '
+            'it has transferred.',
+      ),
+      (
+        'Route changes elsewhere',
+        'Changes to agreed scope are raised and approved in Change Management — '
+            'they are not tracked on this page.',
+      ),
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Scope Transfer Plan',
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827)),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'How the agreed scope is handed into this project during planning.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 14),
+          for (final point in points) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2, right: 10),
+                  child: Icon(Icons.check_circle_outline_rounded,
+                      size: 16, color: Color(0xFFF59E0B)),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        point.$1,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827)),
+                      ),
+                      Text(
+                        point.$2,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.35,
+                            color: Color(0xFF374151)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
 
- Widget _buildTabs() {
+  Widget _buildTabs() {
  final isCompact = MediaQuery.sizeOf(context).width < 900;
  return Container(
  padding: const EdgeInsets.all(8),

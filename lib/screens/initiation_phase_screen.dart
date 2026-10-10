@@ -158,6 +158,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   final List<String> _businessUndoStack = [];
   bool _notesInvalid = false;
   bool _businessInvalid = false;
+
+  /// True when this flow was entered from the Regular Project dashboard
+  /// (`?plan=basic`), so the project it creates lands under Regular Projects.
+  bool _isBasicPlanProject = false;
   static const int _notesWordMinimum = 5;
   static const int _businessWordMinimum = 10;
 
@@ -173,6 +177,8 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         final projectData = ProjectDataHelper.getData(context);
+        _isBasicPlanProject =
+            GoRouterState.of(context).uri.queryParameters['plan'] == 'basic';
         if (projectData.notes.isNotEmpty) {
           _notesController.text = projectData.notes;
         }
@@ -599,8 +605,12 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
         businessCase: business,
       );
 
-      // Save to Firebase
-      await provider.saveToFirebase(checkpoint: 'business_case');
+      // Save to Firebase only when the project already exists — the creation
+      // dialog owns the first record, so an unnamed project is never added.
+      final existingForNext = provider.projectData.projectId;
+      if (existingForNext != null && existingForNext.isNotEmpty) {
+        await provider.saveToFirebase(checkpoint: 'business_case');
+      }
     }
 
     // Show a 3-second loading experience before navigation
@@ -787,7 +797,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
         notes: _notesController.text.trim(),
         businessCase: _businessCaseController.text.trim(),
       );
-      await provider.saveToFirebase(checkpoint: 'business_case');
+      final existingForSkip = provider.projectData.projectId;
+      if (existingForSkip != null && existingForSkip.isNotEmpty) {
+        await provider.saveToFirebase(checkpoint: 'business_case');
+      }
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -815,7 +828,10 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
       businessCase: _businessCaseController.text.trim(),
     );
 
-    await provider.saveToFirebase(checkpoint: 'fep_summary');
+    final existingForFep = provider.projectData.projectId;
+    if (existingForFep != null && existingForFep.isNotEmpty) {
+      await provider.saveToFirebase(checkpoint: 'fep_summary');
+    }
 
     final projectId = provider.projectData.projectId;
     if (projectId != null && projectId.isNotEmpty) {
@@ -849,14 +865,24 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
             title: s.title, description: s.description, projectName: null))
         .toList(growable: false);
 
-    final selection = await showDialog<SolutionOption?>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogCtx) {
-        String? projectName;
-        int? selectedIndex;
-        String? nameError;
-        return StatefulBuilder(builder: (ctx, setState) {
+    // Own the name controller for the dialog's lifetime. The dialog is rebuilt
+    // on every selection/validation change, and a controller constructed inside
+    // the builder was recreated each rebuild — which reset the field, lost the
+    // typed name, and saved the project as "Untitled Project".
+    final nameController = SpellCheckTextEditingController(
+      text: options.isNotEmpty ? options.first.title : '',
+    );
+
+    SolutionOption? selection;
+    try {
+      selection = await showDialog<SolutionOption?>(
+        context: context,
+        barrierDismissible: true,
+        builder: (dialogCtx) {
+          final hasSolutions = options.isNotEmpty;
+          int? selectedIndex = hasSolutions ? 0 : null;
+          String? nameError;
+          return StatefulBuilder(builder: (ctx, setState) {
           return Dialog(
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
@@ -881,11 +907,14 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
                             icon: const Icon(Icons.close)),
                       ]),
                       const SizedBox(height: 12),
-                      const Text(
-                          'Pick the solution you want to advance and give your project a memorable name.',
-                          style:
-                              TextStyle(fontSize: 14, color: Colors.black54)),
+                      Text(
+                          hasSolutions
+                              ? 'Pick the solution you want to advance and give your project a memorable name.'
+                              : 'No potential solutions have been described yet. Give the project a name to continue — you can add solutions later.',
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.black54)),
                       const SizedBox(height: 20),
+                      if (hasSolutions)
                       ConstrainedBox(
                         constraints: BoxConstraints(
                             maxHeight: options.length >= 3 ? 360 : 240),
@@ -913,9 +942,8 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
                                 onTap: () {
                                   setState(() {
                                     selectedIndex = i;
-                                    if (projectName == null ||
-                                        projectName!.trim().isEmpty) {
-                                      projectName = options[i].title;
+                                    if (nameController.text.trim().isEmpty) {
+                                      nameController.text = options[i].title;
                                     }
                                   });
                                 },
@@ -923,15 +951,19 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
                           ]),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      if (hasSolutions) const SizedBox(height: 16),
                       VoiceTextField(
                         decoration: InputDecoration(
                             labelText: 'Project name',
                             errorText: nameError,
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12))),
-                        controller: SpellCheckTextEditingController(text: projectName),
-                        onChanged: (v) => projectName = v,
+                        controller: nameController,
+                        onChanged: (v) {
+                          if (nameError != null) {
+                            setState(() => nameError = null);
+                          }
+                        },
                       ),
                       const SizedBox(height: 20),
                       Row(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -941,17 +973,26 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
                         const SizedBox(width: 12),
                         ElevatedButton(
                           onPressed: () {
-                            if (selectedIndex == null) {
+                            if (hasSolutions && selectedIndex == null) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
                                   const SnackBar(
                                       content:
                                           Text('Select a project first.')));
                               return;
                             }
-                            final name = (projectName ?? '').trim();
+                            final name = nameController.text.trim();
                             if (name.isEmpty) {
                               setState(() => nameError =
                                   'Give your project a name to continue.');
+                              return;
+                            }
+                            if (!hasSolutions) {
+                              // Nothing described yet — still create the project
+                              // rather than dead-ending the user on this dialog.
+                              Navigator.of(ctx).pop(SolutionOption(
+                                  title: '',
+                                  description: '',
+                                  projectName: name));
                               return;
                             }
                             Navigator.of(ctx).pop(SolutionOption(
@@ -970,9 +1011,12 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               ),
             ),
           );
-        });
-      },
-    );
+          });
+        },
+      );
+    } finally {
+      nameController.dispose();
+    }
 
     if (selection == null) return;
 
@@ -1003,8 +1047,9 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
           builder: (_) => const Center(child: CircularProgressIndicator()));
     }
 
+    String? createdProjectId;
     try {
-      await ProjectService.createProject(
+      createdProjectId = await ProjectService.createProject(
         ownerId: user.uid,
         ownerName: ownerName,
         name: selection.projectName ?? selection.title,
@@ -1014,6 +1059,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
         notes: trimmedNotes,
         ownerEmail: user.email,
         tags: tags,
+        isBasicPlanProject: _isBasicPlanProject,
         checkpointRoute: 'project_decision_summary',
       );
     } catch (e) {
@@ -1028,6 +1074,18 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
     if (dialogShown && mounted) {
       Navigator.of(context, rootNavigator: true).pop();
+    }
+
+    // Bind the newly-created record to the provider. The returned id used to be
+    // discarded, so the provider kept no projectId and every later save added
+    // another unnamed project.
+    if (createdProjectId.isNotEmpty && mounted) {
+      try {
+        await ProjectDataHelper.getProvider(context)
+            .loadFromFirebase(createdProjectId);
+      } catch (e) {
+        debugPrint('InitiationPhase: failed to load new project: $e');
+      }
     }
 
     if (!mounted) return;

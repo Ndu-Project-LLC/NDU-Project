@@ -206,6 +206,43 @@ class AgileCeremonyEntry {
   }
 }
 
+/// How deep the groomed backlog is against the delivery model's rule: keep at
+/// least two sprints of stories refined, aiming for about twice the team's
+/// velocity, and groom a third day each week when the backlog falls short.
+class GroomingCoverage {
+  /// Points sitting in the backlog at 'Ready for Sprint'.
+  final int groomedPoints;
+
+  /// Team velocity in points per sprint used for the comparison. Zero when the
+  /// team has no capacity configured yet, which makes the check inconclusive.
+  final double velocityPerSprint;
+
+  /// Weekdays the cadence grooms on. The rule wants three when the backlog is
+  /// too shallow.
+  final int groomingDaysPerWeek;
+
+  const GroomingCoverage({
+    required this.groomedPoints,
+    required this.velocityPerSprint,
+    required this.groomingDaysPerWeek,
+  });
+
+  /// Points two sprints of groomed work needs, or null when velocity is 0.
+  int? get targetPoints =>
+      velocityPerSprint > 0 ? (velocityPerSprint * 2).ceil() : null;
+
+  /// Sprints of groomed work the backlog holds, or null when velocity is 0.
+  double? get sprintsGroomed =>
+      velocityPerSprint > 0 ? groomedPoints / velocityPerSprint : null;
+
+  /// True when the backlog already holds two sprints or more of groomed work.
+  bool get coversTwoSprints =>
+      velocityPerSprint > 0 && groomedPoints >= velocityPerSprint * 2;
+
+  /// True when the cadence should add a third grooming day to close the gap.
+  bool get needsThirdDay => !coversTwoSprints && groomingDaysPerWeek < 3;
+}
+
 /// Derived totals and guardrail warnings for a full ceremony schedule.
 class AgileCeremonyPlan {
   /// Minutes per sprint, per ceremony, for enabled ceremonies only.

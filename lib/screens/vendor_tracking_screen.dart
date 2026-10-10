@@ -12,6 +12,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/vendors_table_widget.dart';
@@ -177,17 +178,22 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 24),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildVendorRegister(),
-                const SizedBox(height: 20),
-                _buildPerformancePanel(),
-                const SizedBox(height: 20),
-                _buildSignalsPanel(),
-                const SizedBox(height: 20),
-                _buildActionPanel(),
+            // The four registers used to be stacked in one long column, so the
+            // action plan sat several scrolls below the scorecard. They now sit
+            // behind the same tab navigator the Launch Phase screens use.
+            LaunchPhaseTableTabs(
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Vendor scorecard'),
+                LaunchPhaseTableTab(label: 'Performance pulse'),
+                LaunchPhaseTableTab(label: 'Risk signals'),
+                LaunchPhaseTableTab(label: 'Action plan'),
               ],
+              builders: {
+                'Vendor scorecard': _buildVendorRegister,
+                'Performance pulse': _buildPerformancePanel,
+                'Risk signals': _buildSignalsPanel,
+                'Action plan': _buildActionPanel,
+              },
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(

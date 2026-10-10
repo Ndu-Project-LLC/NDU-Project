@@ -13,6 +13,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -411,36 +412,25 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
               child: CircularProgressIndicator(),
             ))
           else ...[
-            StaffTeamResourceGrid(
-              rows: _staffingRows,
-              onRowsChanged: _onStaffingRowsChanged,
-            ),
-            const SizedBox(height: 28),
-            _buildMobilizationBoard(),
-            const SizedBox(height: 28),
-            launch.LaunchEditableSection(
-              title: 'Onboarding actions',
-              description:
-                  'List onboarding steps and owners to get people productive.',
-              entries: _onboardingActions,
-              onAdd: () => _addOnboardingAction(),
-              onRemove: (i) {
-                setState(() => _onboardingActions.removeAt(i));
-                _autoSave();
+            // The staffing grid, the mobilization board and the two registers
+            // below them used to be one long column; they are now tabs, the
+            // same arrangement the Launch Phase screens use.
+            LaunchPhaseTableTabs(
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Staffing grid'),
+                LaunchPhaseTableTab(label: 'Team mobilization'),
+                LaunchPhaseTableTab(label: 'Onboarding actions'),
+                LaunchPhaseTableTab(label: 'Coverage risks'),
+              ],
+              builders: {
+                'Staffing grid': () => StaffTeamResourceGrid(
+                      rows: _staffingRows,
+                      onRowsChanged: _onStaffingRowsChanged,
+                    ),
+                'Team mobilization': _buildMobilizationBoard,
+                'Onboarding actions': _buildOnboardingActions,
+                'Coverage risks': _buildCoverageRisks,
               },
-              onEdit: (i, entry) => _editOnboardingAction(i, entry),
-            ),
-            const SizedBox(height: 20),
-            launch.LaunchEditableSection(
-              title: 'Coverage risks',
-              description: 'Document gaps or risks in team coverage.',
-              entries: _coverageRisks,
-              onAdd: () => _addCoverageRisk(),
-              onRemove: (i) {
-                setState(() => _coverageRisks.removeAt(i));
-                _autoSave();
-              },
-              onEdit: (i, entry) => _editCoverageRisk(i, entry),
             ),
           ],
           const SizedBox(height: 36),
@@ -448,6 +438,38 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
           const SizedBox(height: 56),
         ],
       ),
+    );
+  }
+
+  /// Onboarding actions register, extracted so the staff-team tab host can
+  /// take it as a bare tear-off.
+  Widget _buildOnboardingActions() {
+    return launch.LaunchEditableSection(
+      title: 'Onboarding actions',
+      description:
+          'List onboarding steps and owners to get people productive.',
+      entries: _onboardingActions,
+      onAdd: () => _addOnboardingAction(),
+      onRemove: (i) {
+        setState(() => _onboardingActions.removeAt(i));
+        _autoSave();
+      },
+      onEdit: (i, entry) => _editOnboardingAction(i, entry),
+    );
+  }
+
+  /// Coverage risks register, extracted for the same reason.
+  Widget _buildCoverageRisks() {
+    return launch.LaunchEditableSection(
+      title: 'Coverage risks',
+      description: 'Document gaps or risks in team coverage.',
+      entries: _coverageRisks,
+      onAdd: () => _addCoverageRisk(),
+      onRemove: (i) {
+        setState(() => _coverageRisks.removeAt(i));
+        _autoSave();
+      },
+      onEdit: (i, entry) => _editCoverageRisk(i, entry),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:ndu_project/utils/unique_id.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -88,24 +89,28 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
  _buildStatsRow(isNarrow),
  const SizedBox(height: 24),
- Column(
- crossAxisAlignment: CrossAxisAlignment.stretch,
- children: [
- _buildDebtRegister(),
- const SizedBox(height: 20),
- _buildRemediationPanel(),
- const SizedBox(height: 20),
- _buildRootCausePanel(),
- const SizedBox(height: 20),
- _buildOwnershipPanel(),
+ // The four registers used to be stacked in one long column. They now sit
+ // behind the same tab navigator the Launch Phase screens use.
+ LaunchPhaseTableTabs(
+ tabs: const [
+ LaunchPhaseTableTab(label: 'Debt register'),
+ LaunchPhaseTableTab(label: 'Remediation runway'),
+ LaunchPhaseTableTab(label: 'Root cause signals'),
+ LaunchPhaseTableTab(label: 'Ownership coverage'),
+ ],
+ builders: {
+ 'Debt register': _buildDebtRegister,
+ 'Remediation runway': _buildRemediationPanel,
+ 'Root cause signals': _buildRootCausePanel,
+ 'Ownership coverage': _buildOwnershipPanel,
+ },
+ ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel('technical_debt_management'),
  nextLabel: PlanningPhaseNavigation.nextLabel('technical_debt_management'),
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'technical_debt_management'),
  onNext: () => PlanningPhaseNavigation.goToNext(context, 'technical_debt_management'),
- ),
- ],
  ),
  ],
  ),

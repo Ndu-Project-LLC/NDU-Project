@@ -12,6 +12,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wbs_mapping_selectors.dart';
+import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -230,6 +231,7 @@ class _PlanningRequirementsScreenState
  ? null
  : item.wbsGoalId.trim();
  row.selectedWbsElements = List<String>.from(item.wbsElementIds);
+ row.selectedCodesStandards = List<String>.from(item.codesStandards);
  return row;
  }).toList(),
  );
@@ -868,6 +870,7 @@ $requirementsList
  comments: row.commentsController.text.trim(),
  wbsGoalId: row.selectedWbsGoal ?? '',
  wbsElementIds: List<String>.from(row.selectedWbsElements),
+ codesStandards: List<String>.from(row.selectedCodesStandards),
  ),
  )
  .where(
@@ -879,7 +882,8 @@ $requirementsList
  item.person.isNotEmpty ||
  item.phase.isNotEmpty ||
  item.requirementSource.isNotEmpty ||
- item.comments.isNotEmpty,
+ item.comments.isNotEmpty ||
+ item.codesStandards.isNotEmpty,
  )
  .toList();
  }
@@ -1480,9 +1484,10 @@ if (!mounted) return;
       200,  // 8: WBS elements (level 2)
       230,  // 9: Requirement source
       380,  // 10: Comments & source links
-      56,   // 11: Delete
+      230,  // 11: Codes / standards (Lusaka 14)
+      56,   // 12: Delete
     ];
-    const totalWidth = 2520.0;
+    const totalWidth = 2750.0;
 
     // Helper to build a header cell
     Widget hCell(String text, double w) {
@@ -1761,9 +1766,24 @@ if (!mounted) return;
                 ),
               ),
             ),
-            // Col 11: Delete
+            // Col 11: Codes / standards — Lusaka 14
             SizedBox(
               width: colW[11],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: CodesStandardsMultiSelect(
+                  selected: row.selectedCodesStandards,
+                  enabled: !_isRequirementsLocked,
+                  onChanged: (codes) {
+                    setState(() => row.selectedCodesStandards = codes);
+                    _handleRequirementChanged();
+                  },
+                ),
+              ),
+            ),
+            // Col 12: Delete
+            SizedBox(
+              width: colW[12],
               child: Center(
                 child: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
@@ -1831,7 +1851,8 @@ if (!mounted) return;
                         hCell('WBS Elements (Level 2)', colW[8]),
                         hCell('Requirement source', colW[9]),
                         hCell('Comments and Requirement Source Links', colW[10]),
-                        hCell('', colW[11]),
+                        hCell('Codes / Standards', colW[11]),
+                        hCell('', colW[12]),
                       ],
                     ),
                   ),
@@ -1918,7 +1939,8 @@ if (!mounted) return;
                         hCell('WBS Elements (Level 2)', colW[8]),
                         hCell('Requirement source', colW[9]),
                         hCell('Comments and Requirement Source Links', colW[10]),
-                        hCell('', colW[11]),
+                        hCell('Codes / Standards', colW[11]),
+                        hCell('', colW[12]),
                       ],
                     ),
                   ),
@@ -2015,6 +2037,7 @@ if (!mounted) return;
     const CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
     const CsvColumnSpec(key: 'wbsGoal', label: 'WBS Goal (Level 1)', sampleValue: 'G1'),
     const CsvColumnSpec(key: 'wbsElements', label: 'WBS Elements (Level 2)', sampleValue: 'G1.1, G1.2'),
+    const CsvColumnSpec(key: 'codesStandards', label: 'Codes / Standards', sampleValue: 'ISO 9001'),
     const CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
     const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
@@ -2039,6 +2062,7 @@ if (!mounted) return;
         'phase': row.selectedPhase ?? '',
         'wbsGoal': row.selectedWbsGoal ?? '',
         'wbsElements': row.selectedWbsElements.join(', '),
+        'codesStandards': row.selectedCodesStandards.join(', '),
         'source': row.sourceController.text.trim(),
         'comments': row.commentsController.text.trim(),
       };
@@ -2098,6 +2122,11 @@ if (!mounted) return;
  final csvGoal = (row['wbsGoal'] ?? '').trim();
  newRow.selectedWbsGoal = csvGoal.isEmpty ? null : csvGoal;
  newRow.selectedWbsElements = (row['wbsElements'] ?? '')
+     .split(',')
+     .map((e) => e.trim())
+     .where((e) => e.isNotEmpty)
+     .toList();
+ newRow.selectedCodesStandards = (row['codesStandards'] ?? '')
      .split(',')
      .map((e) => e.trim())
      .where((e) => e.isNotEmpty)
@@ -2336,8 +2365,11 @@ class _RequirementRow {
  /// Lusaka 28 — WBS mapping: level-1 goal ("G1" / "ALL") and the level-2
  /// elements under it ("G2.1", "G2.4"…). Every requirement must be traceable
  /// to the WBS so contract / procurement / schedule can read from it.
- String? selectedWbsGoal;
- List<String> selectedWbsElements = [];
+  String? selectedWbsGoal;
+  List<String> selectedWbsElements = [];
+
+  /// Codes / standards the requirement must satisfy (Lusaka 14).
+  List<String> selectedCodesStandards = [];
 
  final VoidCallback? onChanged;
  String? aiUndoText;

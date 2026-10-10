@@ -66,6 +66,7 @@ import 'package:ndu_project/screens/integration_dashboard_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_work_packages_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
 import 'package:ndu_project/screens/cost_estimate_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
@@ -296,6 +297,7 @@ class AppRoutes {
   static const pbs = 'product-breakdown-structure';
   static const executionPlan = 'execution-plan';
   static const executionWorkPackages = 'execution-work-packages';
+  static const executionQualityTracking = 'execution-quality-tracking';
   static const executionPlanInterface = 'execution-plan-interface-management';
   static const costEstimate = 'cost-estimate';
   static const costAnalysis = 'cost-analysis';
@@ -961,6 +963,10 @@ class AppRouter {
           name: AppRoutes.executionWorkPackages,
           path: '/${AppRoutes.executionWorkPackages}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionWorkPackagesScreen())),
+      GoRoute(
+          name: AppRoutes.executionQualityTracking,
+          path: '/${AppRoutes.executionQualityTracking}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionQualityTrackingScreen())),
       GoRoute(
           name: AppRoutes.executionPlanInterface,
           path: '/${AppRoutes.executionPlanInterface}',

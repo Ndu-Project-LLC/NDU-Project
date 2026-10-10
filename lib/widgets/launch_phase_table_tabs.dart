@@ -31,7 +31,9 @@ class LaunchPhaseTableTab {
 /// bare tear-off of one of its existing `_buildXPanel()` methods.
 typedef LaunchPhaseTabBuilder = Widget Function();
 
-/// Tab host for the 11 Launch Phase screens.
+/// Tab host for the Launch Phase screens — and for any other screen whose
+/// registers would otherwise stack into one long column (see
+/// `contracts_tracking_screen.dart`).
 ///
 /// Owns the [TabController] lifecycle and renders the segmented rail that
 /// matches the rest of the Launch Phase surfaces (see

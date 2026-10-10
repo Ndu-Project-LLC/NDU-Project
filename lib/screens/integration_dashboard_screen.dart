@@ -282,7 +282,10 @@ class _IntegrationDashboardScreenState
     });
   }
 
-  void _createNewProject() => context.push('/${AppRoutes.initiationPhase}');
+  // `plan=basic` tells the initiation flow to mark the project it creates as a
+  // Regular Project (basic plan), so it appears back here in Workspaces.
+  void _createNewProject() =>
+      context.push('/${AppRoutes.initiationPhase}?plan=basic');
 
   /// Load a workspace, then resume it exactly where it was last left.
   Future<void> _openProject(ProjectRecord project) async {

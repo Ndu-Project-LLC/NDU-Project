@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/checkpoint_labels.dart';
 import 'package:ndu_project/utils/dashboard_palette.dart';
 
 import '../models/program_model.dart';
@@ -1950,11 +1951,13 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  .join(' ');
  }
  return 'Unknown';
- }
-
- String _relativeTimeString(DateTime? time) {
- if (time == null) return 'moments ago';
- final diff = DateTime.now().difference(time);
+ }  String _relativeTimeString(DateTime? time) {
+    if (time == null) return 'moments ago';
+    // A Firestore serverTimestamp that has not resolved yet arrives as epoch 0.
+    // Rendering that as a relative time produced "20736 days ago" on freshly
+    // created projects, so treat a pre-1970/epoch value as "just now".
+    if (time.millisecondsSinceEpoch <= 0) return 'moments ago';
+    final diff = DateTime.now().difference(time);
  if (diff.isNegative) {
  return 'just now';
  }
@@ -2564,8 +2567,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
     final phaseLabel = project.progressSnapshot.currentPhase.trim().isEmpty
         ? (project.status.isNotEmpty ? project.status : 'Initiation')
         : project.progressSnapshot.currentPhase.trim();
-    final milestoneLabel =
-        project.milestone.isNotEmpty ? project.milestone : 'Starting up';
+    final milestoneLabel = friendlyCheckpointLabel(project.milestone);
     final progressValue = project.progressSnapshot.completion.clamp(0.0, 1.0);
     final progressPercent = project.progressSnapshot.completionPercent;
     final progressDetail = project.progressSnapshot.totalActivities > 0
@@ -3373,3 +3375,4 @@ class _WorldClassStatCard extends StatelessWidget {
     );
   }
 }
+

@@ -6,6 +6,7 @@ import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -408,15 +409,24 @@ class _UpdateOpsMaintenancePlansScreenState
               child: CircularProgressIndicator(),
             )),
           ] else ...[
-            _buildStatsRow(isNarrow),
-            const SizedBox(height: 28),
-            _buildPlanRegister(projectId),
-            const SizedBox(height: 20),
-            _buildCoveragePanel(),
-            const SizedBox(height: 20),
-            _buildSignalsPanel(),
-            const SizedBox(height: 20),
-            _buildMaintenancePanel(),
+            // The stats band becomes the Overview tab and the four registers
+            // that used to be stacked become one tap apart, matching the
+            // Launch Phase screens.
+            LaunchPhaseTableTabs(
+              overview: _buildStatsRow(isNarrow),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Ops Plan Register'),
+                LaunchPhaseTableTab(label: 'Readiness Coverage'),
+                LaunchPhaseTableTab(label: 'Ops Signals'),
+                LaunchPhaseTableTab(label: 'Maintenance Windows'),
+              ],
+              builders: {
+                'Ops Plan Register': () => _buildPlanRegister(projectId),
+                'Readiness Coverage': _buildCoveragePanel,
+                'Ops Signals': _buildSignalsPanel,
+                'Maintenance Windows': _buildMaintenancePanel,
+              },
+            ),
           ],
           const SizedBox(height: 36),
           _buildBottomActionBar(),

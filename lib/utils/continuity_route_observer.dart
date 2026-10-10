@@ -98,6 +98,9 @@ String? checkpointForRouteName(String? routeName) {
     'change-management-module': 'change_management',
     'agile-project-hub': 'agile_development_iterations',
     'project-framework-next': 'project_goals_milestones',
+    // Scope Tracking Plan is reachable both from the sidebar (Planning →
+    // Project Services) and by direct route.
+    'scope-tracking-plan': 'scope_tracking_plan',
   };
 
   final direct = overrides[name];

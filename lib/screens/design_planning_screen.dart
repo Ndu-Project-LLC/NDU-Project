@@ -410,6 +410,20 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     _sectionTileVersion = {
       for (final section in _sectionOrder) section.id: 0,
     };
+
+    // A sidebar deep-link already expanded the requested section, but the page
+    // still renders from the top. Bring the section into view once the first
+    // frame is laid out, otherwise clicking e.g. "Work Packages" lands on the
+    // top of a long page and the user has to scroll to find the tab they
+    // clicked (Lusaka 14).
+    if (hasValidInitialSection) {
+      final targetSectionId = requestedSectionId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _scrollToSectionStart(targetSectionId);
+        }
+      });
+    }
   }
 
   _SectionProgressState _parseProgressState(String? raw) {
@@ -3730,6 +3744,17 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
             style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w700, color: _kText),
           ),
+          const SizedBox(height: 6),
+          // Lusaka 14: the requirements and their codes / standards the WBS
+          // items were written against are echoed here read-only, so the work
+          // package is the one place that answers "what must this design
+          // satisfy?". Editing stays in Requirements.
+          const Text(
+            'Requirements and their codes / standards are reflected here '
+            'read-only from the Requirements table — this view does not create '
+            'or edit them.',
+            style: TextStyle(fontSize: 11, height: 1.4, color: _kMuted),
+          ),
           const SizedBox(height: 10),
           if (wbsTree.isEmpty)
             const _EmptyState(message: 'No WBS items found.')
@@ -3830,9 +3855,28 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                 for (final requirement in linked)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      '• ${requirement.description.trim().isEmpty ? '(untitled requirement)' : requirement.description.trim()}',
-                      style: const TextStyle(fontSize: 12, color: _kMuted),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '• ${requirement.description.trim().isEmpty ? '(untitled requirement)' : requirement.description.trim()}',
+                          style: const TextStyle(fontSize: 12, color: _kMuted),
+                        ),
+                        if (requirement.codesStandards
+                            .where((c) => c.trim().isNotEmpty)
+                            .isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12, top: 1),
+                            child: Text(
+                              'Codes / Standards: ${requirement.codesStandards.where((c) => c.trim().isNotEmpty).join(', ')}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _kMuted,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
               ],

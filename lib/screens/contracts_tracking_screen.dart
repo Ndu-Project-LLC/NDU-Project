@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/contracts_table_widget.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -403,18 +404,36 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                 showNavigationButtons: false,
                 onExportPdf: _exportPdf),
             const SizedBox(height: 24),
-            _buildContractManagementGuide(),
-            const SizedBox(height: 24),
-            Column(
-              children: [
-                _buildContractRegister(),
-                const SizedBox(height: 20),
-                _buildRenewalPanel(),
-                const SizedBox(height: 20),
-                _buildSignalsPanel(),
-                const SizedBox(height: 20),
-                _buildApprovalsPanel(),
+            // The four registers used to be stacked in one long column, so
+            // reaching the last one meant scrolling past the other three. They
+            // now sit behind the same tab navigator the Launch Phase screens
+            // use, with the control framework as the leading Overview tab.
+            LaunchPhaseTableTabs(
+              overview: _buildContractManagementGuide(),
+              tabs: const [
+                LaunchPhaseTableTab(
+                  label: 'Contract register',
+                  icon: Icons.description_outlined,
+                ),
+                LaunchPhaseTableTab(
+                  label: 'Renewal pipeline',
+                  icon: Icons.autorenew_rounded,
+                ),
+                LaunchPhaseTableTab(
+                  label: 'Risk signals',
+                  icon: Icons.warning_amber_rounded,
+                ),
+                LaunchPhaseTableTab(
+                  label: 'Approval readiness',
+                  icon: Icons.verified_outlined,
+                ),
               ],
+              builders: {
+                'Contract register': _buildContractRegister,
+                'Renewal pipeline': _buildRenewalPanel,
+                'Risk signals': _buildSignalsPanel,
+                'Approval readiness': _buildApprovalsPanel,
+              },
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(

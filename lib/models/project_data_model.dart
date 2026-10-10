@@ -2235,6 +2235,13 @@ class RequirementItem {
   String wbsGoalId;
   List<String> wbsElementIds;
 
+  /// Lusaka 14: a requirement also names the code / standard / specification it
+  /// must satisfy (e.g. "ISO 9001", "ISO/IEC 25010"). The values are picked
+  /// from the standards already captured in Quality Management rather than
+  /// free-typed, so the Design → Work Packages traceability can list the same
+  /// set the requirement was written against.
+  List<String> codesStandards;
+
   RequirementItem({
     this.id = '',
     this.description = '',
@@ -2247,7 +2254,9 @@ class RequirementItem {
     this.comments = '',
     this.wbsGoalId = '',
     List<String>? wbsElementIds,
-  }) : wbsElementIds = wbsElementIds ?? [];
+    List<String>? codesStandards,
+  })  : wbsElementIds = wbsElementIds ?? [],
+        codesStandards = codesStandards ?? [];
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -2261,6 +2270,7 @@ class RequirementItem {
         'comments': comments,
         'wbsGoalId': wbsGoalId,
         'wbsElementIds': wbsElementIds,
+        'codesStandards': codesStandards,
       };
 
   factory RequirementItem.fromJson(Map<String, dynamic> json) {
@@ -2271,6 +2281,10 @@ class RequirementItem {
           json['wbs_goal_id']?.toString() ??
           '',
       wbsElementIds: (json['wbsElementIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      codesStandards: (json['codesStandards'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],

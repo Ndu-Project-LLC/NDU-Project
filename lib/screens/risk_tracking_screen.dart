@@ -6,6 +6,7 @@ import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -329,13 +330,23 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
             // "EXECUTION SAFETY / Risk Tracking" hero header and the
             // four stat cards (Active risks / Mitigation coverage /
             // Escalations / Exposure score) removed per user request.
-            const SizedBox(height: 8),            _buildRiskRegister(),
-            const SizedBox(height: 20),
-            _buildMitigationPanel(),
-            const SizedBox(height: 20),
-            _buildSignalsPanel(),
-            const SizedBox(height: 20),
-            _buildEscalationPanel(),
+            const SizedBox(height: 8),
+            // One tab per register: the escalation view used to sit below three
+            // other panels, so reaching it meant scrolling the whole page.
+            LaunchPhaseTableTabs(
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Risk register'),
+                LaunchPhaseTableTab(label: 'Mitigation coverage'),
+                LaunchPhaseTableTab(label: 'Risk signals'),
+                LaunchPhaseTableTab(label: 'Escalation readiness'),
+              ],
+              builders: {
+                'Risk register': _buildRiskRegister,
+                'Mitigation coverage': _buildMitigationPanel,
+                'Risk signals': _buildSignalsPanel,
+                'Escalation readiness': _buildEscalationPanel,
+              },
+            ),
             const SizedBox(height: 24),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: padding),

@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -616,15 +617,23 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildMetricsRow(),
-            const SizedBox(height: 20),
-            _buildChecklistPanel(),
-            const SizedBox(height: 16),
-            _buildApprovalsPanel(),
-            const SizedBox(height: 16),
-            _buildMilestonesPanel(),
-            const SizedBox(height: 16),
-            _buildTimelinePanel(),
+            // The metrics band moves into the Overview tab and the four tables
+            // become one tap apart, matching the Launch Phase screens.
+            LaunchPhaseTableTabs(
+              overview: _buildMetricsRow(),
+              tabs: const [
+                LaunchPhaseTableTab(label: 'Launch Checklist'),
+                LaunchPhaseTableTab(label: 'Approvals & Sign-offs'),
+                LaunchPhaseTableTab(label: 'Launch Milestones'),
+                LaunchPhaseTableTab(label: 'Launch Timeline'),
+              ],
+              builders: {
+                'Launch Checklist': _buildChecklistPanel,
+                'Approvals & Sign-offs': _buildApprovalsPanel,
+                'Launch Milestones': _buildMilestonesPanel,
+                'Launch Timeline': _buildTimelinePanel,
+              },
+            ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
               backLabel: PlanningPhaseNavigation.backLabel('launch_checklist'),

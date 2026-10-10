@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -70,6 +71,14 @@ class _GapAnalysisScopeReconcillationScreenState
     super.dispose();
   }
 
+  /// Gives a tab body the same width signal the old stacked columns got from
+  /// the [LayoutBuilder] each of them wrapped itself in.
+  Widget _tabBody(Widget Function(double width) build) {
+    return LayoutBuilder(
+      builder: (context, constraints) => build(constraints.maxWidth),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
@@ -97,35 +106,79 @@ class _GapAnalysisScopeReconcillationScreenState
                       children: [
                         const _PageHeader(),
                         const SizedBox(height: 20),
-                        _InfoStrip(isMobile: isMobile),
-                        const SizedBox(height: 24),
-                        _PrimarySections(
-                          gapEntries: _gapEntries,
-                          rootCauseThemes: _rootCauseThemes,
-                          mitigationConfidence: _mitigationConfidence,
-                          reconciliationPlans: _reconciliationPlans,
-                          onGapEntriesChanged: _updateGapEntries,
-                          onRootCauseUpdated: _updateRootCauseThemes,
-                          onMitigationUpdated: _updateMitigationConfidence,
-                          onPlansUpdated: _updateReconciliationPlans,
-                        ),
-                        const SizedBox(height: 24),
-                        _SecondarySections(
-                          gapEntries: _gapEntries,
-                          reconciliationPlans: _reconciliationPlans,
-                          impacts: _impactRows,
-                          workflowSteps: _workflowSteps,
-                          lessons: _lessonsLearned,
-                          onImpactsUpdated: _updateImpactRows,
-                          onWorkflowUpdated: (updated) {
-                            setState(() {
-                              _workflowSteps
-                                ..clear()
-                                ..addAll(updated);
-                            });
-                            _schedulePersist();
+                        // The six cards used to be one long column — three
+                        // primary sections followed by three secondary ones.
+                        // They are now tabs, with the info strip as Overview,
+                        // matching the Launch Phase screens.
+                        LaunchPhaseTableTabs(
+                          overview: _InfoStrip(isMobile: isMobile),
+                          tabs: const [
+                            LaunchPhaseTableTab(label: 'Gap Register'),
+                            LaunchPhaseTableTab(label: 'Root Cause Analysis'),
+                            LaunchPhaseTableTab(label: 'Reconciliation Planning'),
+                            LaunchPhaseTableTab(label: 'Impact Assessment'),
+                            LaunchPhaseTableTab(
+                                label: 'Reconciliation Workflow'),
+                            LaunchPhaseTableTab(label: 'Lessons Learned'),
+                          ],
+                          builders: {
+                            'Gap Register': () => _tabBody(
+                                  (w) => _GapRegisterCard(
+                                    width: w,
+                                    entries: _gapEntries,
+                                    onChanged: _updateGapEntries,
+                                  ),
+                                ),
+                            'Root Cause Analysis': () => _tabBody(
+                                  (w) => _GapAnalysisRootCauseCard(
+                                    width: w,
+                                    rootCauseThemes: _rootCauseThemes,
+                                    mitigationConfidence: _mitigationConfidence,
+                                    onRootCauseUpdated:
+                                        _updateRootCauseThemes,
+                                    onMitigationUpdated:
+                                        _updateMitigationConfidence,
+                                  ),
+                                ),
+                            'Reconciliation Planning': () => _tabBody(
+                                  (w) => _ReconciliationPlanningCard(
+                                    width: w,
+                                    plans: _reconciliationPlans,
+                                    onPlansUpdated:
+                                        _updateReconciliationPlans,
+                                  ),
+                                ),
+                            'Impact Assessment': () => _tabBody(
+                                  (w) => _ImpactAssessmentCard(
+                                    width: w,
+                                    impacts: _impactRows,
+                                    onImpactsUpdated: _updateImpactRows,
+                                    gaps: _gapEntries,
+                                    plans: _reconciliationPlans,
+                                  ),
+                                ),
+                            'Reconciliation Workflow': () => _tabBody(
+                                  (w) => _ReconciliationWorkflowCard(
+                                    width: w,
+                                    steps: _workflowSteps,
+                                    onWorkflowUpdated: (updated) {
+                                      setState(() {
+                                        _workflowSteps
+                                          ..clear()
+                                          ..addAll(updated);
+                                      });
+                                      _schedulePersist();
+                                    },
+                                  ),
+                                ),
+                            'Lessons Learned': () => _tabBody(
+                                  (w) => _LessonsLearnedCard(
+                                    width: w,
+                                    lessons: _lessonsLearned,
+                                    onLessonsUpdated: _updateLessonsLearned,
+                                  ),
+                                ),
                           },
-                          onLessonsUpdated: _updateLessonsLearned,
                         ),
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -874,118 +927,6 @@ class _SummaryCard extends StatelessWidget {
         ],
       ),
       child: cardContent,
-    );
-  }
-}
-
-class _PrimarySections extends StatelessWidget {
-  const _PrimarySections({
-    required this.gapEntries,
-    required this.rootCauseThemes,
-    required this.mitigationConfidence,
-    required this.reconciliationPlans,
-    required this.onGapEntriesChanged,
-    required this.onRootCauseUpdated,
-    required this.onMitigationUpdated,
-    required this.onPlansUpdated,
-  });
-
-  final List<_GapEntry> gapEntries;
-  final List<_RootCauseItem> rootCauseThemes;
-  final List<_RootCauseItem> mitigationConfidence;
-  final List<_PlanEntry> reconciliationPlans;
-  final ValueChanged<List<_GapEntry>> onGapEntriesChanged;
-  final ValueChanged<List<_RootCauseItem>> onRootCauseUpdated;
-  final ValueChanged<List<_RootCauseItem>> onMitigationUpdated;
-  final ValueChanged<List<_PlanEntry>> onPlansUpdated;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final sectionWidth = constraints.maxWidth;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _GapRegisterCard(
-              width: sectionWidth,
-              entries: gapEntries,
-              onChanged: onGapEntriesChanged,
-            ),
-            const SizedBox(height: 20),
-            _GapAnalysisRootCauseCard(
-              width: sectionWidth,
-              rootCauseThemes: rootCauseThemes,
-              mitigationConfidence: mitigationConfidence,
-              onRootCauseUpdated: onRootCauseUpdated,
-              onMitigationUpdated: onMitigationUpdated,
-            ),
-            const SizedBox(height: 20),
-            _ReconciliationPlanningCard(
-              width: sectionWidth,
-              plans: reconciliationPlans,
-              onPlansUpdated: onPlansUpdated,
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _SecondarySections extends StatelessWidget {
-  const _SecondarySections({
-    required this.gapEntries,
-    required this.reconciliationPlans,
-    required this.impacts,
-    required this.workflowSteps,
-    required this.lessons,
-    required this.onImpactsUpdated,
-    required this.onWorkflowUpdated,
-    required this.onLessonsUpdated,
-  });
-
-  final List<_GapEntry> gapEntries;
-  final List<_PlanEntry> reconciliationPlans;
-  final List<_ImpactRow> impacts;
-  final List<_WorkflowStep> workflowSteps;
-  final List<String> lessons;
-  final ValueChanged<List<_ImpactRow>> onImpactsUpdated;
-  final ValueChanged<List<_WorkflowStep>> onWorkflowUpdated;
-  final ValueChanged<List<String>> onLessonsUpdated;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final sectionWidth = constraints.maxWidth;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ImpactAssessmentCard(
-              width: sectionWidth,
-              impacts: impacts,
-              onImpactsUpdated: onImpactsUpdated,
-              gaps: gapEntries,
-              plans: reconciliationPlans,
-            ),
-            const SizedBox(height: 20),
-            _ReconciliationWorkflowCard(
-              width: sectionWidth,
-              steps: workflowSteps,
-              onWorkflowUpdated: onWorkflowUpdated,
-            ),
-            const SizedBox(height: 20),
-            _LessonsLearnedCard(
-              width: sectionWidth,
-              lessons: lessons,
-              onLessonsUpdated: onLessonsUpdated,
-            ),
-          ],
-        );
-      },
     );
   }
 }

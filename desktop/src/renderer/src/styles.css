@@ -1,0 +1,191 @@
+/*
+ * The React layer is only a host: the embedded Flutter app must occupy the
+ * whole window so the desktop build is visually identical to the web build.
+ * Nothing here should add chrome around it.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Lifted from lib/theme.dart so the shell's own surfaces match the app. */
+  --ndu-background: #0f172a;
+  --ndu-surface: #ffffff;
+  --ndu-text: #0f172a;
+  --ndu-text-muted: #64748b;
+  --ndu-brand: #ffc812;
+  --ndu-info: #2563eb;
+  --ndu-error: #ba1a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ndu-surface: #0f1115;
+    --ndu-text: #e5e7eb;
+    --ndu-text-muted: #94a3b8;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--ndu-background);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  /* The window is a frame for the app; text selection belongs to the app. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.shell {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.shell__webview {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.shell__webview[hidden] {
+  display: none;
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────
+   Matches the loader Flutter's own index.html paints before the engine boots,
+   so the hand-off from shell to app reads as one continuous start-up. */
+
+.boot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: var(--ndu-background);
+  color: #94a3b8;
+  text-align: center;
+  z-index: 2;
+}
+
+.boot__brand {
+  margin-bottom: 24px;
+  color: #e2e8f0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.boot__brand-accent {
+  color: #3b82f6;
+}
+
+.boot__spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 3px solid rgba(148, 163, 184, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: ndu-spin 1s linear infinite;
+}
+
+.boot__text {
+  font-size: 14px;
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+}
+
+@keyframes ndu-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Error ─────────────────────────────────────────────────────────────── */
+
+.failure {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--ndu-surface);
+  color: var(--ndu-text);
+}
+
+.failure__card {
+  max-width: 520px;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--ndu-text) 12%, transparent);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.failure__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.failure__message {
+  margin: 0 0 20px;
+  color: var(--ndu-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.failure__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.button--primary {
+  background: var(--ndu-brand);
+  color: #1c1c1c;
+}
+
+.button--primary:hover {
+  filter: brightness(0.96);
+}
+
+.button--secondary {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--ndu-text) 20%, transparent);
+  color: var(--ndu-text);
+}
+
+.button--secondary:hover {
+  background: color-mix(in srgb, var(--ndu-text) 6%, transparent);
+}

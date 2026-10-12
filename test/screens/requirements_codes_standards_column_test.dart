@@ -1,6 +1,17 @@
-// Lusaka 14: each requirement row carries the codes / standards it must
-// satisfy. The picker only offers standards already captured in Quality
-// Management (never free-typed), and the choice sticks to the row.
+// Lusaka 15: the Codes / Standards column is read-only on the requirements
+// screens — Front End Planning → Requirements (here) and Planning →
+// Requirements.
+//
+// Codes and standards are authored in Design Planning (Design Specifications →
+// Requirements Mapping) and then surface on the requirements log. Leaving the
+// picker on the requirements pages made them look like the place to fill them
+// in, so the cell now reports what Design Planning mapped:
+//
+//   "it needs to be grayed out. So it's something that they don't have to fill
+//    out now, for when they then go to the codes and standards and map it to
+//    the requirements, then it can show up on this requirements log."
+//
+// This replaces the Lusaka 14 test that asserted the picker itself.
 
 // ignore_for_file: depend_on_referenced_packages
 import 'package:firebase_core/firebase_core.dart';
@@ -23,9 +34,19 @@ Future<void> _pumpScreen(WidgetTester tester) async {
   addTearDown(tester.view.reset);
 
   final model = ProjectDataModel().copyWith(projectId: 'p1');
-  model.frontEndPlanning.requirements =
-      'The system shall encrypt data at rest\n'
-      'The system shall log every access';
+  // Two requirements: one already mapped to a standard by Design Planning,
+  // one still unmapped.
+  model.frontEndPlanning.requirementItems = <RequirementItem>[
+    RequirementItem(
+      id: 'r1',
+      description: 'The system shall encrypt data at rest',
+      codesStandards: const ['Data Protection Standard'],
+    ),
+    RequirementItem(
+      id: 'r2',
+      description: 'The system shall log every access',
+    ),
+  ];
   model.qualityManagementData = QualityManagementData.empty().copyWith(
     standards: <QualityStandard>[
       QualityStandard(
@@ -72,48 +93,44 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
 
-  testWidgets('table shows a Codes / Standards picker per requirement row',
+  testWidgets('the table shows a read-only Codes / Standards cell per row',
       (tester) async {
     await _pumpScreen(tester);
 
+    // The column is still there, with one read-only cell per requirement...
     expect(find.text('Codes / Standards'), findsOneWidget);
-    expect(find.byType(CodesStandardsMultiSelect), findsNWidgets(2));
+    expect(find.byType(CodesStandardsReadOnly), findsNWidgets(2));
+
+    // ... and no picker.
+    expect(find.byType(CodesStandardsMultiSelect), findsNothing);
+    expect(find.text('Select codes…'), findsNothing);
+
+    // What Design Planning mapped is reported, and the unmapped row says so.
+    expect(find.text('Data Protection Standard'), findsOneWidget);
+    expect(find.text('Set in Design Planning'), findsNWidgets(2));
+
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the picker only offers captured standards and keeps the choice',
+  testWidgets('tapping the cell does not open the codes picker',
       (tester) async {
     await _pumpScreen(tester);
 
-    // The underlying screen runs ongoing timers, so pump fixed frames rather
-    // than settling on an animation.
-    await tester.tap(find.byType(CodesStandardsMultiSelect).first);
-    for (var i = 0; i < 6; i++) {
-      await tester.pump(const Duration(milliseconds: 150));
-    }
-
-    // The captured standard (and its code) is offered; nothing is free-typed.
-    expect(find.text('Data Protection Standard'), findsOneWidget);
-    expect(find.text('ISO 27001'), findsOneWidget);
-
-    await tester.tap(find.text('Data Protection Standard'));
-    for (var i = 0; i < 3; i++) {
-      await tester.pump(const Duration(milliseconds: 150));
-    }
-    await tester.tap(find.text('Done'));
-    for (var i = 0; i < 6; i++) {
-      await tester.pump(const Duration(milliseconds: 150));
-    }
-
-    // The row now shows the chosen standard.
-    expect(
-      find.descendant(
-        of: find.byType(CodesStandardsMultiSelect).first,
-        matching: find.text('Data Protection Standard'),
-      ),
-      findsOneWidget,
-    );
-    await tester.pump(const Duration(seconds: 1));
+    final cell = find.byType(CodesStandardsReadOnly).first;
+    await tester.ensureVisible(cell);
+    await tester.pump();
     expect(tester.takeException(), isNull);
+
+    await tester.tap(cell);
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 150));
+    }
+
+    // The Quality Management picker dialog must not open.
+    expect(find.text('Select all'), findsNothing);
+    expect(find.text('Done'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.pump(const Duration(seconds: 1));
   });
 }

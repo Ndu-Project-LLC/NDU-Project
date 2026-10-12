@@ -43,10 +43,15 @@ const String _unboundedViewport = 'Vertical viewport was given unbounded width';
 const String _scrollbarNoPosition =
     "The Scrollbar's ScrollController has no ScrollPosition attached";
 
-Future<void> _pumpWithRows(WidgetTester tester) async {
-  // The table's fixed column widths total 2360, so the default 800x600 test
-  // surface would report its own overflow. Use a desktop-sized surface.
-  tester.view.physicalSize = const Size(2000, 1200);
+Future<ProjectDataProvider> _pumpWithRows(
+  WidgetTester tester, {
+  bool charterApproved = false,
+  Size surfaceSize = const Size(2000, 1200),
+}) async {
+  // Use a desktop surface by default so the fixed-width grid can be tested
+  // without reporting its expected horizontal overflow. Mobile-specific tests
+  // pass the target viewport size explicitly.
+  tester.view.physicalSize = surfaceSize;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
@@ -55,6 +60,9 @@ Future<void> _pumpWithRows(WidgetTester tester) async {
   model.frontEndPlanning.requirements =
       'The system shall store requirements in Firestore\n'
       'The system shall export the requirements plan to PDF';
+  if (charterApproved) {
+    model.charterApprovalDate = DateTime(2026, 1, 1);
+  }
 
   final provider = ProjectDataProvider();
   provider.updateProjectData(model);
@@ -78,6 +86,8 @@ Future<void> _pumpWithRows(WidgetTester tester) async {
   for (var i = 0; i < 8; i++) {
     await tester.pump(const Duration(milliseconds: 200));
   }
+
+  return provider;
 }
 
 /// Fails if the exception (or any exception) mentions one of the unbounded-width
@@ -91,6 +101,18 @@ void _expectNoUnboundedWidthFailure(Object? error, String when) {
       reason: 'unbounded-width viewport failure $when:\n$text');
   expect(text.contains(_scrollbarNoPosition), isFalse,
       reason: 'detached Scrollbar controller $when:\n$text');
+}
+
+void _expectNoMobileFlexOverflow(WidgetTester tester) {
+  Object? error;
+  while ((error = tester.takeException()) != null) {
+    final text = error.toString();
+    expect(
+      text.contains('RenderFlex overflowed'),
+      isFalse,
+      reason: 'mobile layout overflowed:\n$text',
+    );
+  }
 }
 
 void main() {
@@ -116,6 +138,26 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('mobile viewport renders each requirement as a labeled card',
+      (tester) async {
+    await _pumpWithRows(
+      tester,
+      surfaceSize: const Size(427, 952),
+    );
+
+    expect(find.byKey(const ValueKey('req_mobile_card_0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('req_mobile_card_1')), findsOneWidget);
+    expect(find.text('Requirement type'), findsWidgets);
+    expect(find.text('WBS Goal (Level 1)'), findsWidgets);
+    expect(find.text('Codes / Standards'), findsWidgets);
+    expect(find.byKey(const ValueKey('req_header')), findsNothing);
+    _expectNoUnboundedWidthFailure(tester.takeException(), 'on mobile');
+    _expectNoMobileFlexOverflow(tester);
+
+    await tester.pump(const Duration(seconds: 3));
+    _expectNoMobileFlexOverflow(tester);
+  });
+
   testWidgets('Expand renders the full-screen copy with rows', (tester) async {
     await _pumpWithRows(tester);
 
@@ -125,7 +167,34 @@ void main() {
     }
 
     expect(find.byType(ReorderableListView), findsWidgets);
-    _expectNoUnboundedWidthFailure(tester.takeException(), 'in the expanded copy');
+    _expectNoUnboundedWidthFailure(
+        tester.takeException(), 'in the expanded copy');
+
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('Add another adds a row even after the charter is approved',
+      (tester) async {
+    final provider = await _pumpWithRows(tester, charterApproved: true);
+
+    // Regression: the Planning-phase Requirements page is a later phase than
+    // the Front End Planning the charter lock applies to, so it must stay
+    // editable. Gating it on the FEP charter lock left the whole page
+    // read-only once the charter was approved and made this button do nothing.
+    expect(provider.projectData.frontEndPlanning.requirementItems, isEmpty);
+    final addButton = find.widgetWithText(OutlinedButton, 'Add another');
+    expect(tester.widget<OutlinedButton>(addButton).onPressed, isNotNull);
+
+    await tester.ensureVisible(addButton);
+    await tester.pump();
+    await tester.tap(addButton);
+    // Let the debounced autosave persist the new row. The third table row sits
+    // below the scroll viewport and is built lazily, so the persisted items are
+    // the reliable signal that the row was added.
+    await tester.pump(const Duration(milliseconds: 800));
+
+    // The two seeded requirements plus the one just added.
+    expect(provider.projectData.frontEndPlanning.requirementItems.length, 3);
 
     await tester.pump(const Duration(seconds: 3));
   });

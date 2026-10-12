@@ -1,0 +1,423 @@
+// Registry of every screen the app router can build, for the mobile
+// responsiveness audit (`test/mobile_responsiveness_audit_test.dart`).
+//
+// Generated from `lib/routing/app_router.dart`: every distinct `XScreen(`
+// the router constructs that has no required constructor arguments. Entries
+// needing data the router itself supplies (ids, notes, solutions) are wired
+// up by hand at the bottom so they are audited too.
+library;
+
+import 'package:flutter/widgets.dart';
+
+import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.dart';
+import 'package:ndu_project/pbs/screens/pbs_module_screen.dart';
+import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
+import 'package:ndu_project/project_controls/screens/project_controls_screen.dart';
+import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
+import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
+import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
+import 'package:ndu_project/screens/admin/admin_dashboard_screen.dart';
+import 'package:ndu_project/screens/admin/admin_hints_screen.dart';
+import 'package:ndu_project/screens/admin/admin_home_screen.dart';
+import 'package:ndu_project/screens/admin/admin_pricing_config_screen.dart';
+import 'package:ndu_project/screens/admin/admin_projects_screen.dart';
+import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
+import 'package:ndu_project/screens/admin/admin_survey_responses_screen.dart';
+import 'package:ndu_project/screens/admin/admin_users_screen.dart';
+import 'package:ndu_project/screens/admin/user_management_screen.dart';
+import 'package:ndu_project/screens/admin_content_screen.dart';
+import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_ai_coach_screen.dart';
+import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
+import 'package:ndu_project/screens/agile_daily_standups_screen.dart';
+import 'package:ndu_project/screens/agile_dashboard_screen.dart';
+import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
+import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
+import 'package:ndu_project/screens/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile_iteration_management_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_screen.dart';
+import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
+import 'package:ndu_project/screens/agile_project_hub_screen.dart';
+import 'package:ndu_project/screens/agile_release_plan_screen.dart';
+import 'package:ndu_project/screens/agile_retrospectives_screen.dart';
+import 'package:ndu_project/screens/agile_risks_screen.dart';
+import 'package:ndu_project/screens/agile_roadmap_screen.dart';
+import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
+import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
+import 'package:ndu_project/screens/agile_sprint_reviews_screen.dart';
+import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
+import 'package:ndu_project/screens/agile_team_structure_screen.dart';
+import 'package:ndu_project/screens/ai_integrations_screen.dart';
+import 'package:ndu_project/screens/ai_recommendations_screen.dart';
+import 'package:ndu_project/screens/auth/mobile_forgot_password_screen.dart';
+import 'package:ndu_project/screens/backend_design_screen.dart';
+import 'package:ndu_project/screens/basic_plan_dashboard_screen.dart';
+import 'package:ndu_project/screens/benefits_realization_screen.dart';
+import 'package:ndu_project/screens/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/contract_close_out_screen.dart';
+import 'package:ndu_project/screens/contract_details_dashboard_screen.dart';
+import 'package:ndu_project/screens/contracts_tracking_screen.dart';
+import 'package:ndu_project/screens/cost_estimate_screen.dart';
+import 'package:ndu_project/screens/create_account_screen.dart';
+import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
+import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart';
+import 'package:ndu_project/screens/deliverable_status_updates_screen.dart';
+import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
+import 'package:ndu_project/screens/deliverables_roadmap_screen.dart';
+import 'package:ndu_project/screens/demobilize_team_screen.dart';
+import 'package:ndu_project/screens/design_deliverables_screen.dart';
+import 'package:ndu_project/screens/design_phase_screen.dart';
+import 'package:ndu_project/screens/design_planning_screen.dart';
+import 'package:ndu_project/screens/detailed_design_screen.dart';
+import 'package:ndu_project/screens/development_set_up_screen.dart';
+import 'package:ndu_project/screens/document_review_matrix_screen.dart';
+import 'package:ndu_project/screens/engineering_design_screen.dart';
+import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
+import 'package:ndu_project/screens/execution_issue_management_screen.dart';
+import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
+import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_details_screen.dart';
+import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
+import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
+import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
+import 'package:ndu_project/screens/execution_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
+import 'package:ndu_project/screens/execution_plan_stakeholder_identification_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
+import 'package:ndu_project/screens/execution_work_packages_screen.dart';
+import 'package:ndu_project/screens/external_integrations_screen.dart';
+import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
+import 'package:ndu_project/screens/finalize_project_screen.dart';
+import 'package:ndu_project/screens/financial_closeout_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_allowance.dart';
+import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_contracts_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_infrastructure_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_milestone.dart';
+import 'package:ndu_project/screens/front_end_planning_opportunities_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_personnel_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_risks_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_security.dart';
+import 'package:ndu_project/screens/front_end_planning_summary.dart';
+import 'package:ndu_project/screens/front_end_planning_summary_end.dart';
+import 'package:ndu_project/screens/front_end_planning_technology_personnel_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_workspace_screen.dart';
+import 'package:ndu_project/screens/gap_analysis_scope_reconcillation_screen.dart';
+import 'package:ndu_project/screens/home_screen.dart';
+import 'package:ndu_project/screens/how_it_works_screen.dart';
+import 'package:ndu_project/screens/identify_staff_ops_team_screen.dart';
+import 'package:ndu_project/screens/initiation_phase_screen.dart';
+import 'package:ndu_project/screens/integration_dashboard_screen.dart';
+import 'package:ndu_project/screens/interface_management_screen.dart';
+import 'package:ndu_project/screens/issue_management_screen.dart';
+import 'package:ndu_project/screens/landing/careers_page_screen.dart';
+import 'package:ndu_project/screens/landing/landing_page_screen.dart';
+import 'package:ndu_project/screens/landing_screen.dart';
+import 'package:ndu_project/screens/launch_checklist_screen.dart';
+import 'package:ndu_project/screens/lessons_learned_screen.dart';
+import 'package:ndu_project/screens/long_lead_equipment_ordering_screen.dart';
+import 'package:ndu_project/screens/management_level_screen.dart';
+import 'package:ndu_project/screens/mfa_enrollment_screen.dart';
+import 'package:ndu_project/screens/mobile_dashboard_screen.dart';
+import 'package:ndu_project/screens/onboarding/onboarding_screen.dart';
+import 'package:ndu_project/screens/organization_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/partner_screen.dart';
+import 'package:ndu_project/screens/planning_contracting_screen.dart';
+import 'package:ndu_project/screens/planning_procurement_v2_screen.dart';
+import 'package:ndu_project/screens/planning_requirements_screen.dart';
+import 'package:ndu_project/screens/planning_technology_screen.dart';
+import 'package:ndu_project/screens/portfolio_dashboard_screen.dart';
+import 'package:ndu_project/screens/potential_solutions_screen.dart';
+import 'package:ndu_project/screens/pricing/mobile_pricing_screen.dart';
+import 'package:ndu_project/screens/pricing_screen.dart';
+import 'package:ndu_project/screens/privacy_policy_screen.dart';
+import 'package:ndu_project/screens/profile_onboarding_screen.dart';
+import 'package:ndu_project/screens/program_basics_screen.dart';
+import 'package:ndu_project/screens/program_dashboard_mobile_screen.dart';
+import 'package:ndu_project/screens/program_dashboard_screen.dart';
+import 'package:ndu_project/screens/program_teammates_screen.dart';
+import 'package:ndu_project/screens/progress_tracking_screen.dart';
+import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/project_baseline_screen.dart';
+import 'package:ndu_project/screens/project_charter_screen.dart';
+import 'package:ndu_project/screens/project_close_out_screen.dart';
+import 'package:ndu_project/screens/project_command_center_screen.dart';
+import 'package:ndu_project/screens/project_dashboard_screen.dart';
+import 'package:ndu_project/screens/project_framework_next_screen.dart';
+import 'package:ndu_project/screens/project_framework_screen.dart';
+import 'package:ndu_project/screens/project_plan_screen.dart';
+import 'package:ndu_project/screens/project_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/project_team_activities_screen.dart';
+import 'package:ndu_project/screens/punchlist_actions_screen.dart';
+import 'package:ndu_project/screens/quality_management_screen.dart';
+import 'package:ndu_project/screens/recognition_awards_screen.dart';
+import 'package:ndu_project/screens/recovery_codes_screen.dart';
+import 'package:ndu_project/screens/recurring_deliverables_screen.dart';
+import 'package:ndu_project/screens/requirements_implementation_screen.dart';
+import 'package:ndu_project/screens/risk_assessment_screen.dart';
+import 'package:ndu_project/screens/risk_tracking_screen.dart';
+import 'package:ndu_project/screens/risk_tracking_workspace_screen.dart';
+import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
+import 'package:ndu_project/screens/schedule_management_board_screen.dart';
+import 'package:ndu_project/screens/schedule_screen.dart';
+import 'package:ndu_project/screens/scope_completion_screen.dart';
+import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
+import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
+import 'package:ndu_project/screens/security_management_screen.dart';
+import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/screens/sign_in_screen.dart';
+import 'package:ndu_project/screens/specialized_design_screen.dart';
+import 'package:ndu_project/screens/splash_screen.dart';
+import 'package:ndu_project/screens/ssher_stacked_screen.dart';
+import 'package:ndu_project/screens/staff_team_screen.dart';
+import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
+import 'package:ndu_project/screens/stakeholder_management_screen.dart';
+import 'package:ndu_project/screens/startup_planning_screen.dart';
+import 'package:ndu_project/screens/startup_planning_subsections_screen.dart';
+import 'package:ndu_project/screens/status_reports_screen.dart';
+import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
+import 'package:ndu_project/screens/team_handover_screen.dart';
+import 'package:ndu_project/screens/team_management_screen.dart';
+import 'package:ndu_project/screens/team_meetings_screen.dart';
+import 'package:ndu_project/screens/team_roles_responsibilities_screen.dart';
+import 'package:ndu_project/screens/team_status_check_screen.dart';
+import 'package:ndu_project/screens/team_training_building_screen.dart';
+import 'package:ndu_project/screens/technical_alignment_screen.dart';
+import 'package:ndu_project/screens/technical_debt_management_screen.dart';
+import 'package:ndu_project/screens/technical_development_screen.dart';
+import 'package:ndu_project/screens/technology_definitions_screen.dart';
+import 'package:ndu_project/screens/technology_inventory_screen.dart';
+import 'package:ndu_project/screens/terms_conditions_screen.dart';
+import 'package:ndu_project/screens/tools_integration_screen.dart';
+import 'package:ndu_project/screens/training_project_tasks_screen.dart';
+import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
+import 'package:ndu_project/screens/ui_ux_design_screen.dart';
+import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
+import 'package:ndu_project/screens/use_cases_screen.dart';
+import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
+import 'package:ndu_project/screens/vendor_tracking_screen.dart';
+import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
+
+/// Screens keyed by class name. Each builder takes no arguments because the
+/// audit supplies the project, providers and viewport.
+final Map<String, Widget Function()> mobileAuditScreens = <String, Widget Function()>{
+  'ActualVsPlannedGapAnalysisScreen': ActualVsPlannedGapAnalysisScreen.new,
+  'AdminContentScreen': AdminContentScreen.new,
+  'AdminCouponsScreen': AdminCouponsScreen.new,
+  'AdminDashboardScreen': AdminDashboardScreen.new,
+  'AdminHintsScreen': AdminHintsScreen.new,
+  'AdminHomeScreen': AdminHomeScreen.new,
+  'AdminPricingConfigScreen': AdminPricingConfigScreen.new,
+  'AdminProjectsScreen': AdminProjectsScreen.new,
+  'AdminSubscriptionLookupScreen': AdminSubscriptionLookupScreen.new,
+  'AdminSurveyResponsesScreen': AdminSurveyResponsesScreen.new,
+  'AdminUsersScreen': AdminUsersScreen.new,
+  'AgileAcceptanceCriteriaScreen': AgileAcceptanceCriteriaScreen.new,
+  'AgileAiCoachScreen': AgileAiCoachScreen.new,
+  'AgileBacklogGovernanceScreen': AgileBacklogGovernanceScreen.new,
+  'AgileCapacityPlanningScreen': AgileCapacityPlanningScreen.new,
+  'AgileDailyStandupsScreen': AgileDailyStandupsScreen.new,
+  'AgileDashboardScreen': AgileDashboardScreen.new,
+  'AgileDeliveryModelScreen': AgileDeliveryModelScreen.new,
+  'AgileDevelopmentIterationsScreen': AgileDevelopmentIterationsScreen.new,
+  'AgileEpicsFeaturesScreen': AgileEpicsFeaturesScreen.new,
+  'AgileIterationManagementScreen': AgileIterationManagementScreen.new,
+  'AgileKanbanBoardScreen': AgileKanbanBoardScreen.new,
+  'AgileKanbanConfigScreen': AgileKanbanConfigScreen.new,
+  'AgileMetricsPlanningScreen': AgileMetricsPlanningScreen.new,
+  'AgileMetricsScreen': AgileMetricsScreen.new,
+  'AgileProjectBaselineScreen': AgileProjectBaselineScreen.new,
+  'AgileProjectHubScreen': AgileProjectHubScreen.new,
+  'AgileReleasePlanScreen': AgileReleasePlanScreen.new,
+  'AgileRetrospectivesScreen': AgileRetrospectivesScreen.new,
+  'AgileRisksScreen': AgileRisksScreen.new,
+  'AgileRoadmapScreen': AgileRoadmapScreen.new,
+  'AgileScrumConfigScreen': AgileScrumConfigScreen.new,
+  'AgileSprintCalendarScreen': AgileSprintCalendarScreen.new,
+  'AgileSprintReviewsScreen': AgileSprintReviewsScreen.new,
+  'AgileStoriesBacklogScreen': AgileStoriesBacklogScreen.new,
+  'AgileTeamStructureScreen': AgileTeamStructureScreen.new,
+  'AiIntegrationsScreen': AiIntegrationsScreen.new,
+  'AiRecommendationsScreen': AiRecommendationsScreen.new,
+  'BackendDesignScreen': BackendDesignScreen.new,
+  'BasicPlanDashboardScreen': BasicPlanDashboardScreen.new,
+  'BenefitsRealizationScreen': BenefitsRealizationScreen.new,
+  'CareersPageScreen': CareersPageScreen.new,
+  'ChangeManagementModuleScreen': ChangeManagementModuleScreen.new,
+  'CommerceViabilityScreen': CommerceViabilityScreen.new,
+  'ContractCloseOutScreen': ContractCloseOutScreen.new,
+  'ContractDetailsDashboardScreen': ContractDetailsDashboardScreen.new,
+  'ContractsTrackingScreen': ContractsTrackingScreen.new,
+  'CostEstimateModuleScreen': CostEstimateModuleScreen.new,
+  'CostEstimateScreen': CostEstimateScreen.new,
+  'CreateAccountScreen': CreateAccountScreen.new,
+  'CreateContractScreen': CreateContractScreen.new,
+  'DeliverProjectClosureScreen': DeliverProjectClosureScreen.new,
+  'DeliverableRoadmapAgileMapOutScreen': DeliverableRoadmapAgileMapOutScreen.new,
+  'DeliverableStatusUpdatesScreen': DeliverableStatusUpdatesScreen.new,
+  'DeliverablesRoadmapDetailedScreen': DeliverablesRoadmapDetailedScreen.new,
+  'DeliverablesRoadmapScreen': DeliverablesRoadmapScreen.new,
+  'DemobilizeTeamScreen': DemobilizeTeamScreen.new,
+  'DesignDeliverablesScreen': DesignDeliverablesScreen.new,
+  'DesignPhaseScreen': DesignPhaseScreen.new,
+  'DesignPlanningScreen': DesignPlanningScreen.new,
+  'DetailedDesignScreen': DetailedDesignScreen.new,
+  'DevelopmentSetUpScreen': DevelopmentSetUpScreen.new,
+  'DocumentReviewMatrixScreen': DocumentReviewMatrixScreen.new,
+  'EngineeringDesignScreen': EngineeringDesignScreen.new,
+  'ExecutionEnablingWorkPlanScreen': ExecutionEnablingWorkPlanScreen.new,
+  'ExecutionIssueManagementScreen': ExecutionIssueManagementScreen.new,
+  'ExecutionPlanAgileDeliveryPlanScreen': ExecutionPlanAgileDeliveryPlanScreen.new,
+  'ExecutionPlanBestPracticesScreen': ExecutionPlanBestPracticesScreen.new,
+  'ExecutionPlanCommunicationPlanScreen': ExecutionPlanCommunicationPlanScreen.new,
+  'ExecutionPlanConstructionPlanScreen': ExecutionPlanConstructionPlanScreen.new,
+  'ExecutionPlanDetailsScreen': ExecutionPlanDetailsScreen.new,
+  'ExecutionPlanInfrastructurePlanScreen': ExecutionPlanInfrastructurePlanScreen.new,
+  'ExecutionPlanInterfaceManagementOverviewScreen': ExecutionPlanInterfaceManagementOverviewScreen.new,
+  'ExecutionPlanInterfaceManagementPlanScreen': ExecutionPlanInterfaceManagementPlanScreen.new,
+  'ExecutionPlanInterfaceManagementScreen': ExecutionPlanInterfaceManagementScreen.new,
+  'ExecutionPlanLessonsLearnedScreen': ExecutionPlanLessonsLearnedScreen.new,
+  'ExecutionPlanScreen': ExecutionPlanScreen.new,
+  'ExecutionPlanSolutionsScreen': ExecutionPlanSolutionsScreen.new,
+  'ExecutionPlanStakeholderIdentificationScreen': ExecutionPlanStakeholderIdentificationScreen.new,
+  'ExecutionQualityTrackingScreen': ExecutionQualityTrackingScreen.new,
+  'ExecutionWorkPackagesScreen': ExecutionWorkPackagesScreen.new,
+  'ExternalIntegrationsScreen': ExternalIntegrationsScreen.new,
+  'FatMechanicalCompletionScreen': FatMechanicalCompletionScreen.new,
+  'FinalizeProjectScreen': FinalizeProjectScreen.new,
+  'FinancialCloseoutScreen': FinancialCloseoutScreen.new,
+  'FrontEndPlanningAllowanceScreen': FrontEndPlanningAllowanceScreen.new,
+  'FrontEndPlanningContractVendorQuotesScreen': FrontEndPlanningContractVendorQuotesScreen.new,
+  'FrontEndPlanningInfrastructureScreen': FrontEndPlanningInfrastructureScreen.new,
+  'FrontEndPlanningMilestoneScreen': FrontEndPlanningMilestoneScreen.new,
+  'FrontEndPlanningOpportunitiesScreen': FrontEndPlanningOpportunitiesScreen.new,
+  'FrontEndPlanningPersonnelScreen': FrontEndPlanningPersonnelScreen.new,
+  'FrontEndPlanningProcurementScreen': FrontEndPlanningProcurementScreen.new,
+  'FrontEndPlanningRequirementsScreen': FrontEndPlanningRequirementsScreen.new,
+  'FrontEndPlanningRisksScreen': FrontEndPlanningRisksScreen.new,
+  'FrontEndPlanningScreen': FrontEndPlanningScreen.new,
+  'FrontEndPlanningSecurityScreen': FrontEndPlanningSecurityScreen.new,
+  'FrontEndPlanningSummaryEndScreen': FrontEndPlanningSummaryEndScreen.new,
+  'FrontEndPlanningSummaryScreen': FrontEndPlanningSummaryScreen.new,
+  'FrontEndPlanningTechnologyPersonnelScreen': FrontEndPlanningTechnologyPersonnelScreen.new,
+  'FrontEndPlanningWorkspaceScreen': FrontEndPlanningWorkspaceScreen.new,
+  'GapAnalysisScopeReconcillationScreen': GapAnalysisScopeReconcillationScreen.new,
+  'HomeScreen': HomeScreen.new,
+  'HowItWorksScreen': HowItWorksScreen.new,
+  'IdentifyStaffOpsTeamScreen': IdentifyStaffOpsTeamScreen.new,
+  'InitiationPhaseScreen': InitiationPhaseScreen.new,
+  'IntegrationDashboardScreen': IntegrationDashboardScreen.new,
+  'InterfaceManagementScreen': InterfaceManagementScreen.new,
+  'IssueManagementScreen': IssueManagementScreen.new,
+  'LandingPageScreen': LandingPageScreen.new,
+  'LandingScreen': LandingScreen.new,
+  'LaunchChecklistScreen': LaunchChecklistScreen.new,
+  'LessonsLearnedScreen': LessonsLearnedScreen.new,
+  'LongLeadEquipmentOrderingScreen': LongLeadEquipmentOrderingScreen.new,
+  'ManagementLevelScreen': ManagementLevelScreen.new,
+  'MfaEnrollmentScreen': MfaEnrollmentScreen.new,
+  'MobileDashboardScreen': MobileDashboardScreen.new,
+  'MobileForgotPasswordScreen': MobileForgotPasswordScreen.new,
+  'MobilePricingScreen': MobilePricingScreen.new,
+  'OnboardingScreen': OnboardingScreen.new,
+  'OrganizationRaciMatrixScreen': OrganizationRaciMatrixScreen.new,
+  'OrganizationRolesResponsibilitiesScreen': OrganizationRolesResponsibilitiesScreen.new,
+  'OrganizationStaffingPlanScreen': OrganizationStaffingPlanScreen.new,
+  'PBSModuleScreen': PBSModuleScreen.new,
+  'PartnerScreen': PartnerScreen.new,
+  'PlanningContractingScreen': PlanningContractingScreen.new,
+  'PlanningProcurementV2Screen': PlanningProcurementV2Screen.new,
+  'PlanningRequirementsScreen': PlanningRequirementsScreen.new,
+  'PlanningTechnologyScreen': PlanningTechnologyScreen.new,
+  'PortfolioDashboardScreen': PortfolioDashboardScreen.new,
+  'PotentialSolutionsScreen': PotentialSolutionsScreen.new,
+  'PricingScreen': PricingScreen.new,
+  'PrivacyPolicyScreen': PrivacyPolicyScreen.new,
+  'ProfileOnboardingScreen': ProfileOnboardingScreen.new,
+  'ProgramBasicsScreen': ProgramBasicsScreen.new,
+  'ProgramDashboardMobileScreen': ProgramDashboardMobileScreen.new,
+  'ProgramDashboardScreen': ProgramDashboardScreen.new,
+  'ProgramTeammatesScreen': ProgramTeammatesScreen.new,
+  'ProgressTrackingScreen': ProgressTrackingScreen.new,
+  'ProjectActivitiesLogScreen': ProjectActivitiesLogScreen.new,
+  'ProjectBaselineScreen': ProjectBaselineScreen.new,
+  'ProjectCharterScreen': ProjectCharterScreen.new,
+  'ProjectCloseOutScreen': ProjectCloseOutScreen.new,
+  'ProjectCommandCenterScreen': ProjectCommandCenterScreen.new,
+  'ProjectControlsScreen': ProjectControlsScreen.new,
+  'ProjectDashboardScreen': ProjectDashboardScreen.new,
+  'ProjectDetailsScreen': ProjectDetailsScreen.new,
+  'ProjectFrameworkNextScreen': ProjectFrameworkNextScreen.new,
+  'ProjectFrameworkScreen': ProjectFrameworkScreen.new,
+  'ProjectPlanCondensedSummaryScreen': ProjectPlanCondensedSummaryScreen.new,
+  'ProjectPlanDetailedScheduleScreen': ProjectPlanDetailedScheduleScreen.new,
+  'ProjectPlanLevel1ScheduleScreen': ProjectPlanLevel1ScheduleScreen.new,
+  'ProjectPlanScreen': ProjectPlanScreen.new,
+  'ProjectTeamActivitiesScreen': ProjectTeamActivitiesScreen.new,
+  'PunchlistActionsScreen': PunchlistActionsScreen.new,
+  'QualityManagementScreen': QualityManagementScreen.new,
+  'RecognitionAwardsScreen': RecognitionAwardsScreen.new,
+  'RecoveryCodesScreen': RecoveryCodesScreen.new,
+  'RecurringDeliverablesScreen': RecurringDeliverablesScreen.new,
+  'RequirementsImplementationScreen': RequirementsImplementationScreen.new,
+  'RiskAssessmentScreen': RiskAssessmentScreen.new,
+  'RiskTrackingScreen': RiskTrackingScreen.new,
+  'RiskTrackingWorkspaceScreen': RiskTrackingWorkspaceScreen.new,
+  'SalvageDisposalTeamScreen': SalvageDisposalTeamScreen.new,
+  'ScheduleManagementBoardScreen': ScheduleManagementBoardScreen.new,
+  'ScheduleModuleScreen': ScheduleModuleScreen.new,
+  'ScheduleScreen': ScheduleScreen.new,
+  'ScopeCompletionScreen': ScopeCompletionScreen.new,
+  'ScopeTrackingImplementationScreen': ScopeTrackingImplementationScreen.new,
+  'ScopeTrackingPlanScreen': ScopeTrackingPlanScreen.new,
+  'SecurityManagementScreen': SecurityManagementScreen.new,
+  'SettingsScreen': SettingsScreen.new,
+  'SignInScreen': SignInScreen.new,
+  'SpecializedDesignScreen': SpecializedDesignScreen.new,
+  'SplashScreen': SplashScreen.new,
+  'SsherStackedScreen': SsherStackedScreen.new,
+  'StaffTeamScreen': StaffTeamScreen.new,
+  'StakeholderAlignmentScreen': StakeholderAlignmentScreen.new,
+  'StakeholderManagementScreen': StakeholderManagementScreen.new,
+  'StartUpPlanningCloseOutPlanScreen': StartUpPlanningCloseOutPlanScreen.new,
+  'StartUpPlanningDevOpsScreen': StartUpPlanningDevOpsScreen.new,
+  'StartUpPlanningHypercareScreen': StartUpPlanningHypercareScreen.new,
+  'StartUpPlanningOperationsScreen': StartUpPlanningOperationsScreen.new,
+  'StartUpPlanningScreen': StartUpPlanningScreen.new,
+  'StatusReportsScreen': StatusReportsScreen.new,
+  'SummarizeAccountRisksScreen': SummarizeAccountRisksScreen.new,
+  'TeamHandoverScreen': TeamHandoverScreen.new,
+  'TeamManagementScreen': TeamManagementScreen.new,
+  'TeamMeetingsScreen': TeamMeetingsScreen.new,
+  'TeamRolesResponsibilitiesScreen': TeamRolesResponsibilitiesScreen.new,
+  'TeamStatusCheckScreen': TeamStatusCheckScreen.new,
+  'TeamTrainingAndBuildingScreen': TeamTrainingAndBuildingScreen.new,
+  'TechnicalAlignmentScreen': TechnicalAlignmentScreen.new,
+  'TechnicalDebtManagementScreen': TechnicalDebtManagementScreen.new,
+  'TechnicalDevelopmentScreen': TechnicalDevelopmentScreen.new,
+  'TechnologyDefinitionsScreen': TechnologyDefinitionsScreen.new,
+  'TechnologyInventoryScreen': TechnologyInventoryScreen.new,
+  'TermsConditionsScreen': TermsConditionsScreen.new,
+  'ToolsIntegrationScreen': ToolsIntegrationScreen.new,
+  'TrainingProjectTasksScreen': TrainingProjectTasksScreen.new,
+  'TransitionToProdTeamScreen': TransitionToProdTeamScreen.new,
+  'UiUxDesignScreen': UiUxDesignScreen.new,
+  'UpdateOpsMaintenancePlansScreen': UpdateOpsMaintenancePlansScreen.new,
+  'UseCasesScreen': UseCasesScreen.new,
+  'UserManagementScreen': UserManagementScreen.new,
+  'VendorAccountCloseOutScreen': VendorAccountCloseOutScreen.new,
+  'VendorTrackingScreen': VendorTrackingScreen.new,
+  'WBSModuleScreen': WBSModuleScreen.new,
+};
+

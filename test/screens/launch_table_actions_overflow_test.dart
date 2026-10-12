@@ -24,14 +24,20 @@ class _Row {
 const _rows = <_Row>[
   _Row('Admin Dashboard', 'Admin role CRUD operations verified end-to-end',
       'Pending', '2026-09-04'),
-  _Row('API Documentation',
-      'All endpoints documented with examples and error codes', 'Accepted',
+  _Row(
+      'API Documentation',
+      'All endpoints documented with examples and error codes',
+      'Accepted',
       '2026-08-28'),
-  _Row('Deployment Scripts & CI/CD',
-      'Automated deploy to staging succeeds; rollback tested', 'Pending',
+  _Row(
+      'Deployment Scripts & CI/CD',
+      'Automated deploy to staging succeeds; rollback tested',
+      'Pending',
       '2026-09-11'),
-  _Row('Data Migration Package',
-      'Production data migrated with zero data loss verified', 'Partial',
+  _Row(
+      'Data Migration Package',
+      'Production data migrated with zero data loss verified',
+      'Partial',
       '2026-09-11'),
 ];
 
@@ -62,6 +68,8 @@ Widget _scopeAcceptanceTable() {
             ],
             rowCount: _rows.length,
             onAddValues: (_) {},
+            onSearch: (_) {},
+            onFilter: () {},
             csvColumns: const [
               CsvColumnSpec(
                   key: 'deliverable',
@@ -75,7 +83,12 @@ Widget _scopeAcceptanceTable() {
                   key: 'status',
                   label: 'Status',
                   sampleValue: 'Pending',
-                  allowedValues: ['Pending', 'Accepted', 'Partial', 'Rejected']),
+                  allowedValues: [
+                    'Pending',
+                    'Accepted',
+                    'Partial',
+                    'Rejected'
+                  ]),
               CsvColumnSpec(
                   key: 'date', label: 'Date', sampleValue: '2025-01-15'),
             ],
@@ -153,7 +166,12 @@ Future<void> _pumpAt(WidgetTester tester, Size size) async {
 }
 
 void main() {
-  for (final size in const [Size(1052, 992), Size(2105, 986)]) {
+  for (final size in const [
+    Size(360, 800),
+    Size(427, 952),
+    Size(1052, 992),
+    Size(2105, 986),
+  ]) {
     testWidgets('row actions fit their column at ${size.width}px',
         (tester) async {
       await _pumpAt(tester, size);
@@ -162,8 +180,7 @@ void main() {
       final actionsRows = find
           .byTooltip('KAZ AI')
           .evaluate()
-          .map((element) =>
-              _innermostFlexAncestor(element.findRenderObject()!))
+          .map((element) => _innermostFlexAncestor(element.findRenderObject()!))
           .toList();
 
       expect(actionsRows, isNotEmpty,

@@ -30,6 +30,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 class UiUxDesignScreen extends StatefulWidget {
  const UiUxDesignScreen({super.key});
 
@@ -798,17 +800,34 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (_isLoading) const SizedBox(height: 16),
  _buildHeader(isNarrow),
  const SizedBox(height: 16),
- _buildUXFrameworkGuide(),
- const SizedBox(height: 24),
- _buildJourneyRegister(),
- const SizedBox(height: 20),
- _buildInterfaceRegister(),
- const SizedBox(height: 20),
- _buildDesignTokenRegister(),
- const SizedBox(height: 20),
- _buildUsabilityRegister(),
- const SizedBox(height: 20),
- _buildReviewGatesPanel(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Framework guide',
+       builder: (_) => _buildUXFrameworkGuide(),
+     ),
+     SectionTab(
+       label: 'Journeys',
+       builder: (_) => _buildJourneyRegister(),
+     ),
+     SectionTab(
+       label: 'Interfaces',
+       builder: (_) => _buildInterfaceRegister(),
+     ),
+     SectionTab(
+       label: 'Design tokens',
+       builder: (_) => _buildDesignTokenRegister(),
+     ),
+     SectionTab(
+       label: 'Usability',
+       builder: (_) => _buildUsabilityRegister(),
+     ),
+     SectionTab(
+       label: 'Review gates',
+       builder: (_) => _buildReviewGatesPanel(),
+     ),
+   ],
+ ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel('ui_ux_design'),
@@ -1203,7 +1222,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: EdgeInsets.all(32),
  child: Center(child: Text('No journeys defined. Add a user journey to start tracking.', style: TextStyle(color: Color(0xFF64748B)))),
  )
- : Column(
+ : ResponsiveDataTableWrapper(minWidth: 650, child: Column(
  children: [
  _buildTableHeader([
  _ColDef('JOURNEY', flex: 4),
@@ -1251,7 +1270,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }),
  ],
- ),
+ )),
  );
  }
 
@@ -1309,7 +1328,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: EdgeInsets.all(32),
  child: Center(child: Text('No interfaces defined. Add an interface area to start tracking.', style: TextStyle(color: Color(0xFF64748B)))),
  )
- : Column(
+ : ResponsiveDataTableWrapper(minWidth: 530, child: Column(
  children: [
  _buildTableHeader([
  _ColDef('INTERFACE', flex: 4),
@@ -1355,7 +1374,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }),
  ],
- ),
+ )),
  );
  }
 
@@ -1413,7 +1432,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: EdgeInsets.all(32),
  child: Center(child: Text('No design tokens defined. Add a token to start tracking.', style: TextStyle(color: Color(0xFF64748B)))),
  )
- : Column(
+ : ResponsiveDataTableWrapper(minWidth: 550, child: Column(
  children: [
  _buildTableHeader([
  _ColDef('TOKEN', flex: 4),
@@ -1459,7 +1478,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }),
  ],
- ),
+ )),
  );
  }
 
@@ -1519,7 +1538,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: EdgeInsets.all(32),
  child: Center(child: Text('No validation criteria defined. Add criteria to start tracking.', style: TextStyle(color: Color(0xFF64748B)))),
  )
- : Column(
+ : ResponsiveDataTableWrapper(minWidth: 540, child: Column(
  children: [
  _buildTableHeader([
  _ColDef('CRITERIA', flex: 4),
@@ -1565,7 +1584,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }),
  ],
- ),
+ )),
  );
  }
 
@@ -1628,7 +1647,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: EdgeInsets.all(32),
  child: Center(child: Text('No review gates defined. Add a gate to start tracking design reviews.', style: TextStyle(color: Color(0xFF64748B)))),
  )
- : Column(
+ : ResponsiveDataTableWrapper(minWidth: 520, child: Column(
  children: [
  _buildTableHeader([
  _ColDef('GATE', flex: 4),
@@ -1674,7 +1693,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }),
  ],
- ),
+ )),
  );
  }
 

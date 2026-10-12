@@ -22,6 +22,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 
 class TechnicalDevelopmentScreen extends StatefulWidget {
@@ -502,19 +503,38 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (_isLoading) const SizedBox(height: 16),
  _buildFrameworkGuide(isNarrow),
  const SizedBox(height: 24),
- _buildWorkstreamRegisterPanel(),
- const SizedBox(height: 20),
- _buildComponentBuildPanel(),
- const SizedBox(height: 20),
- _buildIntegrationPanel(),
- const SizedBox(height: 20),
- _buildIssueTrackerPanel(),
- const SizedBox(height: 20),
- _buildRiskSignalsPanel(),
- const SizedBox(height: 20),
- _buildReadinessChecklistPanel(),
- const SizedBox(height: 20),
- _buildDocumentationPanel(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Workstreams',
+       builder: (_) => _buildWorkstreamRegisterPanel(),
+     ),
+     SectionTab(
+       label: 'Component build',
+       builder: (_) => _buildComponentBuildPanel(),
+     ),
+     SectionTab(
+       label: 'Integration',
+       builder: (_) => _buildIntegrationPanel(),
+     ),
+     SectionTab(
+       label: 'Issues',
+       builder: (_) => _buildIssueTrackerPanel(),
+     ),
+     SectionTab(
+       label: 'Risk signals',
+       builder: (_) => _buildRiskSignalsPanel(),
+     ),
+     SectionTab(
+       label: 'Readiness',
+       builder: (_) => _buildReadinessChecklistPanel(),
+     ),
+     SectionTab(
+       label: 'Documentation',
+       builder: (_) => _buildDocumentationPanel(),
+     ),
+   ],
+ ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel('technical_development'),

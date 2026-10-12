@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 // firebase_auth removed - unused
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -747,19 +748,38 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (_loading) const SizedBox(height: 16),
  _buildHeader(),
  const SizedBox(height: 16),
- _buildFrameworkGuide(),
- const SizedBox(height: 24),
- _buildDeliverableRegister(),
- const SizedBox(height: 20),
- _buildAcceptanceEvidencePanel(),
- const SizedBox(height: 20),
- _buildHandoffGovernancePanel(),
- const SizedBox(height: 20),
- _buildApprovalGatesPanel(),
- const SizedBox(height: 20),
- _buildPipelinePanel(),
- const SizedBox(height: 20),
- _buildDependenciesPanel(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Framework guide',
+       builder: (_) => _buildFrameworkGuide(),
+     ),
+     SectionTab(
+       label: 'Deliverables',
+       builder: (_) => _buildDeliverableRegister(),
+     ),
+     SectionTab(
+       label: 'Acceptance evidence',
+       builder: (_) => _buildAcceptanceEvidencePanel(),
+     ),
+     SectionTab(
+       label: 'Handoff governance',
+       builder: (_) => _buildHandoffGovernancePanel(),
+     ),
+     SectionTab(
+       label: 'Approval gates',
+       builder: (_) => _buildApprovalGatesPanel(),
+     ),
+     SectionTab(
+       label: 'Pipeline',
+       builder: (_) => _buildPipelinePanel(),
+     ),
+     SectionTab(
+       label: 'Dependencies',
+       builder: (_) => _buildDependenciesPanel(),
+     ),
+   ],
+ ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel('design_deliverables'),

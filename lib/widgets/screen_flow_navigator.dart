@@ -167,12 +167,19 @@ class ScreenFlowNavigator extends StatelessWidget {
                 Icon(Icons.arrow_forward_rounded,
                     size: 13, color: accentColor),
                 const SizedBox(width: 6),
-                Text(
-                  'Up next: ${nextStep.label}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _kHeadline,
+                // The step label comes from the phase content and can be long;
+                // on a phone the pill is the narrowest thing on the page, so the
+                // label has to ellipsize instead of overflowing the row.
+                Flexible(
+                  child: Text(
+                    'Up next: ${nextStep.label}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _kHeadline,
+                    ),
                   ),
                 ),
               ],

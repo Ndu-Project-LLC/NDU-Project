@@ -18,6 +18,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
@@ -302,6 +303,17 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   ],
             ),
           ),
+        bottomBar: const SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: PageNavigationFooter(
+              checkpoint: 'cost_estimate',
+              pageTitle: 'Cost Estimate Overview',
+              showBorders: false,
+            ),
+          ),
+        ),
         );
       },
     );

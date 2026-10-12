@@ -26,11 +26,12 @@ class AdminProjectsScreen extends StatelessWidget {
           children: [
             Icon(Icons.folder_open, color: Color(0xFF9C27B0), size: 28),
             SizedBox(width: 12),
-            Text('Project Overview',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black)),
+            Flexible(
+                child: Text('Project Overview',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black))),
           ],
         ),
         actions: const [

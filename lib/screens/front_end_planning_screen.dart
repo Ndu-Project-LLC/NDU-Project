@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/screens/front_end_planning_workspace_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -109,6 +110,17 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
  ),
  ),
  ],
+ ),
+ bottomBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'front_end_planning',
+       pageTitle: 'Front End Planning',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  }
@@ -333,11 +345,17 @@ class _TableRowCells extends StatelessWidget {
               ? const BorderSide(color: _ProjectCharterTable._borderColor)
               : BorderSide.none,
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
+      ),      // IntrinsicHeight, because `stretch` needs a bounded height: the rows are
+      // built inside a vertical scroll view, where the incoming height is
+      // unbounded, and asking the children to stretch to it threw "BoxConstraints
+      // forces an infinite height" and blanked the table. Sizing the row to its
+      // tallest cell keeps the cell dividers full-height.
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
       ),
     );
- }
+  }
 }

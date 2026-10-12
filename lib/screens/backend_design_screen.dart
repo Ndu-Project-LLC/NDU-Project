@@ -24,6 +24,8 @@ import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
+import 'package:ndu_project/widgets/editable_table.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -326,15 +328,30 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  title: 'Backend Design',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _buildBackendFrameworkGuide(),
- const SizedBox(height: 24),
- _buildSystemArchitectureRegister(),
- const SizedBox(height: 20),
- _buildDataArchitectureRegister(),
- const SizedBox(height: 20),
- _buildInterfaceContractsPanel(),
- const SizedBox(height: 20),
- _buildDocumentsSecurityPanel(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Framework guide',
+       builder: (_) => _buildBackendFrameworkGuide(),
+     ),
+     SectionTab(
+       label: 'System architecture',
+       builder: (_) => _buildSystemArchitectureRegister(),
+     ),
+     SectionTab(
+       label: 'Data architecture',
+       builder: (_) => _buildDataArchitectureRegister(),
+     ),
+     SectionTab(
+       label: 'Interface contracts',
+       builder: (_) => _buildInterfaceContractsPanel(),
+     ),
+     SectionTab(
+       label: 'Documents and security',
+       builder: (_) => _buildDocumentsSecurityPanel(),
+     ),
+   ],
+ ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel('backend_design'),
@@ -2013,14 +2030,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildComponentsTable() {
  final columns = [
- const _TableColumnDef('Component', 200),
- const _TableColumnDef('Type', 140),
- const _TableColumnDef('Responsibility', 240),
- const _TableColumnDef('Owner', 160),
- const _TableColumnDef('Status', 140),
- const _TableColumnDef('', 56),
- const _TableColumnDef('', 56),
- const _TableColumnDef('', 56),
+ const EditableTableColumn('Component', 200),
+ const EditableTableColumn('Type', 140),
+ const EditableTableColumn('Responsibility', 240),
+ const EditableTableColumn('Owner', 160),
+ const EditableTableColumn('Status', 140),
+ const EditableTableColumn('', 56),
+ const EditableTableColumn('', 56),
+ const EditableTableColumn('', 56),
  ];
 
  if (_components.isEmpty) {
@@ -2032,11 +2049,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  return FullScreenTableWrapper(
  title: 'Backend Components',
- child: _EditableTable(
+ child: EditableTable(
  columns: columns,
  rows: [
  for (final entry in _components)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -2092,11 +2109,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ],
  ),
- tableBuilder: (fsContext) => _EditableTable(
+ tableBuilder: (fsContext) => EditableTable(
  columns: columns,
  rows: [
  for (final entry in _components)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -2157,14 +2174,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildFieldsTable() {
  final columns = [
- const _TableColumnDef('Entity/Table', 160),
- const _TableColumnDef('Field', 160),
- const _TableColumnDef('Type', 140),
- const _TableColumnDef('Constraints', 200),
- const _TableColumnDef('Notes', 220),
- const _TableColumnDef('', 56),
- const _TableColumnDef('', 56),
- const _TableColumnDef('', 56),
+ const EditableTableColumn('Entity/Table', 160),
+ const EditableTableColumn('Field', 160),
+ const EditableTableColumn('Type', 140),
+ const EditableTableColumn('Constraints', 200),
+ const EditableTableColumn('Notes', 220),
+ const EditableTableColumn('', 56),
+ const EditableTableColumn('', 56),
+ const EditableTableColumn('', 56),
  ];
 
  if (_fields.isEmpty) {
@@ -2176,11 +2193,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  return FullScreenTableWrapper(
  title: 'Backend Fields',
- child: _EditableTable(
+ child: EditableTable(
  columns: columns,
  rows: [
  for (final entry in _fields)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -2235,11 +2252,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ],
  ),
- tableBuilder: (fsContext) => _EditableTable(
+ tableBuilder: (fsContext) => EditableTable(
  columns: columns,
  rows: [
  for (final entry in _fields)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -2440,90 +2457,6 @@ class _SectionHeader extends StatelessWidget {
  ],
  );
  }
-}
-
-class _EditableTable extends StatelessWidget {
- const _EditableTable({required this.columns, required this.rows});
-
- final List<_TableColumnDef> columns;
- final List<_EditableRow> rows;
-
- @override
- Widget build(BuildContext context) {
- final header = Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: const Color(0xFFF3F4F6),
- borderRadius: BorderRadius.circular(10),
- ),
- child: Row(
- children: columns
- .map((column) => SizedBox(
- width: column.width,
- child: Text(
- column.label.toUpperCase(),
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- letterSpacing: 0.7,
- color: Color(0xFF6B7280)),
- ),
- ))
- .toList(),
- ),
- );
-
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: BoxConstraints(
- minWidth:
- columns.fold<double>(0, (total, col) => total + col.width)),
- child: Column(
- children: [
- header,
- const SizedBox(height: 8),
- for (int i = 0; i < rows.length; i++)
- Container(
- margin: const EdgeInsets.only(bottom: 10),
- padding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: i.isEven ? Colors.white : const Color(0xFFF9FAFB),
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: rows[i],
- ),
- ],
- ),
- ),
- );
- }
-}
-
-class _EditableRow extends StatelessWidget {
- const _EditableRow({super.key, required this.columns, required this.cells});
-
- final List<_TableColumnDef> columns;
- final List<Widget> cells;
-
- @override
- Widget build(BuildContext context) {
- return Row(
- children: List.generate(
- cells.length,
- (index) => SizedBox(width: columns[index].width, child: cells[index]),
- ),
- );
- }
-}
-
-class _TableColumnDef {
- const _TableColumnDef(this.label, this.width);
-
- final String label;
- final double width;
 }
 
 class _TextCell extends StatelessWidget {

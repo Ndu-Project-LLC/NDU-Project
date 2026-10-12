@@ -31,6 +31,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -55,6 +56,7 @@ import 'package:ndu_project/widgets/integration_dashboard/_integration_tokens.da
 import 'package:ndu_project/widgets/integration_dashboard/integration_baseline_view.dart';
 import 'package:ndu_project/widgets/integration_dashboard/integration_workspaces_view.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 /// Which half of the dashboard is on screen.
@@ -96,8 +98,13 @@ class _IntegrationDashboardScreenState
     extends State<IntegrationDashboardScreen>
     with SingleTickerProviderStateMixin {
   /// Horizontal page inset. Matches the padding the old workspace dashboard
-  /// used so the density of the screen doesn't shift on the swap.
-  static const _gutter = EdgeInsets.symmetric(horizontal: 24);
+  /// used so the density of the screen doesn't shift on the swap — except on a
+  /// phone, where the band and its cards take the narrower [AppBreakpoints]
+  /// gutter so the content keeps as much width as possible.
+  static EdgeInsets _gutterFor(BuildContext context) =>
+      EdgeInsets.symmetric(
+        horizontal: AppBreakpoints.isMobile(context) ? 16 : 24,
+      );
 
   // ── View ────────────────────────────────────────────────────────────────────
   late IntegrationDashboardView _view = widget.initialView;
@@ -388,7 +395,8 @@ class _IntegrationDashboardScreenState
                       child: SlideTransition(
                         position: _heroSlide,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                          padding: _gutterFor(context)
+                              .add(const EdgeInsets.only(top: 20)),
                           child: DashboardHeader(
                             isBasicPlan: true,
                             onAddProject: _createNewProject,
@@ -408,7 +416,8 @@ class _IntegrationDashboardScreenState
                   // ── View switcher ──────────────────────────────────────
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+                      padding: _gutterFor(context)
+                          .add(const EdgeInsets.only(top: 18)),
                       child: _ViewSwitcher(
                         tokens: tokens,
                         value: _view,
@@ -423,7 +432,7 @@ class _IntegrationDashboardScreenState
                   // ── Active view ────────────────────────────────────────
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: _gutter.add(
+                      padding: _gutterFor(context).add(
                         const EdgeInsets.only(top: 18, bottom: 120),
                       ),
                       child: AnimatedSwitcher(
@@ -478,6 +487,17 @@ class _IntegrationDashboardScreenState
             );
           },
         ),
+      bottomBar: const SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: PageNavigationFooter(
+            checkpoint: 'integration_dashboard',
+            pageTitle: 'Integration Dashboard',
+            showBorders: false,
+          ),
+        ),
+      ),
       ),
     );
   }
@@ -525,21 +545,25 @@ class _ViewSwitcher extends StatelessWidget {
         const rowHeight = 46.0;
         const rowGap = 4.0;
         final trackHeight = stacked ? rowHeight * 2 + rowGap : rowHeight;
-        final trackWidth = constraints.maxWidth - 8;
+        // 4px of padding plus a 1px border on each side are inside the box and
+        // so are not available to the track: the rows used to be handed 8px of
+        // it and the thumb 8px of width, which put them 2px over in each
+        // direction and painted Flutter's overflow stripe across the Baseline
+        // segment (and clipped the thumb's right edge).
+        const inset = (4.0 + 1.0) * 2;
+        final trackWidth = constraints.maxWidth - inset;
         final thumbWidth = stacked ? trackWidth : trackWidth / 2;
 
-        Widget thumbFor(IntegrationDashboardView view) {
-          final isBaseline = view == IntegrationDashboardView.baseline;
+        // One thumb, positioned by the current selection: stacked, it slides
+        // down a row; side by side, it slides across a column. Drawing a thumb
+        // per segment instead made both segments read as selected.
+        Widget thumb() {
+          final isBaseline = value == IntegrationDashboardView.baseline;
           return AnimatedPositioned(
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeOutCubic,
-            // Stacked: the thumb moves down one row. Side by side: it moves
-            // right one column. It must never span both rows, or both
-            // segments would read as selected.
             left: 4 + (isBaseline && !stacked ? thumbWidth : 0),
-            top: stacked
-                ? 4 + (isBaseline ? rowHeight + rowGap : 0)
-                : 4,
+            top: stacked ? 4 + (isBaseline ? rowHeight + rowGap : 0) : 4,
             width: thumbWidth,
             height: rowHeight,
             child: Container(
@@ -629,7 +653,7 @@ class _ViewSwitcher extends StatelessWidget {
         }
 
         return Container(
-          height: trackHeight + 8,
+          height: trackHeight + inset,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: tokens.surfaceAlt,
@@ -639,8 +663,7 @@ class _ViewSwitcher extends StatelessWidget {
           child: stacked
               ? Stack(
                   children: [
-                    thumbFor(IntegrationDashboardView.workspaces),
-                    thumbFor(IntegrationDashboardView.baseline),
+                    thumb(),
                     Column(
                       children: [
                         SizedBox(
@@ -658,8 +681,7 @@ class _ViewSwitcher extends StatelessWidget {
                 )
               : Stack(
                   children: [
-                    thumbFor(IntegrationDashboardView.workspaces),
-                    thumbFor(IntegrationDashboardView.baseline),
+                    thumb(),
                     Row(
                       children: [
                         Expanded(

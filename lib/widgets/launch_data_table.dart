@@ -14,12 +14,14 @@ import 'package:ndu_project/utils/download_helper_stub.dart'
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const double _defaultColumnWidth = 160;
 const double _tableHorizontalPadding = 20;
 const double _columnGap = 12;
+
 /// Width of the row-actions column. It must fit the widest set of actions a
 /// row can carry: KAZ AI + edit + delete — three [IconButton]s and the two 2px
 /// gaps between them. Material pads every button to the 48px touch-target
@@ -184,7 +186,8 @@ class LaunchDataTable extends StatefulWidget {
 }
 
 class _LaunchDataTableState extends State<LaunchDataTable> {
-  final TextEditingController _searchController = SpellCheckTextEditingController();
+  final TextEditingController _searchController =
+      SpellCheckTextEditingController();
 
   @override
   void dispose() {
@@ -249,161 +252,178 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
     );
   }
 
+  Widget _buildSearchField() {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 12),
+            child: Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => widget.onSearch?.call(value),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              decoration: const InputDecoration(
+                hintText: 'Search...',
+                hintStyle: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Icon(Icons.mic, size: 20, color: Color(0xFFF59E0B)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionBar(BuildContext context) {
     final hasSearch = widget.onSearch != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Row(
-        children: [
-          if (hasSearch)
-            Expanded(
-              child: Container(
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 900;
+          final actions = <Widget>[
+            if (widget.onFilter != null)
+              OutlinedButton(
+                onPressed: widget.onFilter,
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                child: const Text(
+                  'Filter',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ),
+            if (widget.onAdd != null || widget.onAddValues != null)
+              ElevatedButton(
+                onPressed: () => _showAddDialog(context),
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  backgroundColor: const Color(0xFFF59E0B),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 12),
-                      child: Icon(Icons.search,
-                          size: 20, color: Color(0xFF9CA3AF)),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          widget.onSearch?.call(value);
-                        },
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF111827),
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'Search...',
-                          hintStyle: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF9CA3AF),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                        ),
+                    const Icon(Icons.add, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.addLabel,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(right: 12),
-                      child:
-                          Icon(Icons.mic, size: 20, color: Color(0xFFF59E0B)),
                     ),
                   ],
                 ),
               ),
-            ),
-          if (widget.onSearch != null) const SizedBox(width: 12),
-          if (widget.onFilter != null) ...[
-            OutlinedButton(
-              onPressed: widget.onFilter,
-              style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                side: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              child: const Text(
-                'Filter',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF374151),
+            if (widget.csvColumns != null && widget.onCsvImport != null) ...[
+              OutlinedButton.icon(
+                onPressed: () => _downloadTemplate(context),
+                icon: const Icon(Icons.download_outlined, size: 16),
+                label: const Text('Download Template'),
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  foregroundColor: const Color(0xFFB45309),
+                  side: const BorderSide(color: Color(0xFFFFC812)),
+                  backgroundColor: const Color(0xFFFFF8E1),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          if (widget.onAdd != null || widget.onAddValues != null) ...[
-            ElevatedButton(
-              onPressed: () => _showAddDialog(context),
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              OutlinedButton.icon(
+                onPressed: () => _showCsvImportDialog(context),
+                icon: const Icon(Icons.upload_file_outlined, size: 16),
+                label: const Text('Import CSV'),
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFFC812)),
                 ),
-                elevation: 0,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    widget.addLabel,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+            ],
+            if (widget.onImport != null && widget.importLabel != null)
+              OutlinedButton.icon(
+                onPressed: widget.onImport,
+                icon: const Icon(Icons.download_outlined, size: 16),
+                label: Text(widget.importLabel!),
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  foregroundColor: const Color(0xFF4B5563),
+                  side: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+              ),
+            _ExpandTableChip(onTap: () => _openFullScreen(context)),
+          ];
+
+          final actionWrap = Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: compact ? WrapAlignment.start : WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: actions,
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasSearch) ...[
+                  SizedBox(
+                    width: constraints.maxWidth,
+                    child: _buildSearchField(),
                   ),
+                  const SizedBox(height: 8),
                 ],
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (widget.csvColumns != null && widget.onCsvImport != null) ...[
-            OutlinedButton.icon(
-              onPressed: () => _downloadTemplate(context),
-              icon: const Icon(Icons.download_outlined, size: 16),
-              label: const Text('Download Template'),
-              style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFFB45309),
-                side: const BorderSide(color: Color(0xFFFFC812)),
-                backgroundColor: const Color(0xFFFFF8E1),
-              ),
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              onPressed: () => _showCsvImportDialog(context),
-              icon: const Icon(Icons.upload_file_outlined, size: 16),
-              label: const Text('Import CSV'),
-              style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFFFFC812),
-                side: const BorderSide(color: Color(0xFFFFC812)),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (widget.onImport != null && widget.importLabel != null) ...[
-            OutlinedButton.icon(
-              onPressed: widget.onImport,
-              icon: const Icon(Icons.download_outlined, size: 16),
-              label: Text(widget.importLabel!),
-              style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFF4B5563),
-                side: const BorderSide(color: Color(0xFFD1D5DB)),
-              ),
-            ),
-          ],
-          const SizedBox(width: 8),
-          if (!hasSearch) const Spacer(),
-          _ExpandTableChip(onTap: () => _openFullScreen(context)),
-        ],
+                actionWrap,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              if (hasSearch) ...[
+                Expanded(child: _buildSearchField()),
+                const SizedBox(width: 12),
+              ],
+              Flexible(child: actionWrap),
+            ],
+          );
+        },
       ),
     );
   }
@@ -422,8 +442,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             appBar: AppBar(
               title: Text(
                 widget.title,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               leading: IconButton(
                 tooltip: 'Close',
@@ -506,8 +526,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
           for (int i = 0; i < rows.length; i++) ...[
             rows[i],
             if (i < rows.length - 1)
-              const Divider(
-                  height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
           ],
         ],
       ),
@@ -596,6 +615,10 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
   }
 
   Widget _buildRows(BuildContext context) {
+    if (AppBreakpoints.isMobile(context)) {
+      return _buildMobileCards(context);
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final virtualHeight = widget.virtualizedBodyHeight;
@@ -691,6 +714,34 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMobileCards(BuildContext context) {
+    final rows = List.generate(
+      widget.rowCount,
+      (index) => widget.cellBuilder(context, index),
+    );
+    final columns = _resolveColumns(rows);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < rows.length; index++) ...[
+            _LaunchDataMobileCard(
+              columns: columns,
+              row: rows[index],
+              borderColor: borderColor,
+            ),
+            if (index < rows.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      ),
     );
   }
 
@@ -809,6 +860,103 @@ List<Widget> _buildColumnSlots(
   return slots;
 }
 
+class _LaunchDataMobileCard extends StatelessWidget {
+  const _LaunchDataMobileCard({
+    required this.columns,
+    required this.row,
+    required this.borderColor,
+  });
+
+  final List<LaunchColumn> columns;
+  final Widget row;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (row is! LaunchDataRow) {
+      return Card(
+        margin: EdgeInsets.zero,
+        child: Padding(padding: const EdgeInsets.all(14), child: row),
+      );
+    }
+
+    final dataRow = row as LaunchDataRow;
+    final rowLayout = <Widget>[];
+    for (var index = 0;
+        index < columns.length && index < dataRow.cells.length;
+        index++) {
+      if (index > 0) rowLayout.add(const SizedBox(height: 12));
+      rowLayout.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 104,
+              child: Text(
+                columns[index].label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: dataRow.cells[index]),
+          ],
+        ),
+      );
+    }
+
+    final actions = <Widget>[
+      if (dataRow.onKazAi != null)
+        IconButton(
+          tooltip: 'KAZ AI',
+          onPressed: dataRow.onKazAi,
+          icon: const Icon(Icons.auto_awesome_outlined),
+        ),
+      if (dataRow.onEdit != null)
+        IconButton(
+          tooltip: 'Edit',
+          onPressed: dataRow.onEdit,
+          icon: const Icon(Icons.edit_outlined),
+        ),
+      if (dataRow.onDelete != null)
+        IconButton(
+          tooltip: 'Delete',
+          onPressed: dataRow.onDelete,
+          icon: const Icon(Icons.delete_outline),
+        ),
+    ];
+
+    return Material(
+      color: Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...rowLayout,
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(spacing: 4, children: actions),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class LaunchDataRow extends StatefulWidget {
   const LaunchDataRow({
     super.key,
@@ -906,8 +1054,7 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
                             ),
                           ),
                         if (widget.onKazAi != null &&
-                            (widget.onEdit != null ||
-                                widget.onDelete != null))
+                            (widget.onEdit != null || widget.onDelete != null))
                           const SizedBox(width: 2),
                         if (widget.onEdit != null)
                           Tooltip(
@@ -1617,8 +1764,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
       _focusNodes[col.label] = FocusNode();
       switch (col.fieldType) {
         case LaunchFieldType.text:
-          _controllers[col.label] =
-              SpellCheckTextEditingController(text: widget.initialValues[col.label]);
+          _controllers[col.label] = SpellCheckTextEditingController(
+              text: widget.initialValues[col.label]);
         case LaunchFieldType.date:
           _dateValues[col.label] = widget.initialValues[col.label] ?? '';
         case LaunchFieldType.dropdown:
@@ -1674,9 +1821,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
         autofocus: true,
         child: LaunchModalShell(
           icon: widget.isEdit ? Icons.edit_outlined : Icons.add_rounded,
-          title: widget.isEdit
-              ? 'Edit ${widget.title}'
-              : 'Add to ${widget.title}',
+          title:
+              widget.isEdit ? 'Edit ${widget.title}' : 'Add to ${widget.title}',
           subtitle: widget.isEdit
               ? 'Update the entry details in the fields below.'
               : 'Fill in the fields below to add a new entry to this table.',
@@ -2108,8 +2254,7 @@ class _ExpandTableChip extends StatelessWidget {
         child: Tooltip(
           message: 'Expand table to full screen',
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(10),
@@ -2118,8 +2263,7 @@ class _ExpandTableChip extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.fullscreen,
-                    size: 16, color: Color(0xFF4B5563)),
+                Icon(Icons.fullscreen, size: 16, color: Color(0xFF4B5563)),
                 SizedBox(width: 6),
                 Text(
                   'Expand',

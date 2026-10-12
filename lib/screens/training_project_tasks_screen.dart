@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -75,6 +76,17 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  Expanded(child: _main()),
  ],
  ),
+ ),
+ bottomNavigationBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'training_project_tasks',
+       pageTitle: 'Training Project Tasks',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  }

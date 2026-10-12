@@ -21,6 +21,7 @@ library;
 /// no Scaffold of its own.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
@@ -57,37 +58,49 @@ class _BuilderScreenState extends State<BuilderScreen>
   _BuilderViewMode _viewMode = _BuilderViewMode.lines;
 
   static const _subTabs = [
-    ('Direct Costs', [
-      CostCategory.labor,
-      CostCategory.materials,
-      CostCategory.software,
-      CostCategory.procurement,
-      CostCategory.travelTraining,
-      CostCategory.construction,
-    ]),
-    ('Indirect Costs', [
-      CostCategory.projectTeam,
-      CostCategory.overheads,
-      CostCategory.ga,
-      CostCategory.facilities,
-      CostCategory.insuranceCompliance,
-    ]),
-    ('SSHER & Quality', [
-      CostCategory.ssher,
-      CostCategory.quality,
-    ]),
-    ('Additional Elements', [
-      CostCategory.riskAllowance,
-      CostCategory.contingency,
-      CostCategory.mgmtReserve,
-      CostCategory.escalation,
-      CostCategory.taxes,
-      CostCategory.financing,
-      CostCategory.startup,
-      CostCategory.warranty,
-      CostCategory.decommissioning,
-      CostCategory.other,
-    ]),
+    (
+      'Direct Costs',
+      [
+        CostCategory.labor,
+        CostCategory.materials,
+        CostCategory.software,
+        CostCategory.procurement,
+        CostCategory.travelTraining,
+        CostCategory.construction,
+      ]
+    ),
+    (
+      'Indirect Costs',
+      [
+        CostCategory.projectTeam,
+        CostCategory.overheads,
+        CostCategory.ga,
+        CostCategory.facilities,
+        CostCategory.insuranceCompliance,
+      ]
+    ),
+    (
+      'SSHER & Quality',
+      [
+        CostCategory.ssher,
+        CostCategory.quality,
+      ]
+    ),
+    (
+      'Additional Elements',
+      [
+        CostCategory.riskAllowance,
+        CostCategory.contingency,
+        CostCategory.mgmtReserve,
+        CostCategory.escalation,
+        CostCategory.taxes,
+        CostCategory.financing,
+        CostCategory.startup,
+        CostCategory.warranty,
+        CostCategory.decommissioning,
+        CostCategory.other,
+      ]
+    ),
   ];
 
   // Tab accent tints — warm Treasury palette progression
@@ -190,7 +203,9 @@ class _BuilderScreenState extends State<BuilderScreen>
                         icon: Icons.add_rounded,
                         label: 'Add line',
                         primary: true,
-                        onTap: () => _showAddLineDialog(context, provider,
+                        onTap: () => _showAddLineDialog(
+                            context,
+                            provider,
                             tabCategories.isNotEmpty
                                 ? tabCategories.first
                                 : CostCategory.labor),
@@ -204,8 +219,7 @@ class _BuilderScreenState extends State<BuilderScreen>
                   kpis: [
                     TreasuryKpiSpec(
                       label: 'Tab Total',
-                      value:
-                          '$currencySymbol${treasuryFmt(tabTotal)}',
+                      value: '$currencySymbol${treasuryFmt(tabTotal)}',
                       sub: '${tabLines.length} lines in this tab',
                       icon: Icons.account_balance_wallet_outlined,
                       tint: _tabTints[tabIndex],
@@ -213,8 +227,7 @@ class _BuilderScreenState extends State<BuilderScreen>
                     ),
                     TreasuryKpiSpec(
                       label: 'Estimate Total',
-                      value:
-                          '$currencySymbol${treasuryFmt(grandTotal)}',
+                      value: '$currencySymbol${treasuryFmt(grandTotal)}',
                       sub: 'All categories combined',
                       icon: Icons.shield_outlined,
                       tint: const Color(0xFFD97706),
@@ -262,7 +275,8 @@ class _BuilderScreenState extends State<BuilderScreen>
                   ),
                 if (isBaselined) ...[
                   const SizedBox(height: 14),
-                  _BaselinedNotice(version: estimate.baseline?.version ?? 1,
+                  _BaselinedNotice(
+                      version: estimate.baseline?.version ?? 1,
                       remaining: estimate.baseline?.rebaselineRemaining ?? 0),
                 ],
                 const SizedBox(height: 18),
@@ -333,8 +347,12 @@ class _BuilderScreenState extends State<BuilderScreen>
           ? TreasuryPrimaryButton(
               icon: Icons.add_rounded,
               label: 'Add line',
-              onPressed: () => _showAddLineDialog(context, provider,
-                  categories.isNotEmpty ? categories.first : CostCategory.labor),
+              onPressed: () => _showAddLineDialog(
+                  context,
+                  provider,
+                  categories.isNotEmpty
+                      ? categories.first
+                      : CostCategory.labor),
             )
           : null,
       child: Column(
@@ -354,8 +372,12 @@ class _BuilderScreenState extends State<BuilderScreen>
                   'Add your first cost line in this category. The totals sidebar updates live as you build out the estimate.',
               ctaLabel: canEditNow ? 'Add first line' : null,
               onCta: canEditNow
-                  ? () => _showAddLineDialog(context, provider,
-                      categories.isNotEmpty ? categories.first : CostCategory.labor)
+                  ? () => _showAddLineDialog(
+                      context,
+                      provider,
+                      categories.isNotEmpty
+                          ? categories.first
+                          : CostCategory.labor)
                   : null,
             )
           else
@@ -757,9 +779,7 @@ class _TreasurySubTabPill extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                    color: active
-                        ? Colors.white
-                        : TreasuryTokens.inkSoft,
+                    color: active ? Colors.white : TreasuryTokens.inkSoft,
                     letterSpacing: 0.1,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -770,9 +790,8 @@ class _TreasurySubTabPill extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: active
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : tintSoft,
+                  color:
+                      active ? Colors.white.withValues(alpha: 0.25) : tintSoft,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -780,9 +799,7 @@ class _TreasurySubTabPill extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: active
-                        ? Colors.white
-                        : tint,
+                    color: active ? Colors.white : tint,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -935,10 +952,11 @@ class _SchedulePackagesTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = rows.fold(0.0, (sum, row) => sum + (row.matchedLine?.total ?? 0));
+    final total =
+        rows.fold(0.0, (sum, row) => sum + (row.matchedLine?.total ?? 0));
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: DataTable(
+      child: NduResponsiveDataTable(
         columnSpacing: 28,
         columns: const [
           DataColumn(label: Text('Work Package')),
@@ -1108,8 +1126,8 @@ class _BaselinedNotice extends StatelessWidget {
       decoration: BoxDecoration(
         color: TreasuryTokens.warningSoft,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: TreasuryTokens.warning.withValues(alpha: 0.35)),
+        border:
+            Border.all(color: TreasuryTokens.warning.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -1226,12 +1244,12 @@ class _TreasuryLineRow extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFC812)
-                              .withValues(alpha: 0.12),
+                          color:
+                              const Color(0xFFFFC812).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: const Color(0xFFFFC812)
-                                .withValues(alpha: 0.35),
+                            color:
+                                const Color(0xFFFFC812).withValues(alpha: 0.35),
                           ),
                         ),
                         child: const Text(
@@ -1254,8 +1272,8 @@ class _TreasuryLineRow extends StatelessWidget {
                           color: TreasuryTokens.warningSoft,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: TreasuryTokens.warning
-                                .withValues(alpha: 0.35),
+                            color:
+                                TreasuryTokens.warning.withValues(alpha: 0.35),
                           ),
                         ),
                         child: const Text(
@@ -1275,8 +1293,7 @@ class _TreasuryLineRow extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(Icons.label_outline,
-                        size: 11,
-                        color: TreasuryTokens.mutedSoft),
+                        size: 11, color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Text(
                       line.category.label,
@@ -1288,8 +1305,7 @@ class _TreasuryLineRow extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     const Icon(Icons.source_outlined,
-                        size: 11,
-                        color: TreasuryTokens.mutedSoft),
+                        size: 11, color: TreasuryTokens.mutedSoft),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(

@@ -111,14 +111,20 @@ class SectionProgressBar extends StatelessWidget {
                       : kFlowBrandDark,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: kFlowBrandDark,
+                // Flexible, not bare: the flag pill shares its row with the tab
+                // strip, so on a phone the label has to give way rather than
+                // push the icon off the edge. `ellipsis` alone does nothing
+                // without a bounded width to ellipsize into.
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: kFlowBrandDark,
+                    ),
                   ),
                 ),
               ],
@@ -153,12 +159,18 @@ class FlowTabContinueBadge extends StatelessWidget {
         children: [
           Icon(Icons.play_arrow_rounded, size: 12, color: kFlowBrandDark),
           SizedBox(width: 1),
-          Text(
-            'Continue',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: kFlowBrandDark,
+          // Same reason as the flag pill above: the badge rides at the end of a
+          // tab, so its label must be allowed to shrink on a narrow screen.
+          Flexible(
+            child: Text(
+              'Continue',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: kFlowBrandDark,
+              ),
             ),
           ),
         ],

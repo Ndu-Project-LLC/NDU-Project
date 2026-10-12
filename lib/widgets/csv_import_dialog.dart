@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:excel/excel.dart' hide Border;
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -796,7 +797,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
               borderRadius: BorderRadius.circular(12),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: DataTable(
+                child: NduResponsiveDataTable(
                   headingRowColor:
                       WidgetStateProperty.all(const Color(0xFFF8FAFC)),
                   headingRowHeight: 40,

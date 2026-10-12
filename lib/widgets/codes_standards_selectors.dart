@@ -203,3 +203,82 @@ class CodesStandardsMultiSelectState extends State<CodesStandardsMultiSelect> {
     );
   }
 }
+
+/// Read-only, greyed-out view of the codes / standards a requirement is
+/// mapped to — Lusaka 15.
+///
+/// Where the codes and standards belong: they are authored in **Design
+/// Planning** (Design Specifications, then Requirements Mapping) and only then
+/// surface here on the requirements log. Offering the picker on the
+/// requirements page made it look like the place to fill them in, so this cell
+/// now reports what Design Planning mapped and is not tappable.
+class CodesStandardsReadOnly extends StatelessWidget {
+  const CodesStandardsReadOnly({super.key, required this.selected});
+
+  /// The mapped code / standard names, as stored on the requirement.
+  final List<String> selected;
+
+  static const _kGrey = Color(0xFF6B7280);
+  static const _kMuted = Color(0xFF9CA3AF);
+  static const _kBorder = Color(0xFFE5E7EB);
+
+  @override
+  Widget build(BuildContext context) {
+    final values = selected
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+    final hasValues = values.isNotEmpty;
+
+    return Tooltip(
+      message: hasValues
+          ? 'Mapped in Design Planning → Requirements Mapping.'
+          : 'Nothing mapped yet. Codes and standards are mapped to requirements '
+              'in Design Planning → Requirements Mapping.',
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _kBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(Icons.lock_outline, size: 14, color: _kMuted),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    hasValues ? values.join(', ') : 'Not mapped yet',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: hasValues ? _kGrey : _kMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Set in Design Planning',
+              style: TextStyle(
+                fontSize: 11,
+                color: _kMuted,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

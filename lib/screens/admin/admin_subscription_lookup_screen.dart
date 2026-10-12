@@ -54,11 +54,12 @@ class _AdminSubscriptionLookupScreenState
           children: [
             Icon(Icons.search, color: Color(0xFF2196F3), size: 28),
             SizedBox(width: 12),
-            Text('Subscription Lookup',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black)),
+            Flexible(
+                child: Text('Subscription Lookup',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black))),
           ],
         ),
         actions: const [

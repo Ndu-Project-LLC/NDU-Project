@@ -386,19 +386,30 @@ class LaunchStatusMixBar extends StatelessWidget {
             children: [
               const Icon(Icons.stacked_bar_chart, size: 16, color: _kInk2),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: _kInk,
+              // The insight cards are laid out in a responsive grid, so on a
+              // phone this header row can be ~140px wide. Both labels have to
+              // shrink rather than push the count off the card.
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _kInk,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                '$total item${total == 1 ? "" : "s"}',
-                style: const TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w700, color: _kMute),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '$total item${total == 1 ? "" : "s"}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700, color: _kMute),
+                ),
               ),
             ],
           ),
@@ -700,10 +711,14 @@ class LaunchRadarChart extends StatelessWidget {
             children: [
               const Icon(Icons.radar_outlined, size: 16, color: _kInk2),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+                ),
               ),
             ],
           ),
@@ -888,10 +903,14 @@ class LaunchTrendLineChart extends StatelessWidget {
             children: [
               const Icon(Icons.show_chart, size: 16, color: _kInk2),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+                ),
               ),
             ],
           ),
@@ -1016,16 +1035,24 @@ class LaunchKanbanBoard extends StatelessWidget {
             children: [
               const Icon(Icons.view_kanban_outlined, size: 16, color: _kInk2),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+                ),
               ),
-              const Spacer(),
-              Text(
-                '${cards.length} item${cards.length == 1 ? "" : "s"}',
-                style: const TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w700, color: _kMute),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '${cards.length} item${cards.length == 1 ? "" : "s"}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700, color: _kMute),
+                ),
               ),
             ],
           ),
@@ -1234,10 +1261,14 @@ class LaunchDonutBreakdown extends StatelessWidget {
             children: [
               const Icon(Icons.donut_small_outlined, size: 16, color: _kInk2),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
+                ),
               ),
             ],
           ),
@@ -1367,9 +1398,13 @@ class LaunchDonutBreakdown extends StatelessWidget {
                                       color: s.color, shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 4),
-                                Text('${s.label} $pct%',
-                                    style: const TextStyle(
-                                        fontSize: 10, color: _kInk2)),
+                                Flexible(
+                                  child: Text('${s.label} $pct%',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 10, color: _kInk2)),
+                                ),
                               ],
                             );
                           }).toList(),

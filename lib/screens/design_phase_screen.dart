@@ -37,6 +37,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 class DesignPhaseScreen extends StatefulWidget {
  const DesignPhaseScreen(
  {super.key, this.activeItemLabel = 'Design Management'});
@@ -472,37 +473,44 @@ Future<void> _loadProgress(String projectId) async {
  const SizedBox(height: 20),
 
  // ── 4. Design Strategy & Governance ────────────────────────────
- SafeSection(
-   title: 'Design Strategy & Governance',
-   builder: (_) => _buildStableStrategySection(),
- ),
- const SizedBox(height: 24),
-
- // ── 5. Two-Column Cards: Design Documents + Design Tools ───────
- SafeSection(
-   title: 'Design Documents & Tools',
-   builder: (_) => _buildStableDocumentToolCards(),
- ),
- const SizedBox(height: 24),
-
- // ── 6. System Architecture Section ─────────────────────────────
- SafeSection(
-   title: 'System Architecture',
-   builder: (_) => _buildStableSystemArchitecture(),
- ),
- const SizedBox(height: 24),
-
- // ── 7. Design Tools & Rich Text Editor ─────────────────────────
- SafeSection(
-   title: 'Design Tools',
-   builder: (_) => _buildStableDesignToolsEditor(),
- ),
- const SizedBox(height: 24),
-
- // ── 7.5 Collaborators Section ──────────────────────────────────
- SafeSection(
-   title: 'Collaborators',
-   builder: (_) => _buildStableCollaboratorsCard(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Design Strategy & Governance',
+       builder: (_) => SafeSection(
+         title: 'Design Strategy & Governance',
+         builder: (_) => _buildStableStrategySection(),
+       ),
+     ),
+     SectionTab(
+       label: 'Design Documents & Tools',
+       builder: (_) => SafeSection(
+         title: 'Design Documents & Tools',
+         builder: (_) => _buildStableDocumentToolCards(),
+       ),
+     ),
+     SectionTab(
+       label: 'System Architecture',
+       builder: (_) => SafeSection(
+         title: 'System Architecture',
+         builder: (_) => _buildStableSystemArchitecture(),
+       ),
+     ),
+     SectionTab(
+       label: 'Design Tools',
+       builder: (_) => SafeSection(
+         title: 'Design Tools',
+         builder: (_) => _buildStableDesignToolsEditor(),
+       ),
+     ),
+     SectionTab(
+       label: 'Collaborators',
+       builder: (_) => SafeSection(
+         title: 'Collaborators',
+         builder: (_) => _buildStableCollaboratorsCard(),
+       ),
+     ),
+   ],
  ),
  const SizedBox(height: 24),
 

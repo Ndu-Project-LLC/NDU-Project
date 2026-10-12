@@ -109,16 +109,18 @@ class CsvEnabledSectionHeader extends StatelessWidget {
         columns: columns,
         onImport: onImport,
       ),
-      
       // Optional Add button
-      if (onAdd != null) ...[
-        SizedBox(width: spacing),
-        _buildAddButton(),
-      ],
+      if (onAdd != null) _buildAddButton(),
     ];
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    // A Wrap, not a Row: the CSV import button plus an Add button is wider than
+    // a phone viewport (measured 187px of overflow), and no column in this
+    // header can shrink, so wrapping moves the Add button to its own line
+    // instead. `spacing` used to be an explicit SizedBox separator.
+    return Wrap(
+      spacing: spacing,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: children,
     );
   }

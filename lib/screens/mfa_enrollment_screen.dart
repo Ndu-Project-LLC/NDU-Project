@@ -300,13 +300,16 @@ class _MfaEnrollmentScreenState extends State<MfaEnrollmentScreen> {
                 if (_method == MfaMethod.sms) _buildSms(),
                 if (_method == MfaMethod.emailCode) _buildEmailCode(),
                 const SizedBox(height: 20),
-                Row(
+                // A Wrap, not a Row: the two buttons stack instead of
+                // overflowing once the viewport is narrower than both.
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     ElevatedButton(
                       onPressed: _busy ? null : _completeEnrollment,
                       child: Text(_verified ? 'Saved' : 'Save & Complete'),
                     ),
-                    const SizedBox(width: 12),
                     TextButton(
                       onPressed: _busy ? null : () => Navigator.pop(context),
                       child: const Text('Back'),

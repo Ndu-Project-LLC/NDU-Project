@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -512,7 +513,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
                   const Positioned(
                     right: 24,
                     bottom: 24,
-                    child: KazAiChatBubble(),
+                    child: KazAiChatBubble(positioned: false),
                   ),
                 ],
               ),
@@ -520,6 +521,17 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'agile_retrospectives',
+          pageTitle: 'Agile Retrospectives',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

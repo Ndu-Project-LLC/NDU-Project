@@ -931,13 +931,23 @@ class _HeaderWithStatus extends StatelessWidget {
  const _HeaderWithStatus(this.title, this.isSet);
 
  @override
- Widget build(BuildContext context) {
- return Row(
- children: [
- Text(title,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
- const Spacer(),
+ Widget build(BuildContext context) {    return Row(
+      children: [
+        // Flexible: these section titles are user-editable charter headings,
+        // and at phone width one long heading pushed the status chip off the
+        // row (Flutter's overflow stripe) — or, with a Spacer present, blew up
+        // layout entirely.
+        Flexible(
+          child: Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+          ),
+        ),
+        const SizedBox(width: 8),
+        const Spacer(),
  if (!isSet)
  const Text('MISSING',
  style: TextStyle(

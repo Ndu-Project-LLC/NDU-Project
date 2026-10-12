@@ -26,6 +26,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/utils/stakeholder_provenance.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/editable_table.dart';
 class StakeholderManagementScreen extends StatefulWidget {
   const StakeholderManagementScreen({super.key});
 
@@ -3131,17 +3132,17 @@ class _StakeholdersTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final columns = [
-      const _TableColumnDef('#', 56),
-      const _TableColumnDef('Contact person', 240),
-      const _TableColumnDef('Organization', 160),
-      const _TableColumnDef('Role/Title', 180),
-      const _TableColumnDef('Contact Info', 220),
-      const _TableColumnDef('Influence', 130),
-      const _TableColumnDef('Interest', 130),
-      const _TableColumnDef('Channel', 150),
-      const _TableColumnDef('Relationship owner', 180),
-      const _TableColumnDef('Notes', 260),
-      const _TableColumnDef('Actions', 130),
+      const EditableTableColumn('#', 56),
+      const EditableTableColumn('Contact person', 240),
+      const EditableTableColumn('Organization', 160),
+      const EditableTableColumn('Role/Title', 180),
+      const EditableTableColumn('Contact Info', 220),
+      const EditableTableColumn('Influence', 130),
+      const EditableTableColumn('Interest', 130),
+      const EditableTableColumn('Channel', 150),
+      const EditableTableColumn('Relationship owner', 180),
+      const EditableTableColumn('Notes', 260),
+      const EditableTableColumn('Actions', 130),
     ];
 
     if (isLoading) {
@@ -3156,11 +3157,13 @@ class _StakeholdersTable extends StatelessWidget {
       );
     }
 
-    return _EditableTable(
+    return EditableTable(
+      variant: EditableTableVariant.sheet,
       columns: columns,
       rows: [
         for (int index = 0; index < entries.length; index++)
-          _EditableRow(
+          EditableTableRow(
+            crossAxisAlignment: CrossAxisAlignment.start,
             key: ValueKey(entries[index].id),
             columns: columns,
             cells: [
@@ -3305,15 +3308,15 @@ class _StakeholderMappingTable extends StatelessWidget {
     }
 
     final columns = [
-      const _TableColumnDef('#', 56),
-      const _TableColumnDef('Stakeholder', 200),
-      const _TableColumnDef('Organization', 150),
-      const _TableColumnDef('Role/Title', 160),
-      const _TableColumnDef('Influence', 110),
-      const _TableColumnDef('Interest', 110),
-      const _TableColumnDef('Suggested Rating', 220),
-      const _TableColumnDef('Source', 130),
-      const _TableColumnDef('Actions', 100),
+      const EditableTableColumn('#', 56),
+      const EditableTableColumn('Stakeholder', 200),
+      const EditableTableColumn('Organization', 150),
+      const EditableTableColumn('Role/Title', 160),
+      const EditableTableColumn('Influence', 110),
+      const EditableTableColumn('Interest', 110),
+      const EditableTableColumn('Suggested Rating', 220),
+      const EditableTableColumn('Source', 130),
+      const EditableTableColumn('Actions', 100),
     ];
 
     return Column(
@@ -3357,11 +3360,13 @@ class _StakeholderMappingTable extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        _EditableTable(
+        EditableTable(
+          variant: EditableTableVariant.sheet,
           columns: columns,
           rows: [
             for (int index = 0; index < entries.length; index++)
-              _EditableRow(
+              EditableTableRow(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 key: ValueKey('mapping_${entries[index].id}'),
                 columns: columns,
                 cells: _buildRowCells(index, entries[index]),
@@ -3805,18 +3810,18 @@ class _EngagementPlansTableState extends State<_EngagementPlansTable> {
   @override
   Widget build(BuildContext context) {
     final columns = [
-      const _TableColumnDef('#', 56),
-      const _TableColumnDef('Stakeholder', 220),
-      const _TableColumnDef('Group', 150),
-      const _TableColumnDef('Manage Closely', 120),
-      const _TableColumnDef('Objective', 240),
-      const _TableColumnDef('Method', 160),
-      const _TableColumnDef('Frequency', 140),
-      const _TableColumnDef('Relationship owner', 180),
-      const _TableColumnDef('Status', 130),
-      const _TableColumnDef('Next Touchpoint', 160),
-      const _TableColumnDef('Notes', 220),
-      const _TableColumnDef('Actions', 130),
+      const EditableTableColumn('#', 56),
+      const EditableTableColumn('Stakeholder', 220),
+      const EditableTableColumn('Group', 150),
+      const EditableTableColumn('Manage Closely', 120),
+      const EditableTableColumn('Objective', 240),
+      const EditableTableColumn('Method', 160),
+      const EditableTableColumn('Frequency', 140),
+      const EditableTableColumn('Relationship owner', 180),
+      const EditableTableColumn('Status', 130),
+      const EditableTableColumn('Next Touchpoint', 160),
+      const EditableTableColumn('Notes', 220),
+      const EditableTableColumn('Actions', 130),
     ];
 
     if (widget.isLoading) {
@@ -3832,7 +3837,8 @@ class _EngagementPlansTableState extends State<_EngagementPlansTable> {
       );
     }
 
-    return _EditableTable(
+    return EditableTable(
+      variant: EditableTableVariant.sheet,
       columns: columns,
       rows: [
         for (int index = 0; index < widget.entries.length; index++)
@@ -3874,7 +3880,7 @@ class _EngagementPlanRow extends StatelessWidget {
 
   final EngagementPlanEntry entry;
   final int index;
-  final List<_TableColumnDef> columns;
+  final List<EditableTableColumn> columns;
   final bool isExpanded;
   final VoidCallback onToggleExpand;
   final List<String> frequencyOptions;
@@ -3887,7 +3893,8 @@ class _EngagementPlanRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _EditableRow(
+        EditableTableRow(
+          crossAxisAlignment: CrossAxisAlignment.start,
           columns: columns,
           cells: [
             _IndexCell(number: index + 1),
@@ -4345,92 +4352,6 @@ class _DataLinksFieldState extends State<_DataLinksField> {
   }
 }
 
-class _EditableTable extends StatelessWidget {
-  const _EditableTable({required this.columns, required this.rows});
-
-  final List<_TableColumnDef> columns;
-  final List<Widget> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    const horizontalPadding = 16.0;
-    final contentWidth =
-        columns.fold<double>(0, (total, column) => total + column.width);
-    final minTableWidth = contentWidth + (horizontalPadding * 2);
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        color: Colors.white,
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final tableWidth = constraints.maxWidth > minTableWidth
-              ? constraints.maxWidth
-              : minTableWidth;
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: tableWidth,
-              child: Column(
-                children: [
-                  Container(
-                    width: tableWidth,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: horizontalPadding, vertical: 14),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(18),
-                          topRight: Radius.circular(18)),
-                    ),
-                    child: Row(
-                      children: columns
-                          .map((column) => SizedBox(
-                                width: column.width,
-                                child: Center(
-                                  child: Text(
-                                    column.label.toUpperCase(),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.8,
-                                        color: Color(0xFF6B7280)),
-                                  ),
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                  ),
-                  for (int i = 0; i < rows.length; i++)
-                    Container(
-                      width: tableWidth,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalPadding, vertical: 12),
-                      decoration: BoxDecoration(
-                        color:
-                            i.isEven ? Colors.white : const Color(0xFFF9FAFB),
-                        border: Border(
-                          top: BorderSide(
-                              color: const Color(0xFFE5E7EB),
-                              width: i == 0 ? 1 : 0.5),
-                        ),
-                      ),
-                      child: rows[i],
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class _IndexCell extends StatelessWidget {
   const _IndexCell({required this.number});
 
@@ -4464,31 +4385,6 @@ class _TableFieldShell extends StatelessWidget {
       child: child,
     );
   }
-}
-
-class _EditableRow extends StatelessWidget {
-  const _EditableRow({super.key, required this.columns, required this.cells});
-
-  final List<_TableColumnDef> columns;
-  final List<Widget> cells;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.generate(
-        cells.length,
-        (index) => SizedBox(width: columns[index].width, child: cells[index]),
-      ),
-    );
-  }
-}
-
-class _TableColumnDef {
-  const _TableColumnDef(this.label, this.width);
-
-  final String label;
-  final double width;
 }
 
 class _TextCell extends StatefulWidget {
@@ -4596,6 +4492,12 @@ class _DropdownCell extends StatelessWidget {
       child: DropdownButtonFormField<String>(
         key: ValueKey(fieldKey),
         initialValue: resolvedValue,
+        // The cell is a fixed-width table column. Without `isExpanded` the
+        // button lays the selected option out at its intrinsic width, which
+        // pushes the cell's arrow — and the option text — past the column edge
+        // on a phone. Expanded makes the selection take the cell width and
+        // ellipsize instead.
+        isExpanded: true,
         items: options
             .map((option) => DropdownMenuItem(
                 value: option,
@@ -4708,8 +4610,13 @@ class _RowActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _TableFieldShell(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      // Wrap, not Row: the bar is three 32px buttons, which is wider than the
+      // trailing column it lives in on a phone. Wrapping keeps the actions
+      // reachable instead of clipping the last one off the table.
+      child: Wrap(
+        spacing: 0,
+        runSpacing: 0,
+        alignment: WrapAlignment.center,
         children: [
           Tooltip(
             message: 'Voice input (row-level)',
@@ -5149,20 +5056,22 @@ class _ProjectTeamRosterTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final columns = [
-      const _TableColumnDef('#', 48),
-      const _TableColumnDef('Name', 160),
-      const _TableColumnDef('Role', 140),
-      const _TableColumnDef('Email Address', 200),
-      const _TableColumnDef('Location', 140),
-      const _TableColumnDef('Phone (country + area)', 180),
-      const _TableColumnDef('Site Access', 110),
+      const EditableTableColumn('#', 48),
+      const EditableTableColumn('Name', 160),
+      const EditableTableColumn('Role', 140),
+      const EditableTableColumn('Email Address', 200),
+      const EditableTableColumn('Location', 140),
+      const EditableTableColumn('Phone (country + area)', 180),
+      const EditableTableColumn('Site Access', 110),
     ];
 
-    return _EditableTable(
+    return EditableTable(
+      variant: EditableTableVariant.sheet,
       columns: columns,
       rows: [
         for (int i = 0; i < members.length; i++)
-          _EditableRow(
+          EditableTableRow(
+            crossAxisAlignment: CrossAxisAlignment.start,
             key: ValueKey('pt_${members[i].id}'),
             columns: columns,
             cells: [
@@ -5363,14 +5272,18 @@ class _SiteAccessCell extends StatelessWidget {
                       value ? const Color(0xFF059669) : const Color(0xFFEF4444),
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  value ? 'Has access' : 'No access',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: value
-                        ? const Color(0xFF065F46)
-                        : const Color(0xFF991B1B),
+                Flexible(
+                  child: Text(
+                    value ? 'Has access' : 'No access',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: value
+                          ? const Color(0xFF065F46)
+                          : const Color(0xFF991B1B),
+                    ),
                   ),
                 ),
               ],

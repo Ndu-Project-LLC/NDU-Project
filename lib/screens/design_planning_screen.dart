@@ -24,11 +24,12 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/architecture_whiteboard.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 // import 'package:ndu_project/widgets/launch_phase_navigation.dart'; // removed: UI redesign
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -37,7 +38,6 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/section_flow_gate.dart';
-import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -66,6 +66,17 @@ enum _SpecViewMode {
   table,
 
   /// The per-row cards, where a specification is written and edited.
+  cards,
+}
+
+/// Presentation mode for the Requirements Mapping rows (Lusaka 15 item 8).
+enum _RequirementMappingView {
+  /// Table first: every requirement and what it is mapped to at a glance.
+  /// The owner: "This was supposed to be a table view … that made it easy to
+  /// see what requirements need to be mapped."
+  table,
+
+  /// The per-requirement cards, where the detailed mapping is written.
   cards,
 }
 
@@ -215,6 +226,15 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   /// default — the owner asked for the rows to be readable as a set, with the
   /// cards still one tap away for editing (Lusaka 25 (copy), 2026-09-17).
   _SpecViewMode _specViewMode = _SpecViewMode.table;
+
+  /// How the Requirements Mapping rows are presented. Table first — see
+  /// [_RequirementMappingView].
+  _RequirementMappingView _requirementMappingView =
+      _RequirementMappingView.table;
+
+  /// On the Requirements Mapping table, show only the requirements still
+  /// missing a code / standard or a specification.
+  bool _requirementsUnmappedOnly = false;
 
   /// One key per section tab, so a deep-link (or a jump from the header) can
   /// scroll the selected tab into view even when it sits far along the
@@ -934,6 +954,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
 
   Future<void> _showSpecificationsTableDialog() async {
     final rows = _specificationOptions();
+    final requirementLabels =
+        _requirementLabelMap(ProjectDataHelper.getData(context));
     final searchController = SpellCheckTextEditingController();
     var query = '';
     var disciplineFilter = 'All';
@@ -1056,7 +1078,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                     scrollDirection: Axis.horizontal,
                                     child: ConstrainedBox(
                                       constraints:
-                                          const BoxConstraints(minWidth: 1240),
+                                          const BoxConstraints(minWidth: 1460),
                                       child: buildNduDataTable(
                                         context: context,
                                         columnSpacing: 30,
@@ -1071,6 +1093,11 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Spec type'))),
+                                          DataColumn(
+                                              label: SizedBox(
+                                                  width: 220,
+                                                  child: Text(
+                                                      'Applies to requirements'))),
                                           DataColumn(
                                               label: SizedBox(
                                                   width: 140,
@@ -1115,6 +1142,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                                     child: Text(
                                                       item.specificationType,
                                                       maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  )),
+                                                  DataCell(SizedBox(
+                                                    width: 220,
+                                                    child: Text(
+                                                      _requirementLabelsFor(
+                                                        item.attachedRequirementIds,
+                                                        requirementLabels,
+                                                      ),
+                                                      maxLines: 2,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                     ),
@@ -1206,7 +1245,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                     scrollDirection: Axis.horizontal,
                                     child: ConstrainedBox(
                                       constraints:
-                                          const BoxConstraints(minWidth: 1240),
+                                          const BoxConstraints(minWidth: 1460),
                                       child: buildNduDataTable(
                                         context: context,
                                         columnSpacing: 30,
@@ -1221,6 +1260,11 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Spec type'))),
+                                          DataColumn(
+                                              label: SizedBox(
+                                                  width: 220,
+                                                  child: Text(
+                                                      'Applies to requirements'))),
                                           DataColumn(
                                               label: SizedBox(
                                                   width: 140,
@@ -1265,6 +1309,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                                     child: Text(
                                                       item.specificationType,
                                                       maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  )),
+                                                  DataCell(SizedBox(
+                                                    width: 220,
+                                                    child: Text(
+                                                      _requirementLabelsFor(
+                                                        item.attachedRequirementIds,
+                                                        requirementLabels,
+                                                      ),
+                                                      maxLines: 2,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                     ),
@@ -1393,6 +1449,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     }
 
     final filename = _buildSpecificationsPdfFilename();
+    final requirementLabels =
+        _requirementLabelMap(ProjectDataHelper.getData(context));
 
     try {
       final doc = pw.Document();
@@ -1431,6 +1489,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               headers: const [
                 'Title',
                 'Spec type',
+                'Applies to requirements',
                 'Discipline',
                 'Area',
                 'WBS Work Package',
@@ -1443,6 +1502,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                     (item) => [
                       _pdfCellValue(item.title),
                       _pdfCellValue(item.specificationType),
+                      _requirementLabelsFor(
+                          item.attachedRequirementIds, requirementLabels),
                       _pdfCellValue(item.discipline),
                       _pdfCellValue(item.area),
                       _pdfCellValue(item.wbsWorkPackageTitle),
@@ -1913,6 +1974,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
         _RequirementAttachmentOption(
           id: id,
           label: description.isEmpty ? 'Requirement ${index + 1}' : description,
+          index: index,
+          codesStandards: List<String>.from(item.codesStandards),
         ),
       );
     }
@@ -1941,6 +2004,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
           referenceLink: row.referenceLink.trim(),
           wbsWorkPackageId: row.wbsWorkPackageId.trim(),
           wbsWorkPackageTitle: row.wbsWorkPackageTitle.trim(),
+          attachedRequirementIds: List<String>.from(row.attachedRequirementIds),
         ),
       );
     }
@@ -2045,6 +2109,107 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       output.add(trimmed);
     }
     return output;
+  }
+
+  /// Every planning requirement with what it is mapped to, for the
+  /// Requirements Mapping table (Lusaka 15 item 8).
+  ///
+  /// A requirement is mapped when it names a code / standard **or** a
+  /// specification row applies to it; the specification side is read from the
+  /// same [DesignSpecificationPlanRow.attachedRequirementIds] the specification
+  /// rows edit, so the table shows the real linkage rather than a copy of it.
+  List<_RequirementMappingRow> _requirementMappingRows(
+    ProjectDataModel projectData,
+  ) {
+    final specificationTitles = <String, List<String>>{};
+    for (var i = 0; i < _document.specifications.length; i++) {
+      final row = _document.specifications[i];
+      final title = row.title.trim().isEmpty
+          ? 'Specification ${i + 1}'
+          : row.title.trim();
+      for (final id in row.attachedRequirementIds) {
+        final trimmed = id.trim();
+        if (trimmed.isEmpty) continue;
+        specificationTitles.putIfAbsent(trimmed, () => []).add(title);
+      }
+    }
+
+    final rows = <_RequirementMappingRow>[];
+    final items = projectData.frontEndPlanning.requirementItems;
+    for (var index = 0; index < items.length; index++) {
+      final item = items[index];
+      final description = item.description.trim();
+      if (description.isEmpty && item.id.trim().isEmpty) continue;
+      final id = item.id.trim().isNotEmpty
+          ? item.id.trim()
+          : 'fep_req_${index + 1}_${description.toLowerCase().hashCode.abs()}';
+      rows.add(
+        _RequirementMappingRow(
+          index: index,
+          id: id,
+          description:
+              description.isEmpty ? 'Requirement ${index + 1}' : description,
+          codesStandards: List<String>.from(item.codesStandards),
+          specificationTitles: specificationTitles[id] ?? const [],
+        ),
+      );
+    }
+    return rows;
+  }
+
+  /// Writes the codes / standards a requirement is mapped to back onto the
+  /// planning requirement itself — the field both requirements pages show
+  /// read-only ("Set in Design Planning").
+  Future<void> _setRequirementCodesStandards(
+    int index,
+    List<String> values,
+  ) async {
+    final data = ProjectDataHelper.getData(context);
+    if (index < 0 || index >= data.frontEndPlanning.requirementItems.length) {
+      return;
+    }
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'design',
+      showSnackbar: false,
+      dataUpdater: (current) {
+        final items = List<RequirementItem>.from(
+            current.frontEndPlanning.requirementItems);
+        if (index < 0 || index >= items.length) return current;
+        items[index].codesStandards = List<String>.from(values);
+        return current.copyWith(
+          frontEndPlanning:
+              current.frontEndPlanning.copyWith(requirementItems: items),
+        );
+      },
+    );
+    if (mounted) setState(() {});
+  }
+
+  /// Requirement id → label, shared by the specifications tables.
+  Map<String, String> _requirementLabelMap(ProjectDataModel projectData) {
+    final labels = <String, String>{};
+    for (final option in _requirementAttachmentOptions(projectData)) {
+      labels[option.id] = option.label;
+    }
+    return labels;
+  }
+
+  /// The requirements a specification applies to, as names. Returns
+  /// `Not mapped` when nothing is attached, which is the coverage gap the
+  /// owner wants visible.
+  String _requirementLabelsFor(
+    List<String> ids,
+    Map<String, String> labels,
+  ) {
+    final names = <String>[];
+    for (final id in ids) {
+      final key = id.trim();
+      if (key.isEmpty) continue;
+      final label = (labels[key] ?? key).trim();
+      if (label.isNotEmpty) names.add(label);
+    }
+    return names.isEmpty ? 'Not mapped' : names.join('; ');
   }
 
   List<_RequirementAttachmentOption> _unlinkedRequirements(
@@ -2963,10 +3128,19 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   }
 
   Widget _buildRequirementsSection(List<String> owners) {
+    final projectData = ProjectDataHelper.getData(context);
     final specificationOptions = _specificationOptions();
-    final requirementOptions =
-        _requirementAttachmentOptions(ProjectDataHelper.getData(context));
+    final requirementOptions = _requirementAttachmentOptions(projectData);
     final unlinkedRequirements = _unlinkedRequirements(requirementOptions);
+    final requirementRows = _requirementMappingRows(projectData);
+    final unmappedCount = requirementRows.where((row) => !row.mapped).length;
+    final visibleRows = _requirementsUnmappedOnly
+        ? requirementRows.where((row) => !row.mapped).toList(growable: false)
+        : requirementRows;
+    final unmappedSpecifications = _document.specifications
+        .where((row) =>
+            row.attachedRequirementIds.every((id) => id.trim().isEmpty))
+        .length;
     return _buildGuidedSectionCard(
       sectionId: 'requirements',
       sectionKey: _sectionKeys['requirements']!,
@@ -2976,10 +3150,15 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       // wording keeps them apart: specifications are written on the Design
       // Specifications section, and this section records which planning
       // requirement each one satisfies.
+      //
+      // Lusaka 15 item 8: table first — the codes / standards are applied to
+      // requirements here, and the table is where the still-unmapped
+      // requirements are visible at a glance ("This was supposed to be a table
+      // view … that made it easy to see what requirements need to be mapped.").
       subtitle:
-          'Map each planning requirement to the specification that satisfies '
-          'it. Write the specifications themselves on the Design Specifications '
-          'section; this is the link between the two.',
+          'Apply the codes, standards and specifications that satisfy each '
+          'planning requirement. The table shows what still needs mapping; the '
+          'cards hold the detailed design response.',
       accent: const Color(0xFF0F9D58),
       child: Column(
         children: [
@@ -3003,36 +3182,95 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               ),
             ),
           ],
-          _SubHeader(
-            title: 'Mappings',
-            actionLabel: 'Add mapping',
-            onAction: () {
-              setState(
-                  () => _document.requirements.add(DesignRequirementMapping()));
-              _queueSave();
-              _showToast('Mapping row added.');
-            },
+          if (unmappedSpecifications > 0) ...[
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFCD34D)),
+              ),
+              child: Text(
+                'Specification coverage gap: $unmappedSpecifications specification(s) not mapped to any requirement yet. Every listed specification must apply to at least one requirement.',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF92400E),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+          Row(
+            children: [
+              SegmentedButton<_RequirementMappingView>(
+                segments: const [
+                  ButtonSegment(
+                    value: _RequirementMappingView.table,
+                    label: Text('Table'),
+                    icon: Icon(Icons.table_chart_outlined, size: 16),
+                  ),
+                  ButtonSegment(
+                    value: _RequirementMappingView.cards,
+                    label: Text('Cards'),
+                    icon: Icon(Icons.view_agenda_outlined, size: 16),
+                  ),
+                ],
+                selected: {_requirementMappingView},
+                onSelectionChanged: (selection) =>
+                    setState(() => _requirementMappingView = selection.first),
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              const Spacer(),
+              if (_requirementMappingView == _RequirementMappingView.cards)
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() =>
+                        _document.requirements.add(DesignRequirementMapping()));
+                    _queueSave();
+                    _showToast('Mapping row added.');
+                  },
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add mapping row'),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
-          for (var i = 0; i < _document.requirements.length; i++) ...[
-            _MappingCard(
-              data: _document.requirements[i],
-              availableSpecifications: specificationOptions,
-              owners: owners,
-              onChanged: _queueSave,
-              onRemove: () {
-                setState(() => _document.requirements.removeAt(i));
-                _queueSave();
-              },
-            ),
-            if (i != _document.requirements.length - 1)
-              const SizedBox(height: 12),
+          if (_requirementMappingView == _RequirementMappingView.table)
+            _RequirementsMappingTable(
+              rows: visibleRows,
+              totalCount: requirementRows.length,
+              unmappedCount: unmappedCount,
+              showUnmappedOnly: _requirementsUnmappedOnly,
+              onToggleUnmappedOnly: () => setState(
+                  () => _requirementsUnmappedOnly = !_requirementsUnmappedOnly),
+              onCodesChanged: _setRequirementCodesStandards,
+            )
+          else ...[
+            for (var i = 0; i < _document.requirements.length; i++) ...[
+              _MappingCard(
+                data: _document.requirements[i],
+                availableSpecifications: specificationOptions,
+                owners: owners,
+                onChanged: _queueSave,
+                onRemove: () {
+                  setState(() => _document.requirements.removeAt(i));
+                  _queueSave();
+                },
+              ),
+              if (i != _document.requirements.length - 1)
+                const SizedBox(height: 12),
+            ],
+            if (_document.requirements.isEmpty)
+              const _EmptyState(
+                message:
+                    'No mappings yet. Add rows here to make the design basis traceable.',
+              ),
           ],
-          if (_document.requirements.isEmpty)
-            const _EmptyState(
-              message:
-                  'No mappings yet. Add rows here to make the design basis traceable.',
-            ),
         ],
       ),
     );
@@ -3353,6 +3591,10 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
         _wbsDisciplineOptions(wbsWorkPackages, _specDisciplineOptions);
     final areaOptions = _wbsAreaOptions(wbsWorkPackages, _specAreaOptions);
     final unlinkedRequirements = _unlinkedRequirements(requirementOptions);
+    final unmappedSpecifications = _document.specifications
+        .where((row) =>
+            row.attachedRequirementIds.every((id) => id.trim().isEmpty))
+        .length;
     return _buildGuidedSectionCard(
       sectionId: 'design_specifications_workspace',
       sectionKey: _sectionKeys['design_specifications_workspace']!,
@@ -3426,6 +3668,26 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF9A3412),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (unmappedSpecifications > 0) ...[
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFFCD34D)),
+                        ),
+                        child: Text(
+                          'Specification coverage gap: $unmappedSpecifications specification(s) not mapped to any requirement yet. Every listed specification must apply to at least one requirement.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF92400E),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -3531,6 +3793,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                         _document.specifications.isNotEmpty) ...[
                       _SpecificationsInlineTable(
                         rows: _specificationOptions(),
+                        requirementLabels: _requirementLabelMap(projectData),
                         onOpenCards: () =>
                             setState(() => _specViewMode = _SpecViewMode.cards),
                       ),
@@ -4852,6 +5115,191 @@ class _SpecViewToggle extends StatelessWidget {
   }
 }
 
+/// One planning requirement as the Requirements Mapping table shows it.
+class _RequirementMappingRow {
+  const _RequirementMappingRow({
+    required this.index,
+    required this.id,
+    required this.description,
+    required this.codesStandards,
+    required this.specificationTitles,
+  });
+
+  /// Position in `frontEndPlanning.requirementItems` — the row the codes /
+  /// standards edit is written back to.
+  final int index;
+  final String id;
+  final String description;
+  final List<String> codesStandards;
+  final List<String> specificationTitles;
+
+  /// Mapped when the requirement names a code / standard **or** a
+  /// specification applies to it.
+  bool get mapped =>
+      codesStandards.any((value) => value.trim().isNotEmpty) ||
+      specificationTitles.isNotEmpty;
+}
+
+/// The Requirements Mapping table — Lusaka 15 item 8.
+///
+/// Table first: every planning requirement in one place, with the codes /
+/// standards applied to it (editable here — this is the authoring surface the
+/// requirements log defers to, "Set in Design Planning"), the specification(s)
+/// that apply, and whether anything is still missing. The owner: "This was
+/// supposed to be a table view … that made it easy to see what requirements
+/// need to be mapped."
+class _RequirementsMappingTable extends StatelessWidget {
+  const _RequirementsMappingTable({
+    required this.rows,
+    required this.totalCount,
+    required this.unmappedCount,
+    required this.showUnmappedOnly,
+    required this.onToggleUnmappedOnly,
+    required this.onCodesChanged,
+  });
+
+  final List<_RequirementMappingRow> rows;
+  final int totalCount;
+  final int unmappedCount;
+  final bool showUnmappedOnly;
+  final VoidCallback onToggleUnmappedOnly;
+  final void Function(int index, List<String> values) onCodesChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (totalCount == 0) {
+      return const _EmptyState(
+        message: 'No requirements to map yet. Add them in Front End Planning → '
+            'Requirements first.',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ChoiceChip(
+              selected: !showUnmappedOnly,
+              onSelected: (_) {
+                if (showUnmappedOnly) onToggleUnmappedOnly();
+              },
+              label: Text('All ($totalCount)'),
+            ),
+            const SizedBox(width: 8),
+            ChoiceChip(
+              selected: showUnmappedOnly,
+              onSelected: (_) {
+                if (!showUnmappedOnly) onToggleUnmappedOnly();
+              },
+              selectedColor: const Color(0xFFFEF3C7),
+              label: Text('Needs mapping ($unmappedCount)'),
+            ),
+            const Spacer(),
+            Flexible(
+              child: Text(
+                unmappedCount == 0
+                    ? 'Every requirement is mapped.'
+                    : '$unmappedCount requirement(s) still need a code / '
+                        'standard or a specification.',
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 12, color: _kMuted),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (rows.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Nothing left unmapped.',
+              style: TextStyle(fontSize: 13, color: _kMuted),
+            ),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: buildNduDataTable(
+              context: context,
+              columnSpacing: 20,
+              dataRowMinHeight: 52,
+              dataRowMaxHeight: 88,
+              columns: const [
+                DataColumn(label: Text('#')),
+                DataColumn(label: Text('Requirement')),
+                DataColumn(label: Text('Codes / Standards')),
+                DataColumn(label: Text('Specification(s) applied')),
+                DataColumn(label: Text('Status')),
+              ],
+              rows: [
+                for (final row in rows)
+                  DataRow(cells: [
+                    DataCell(Text('${row.index + 1}')),
+                    DataCell(SizedBox(
+                      width: 280,
+                      child: Text(
+                        row.description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )),
+                    DataCell(SizedBox(
+                      width: 250,
+                      child: CodesStandardsMultiSelect(
+                        selected: row.codesStandards,
+                        onChanged: (values) =>
+                            onCodesChanged(row.index, values),
+                      ),
+                    )),
+                    DataCell(SizedBox(
+                      width: 240,
+                      child: Text(
+                        row.specificationTitles.isEmpty
+                            ? 'Not mapped'
+                            : row.specificationTitles.join('; '),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: row.specificationTitles.isEmpty
+                              ? const Color(0xFF9A3412)
+                              : null,
+                        ),
+                      ),
+                    )),
+                    DataCell(Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: row.mapped
+                            ? const Color(0xFFECFDF5)
+                            : const Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: row.mapped
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFF59E0B),
+                        ),
+                      ),
+                      child: Text(
+                        row.mapped ? 'Mapped' : 'Needs mapping',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: row.mapped
+                              ? const Color(0xFF065F46)
+                              : const Color(0xFF9A3412),
+                        ),
+                      ),
+                    )),
+                  ]),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// Read-only table of the Design Specifications rows, shown as the default view.
 ///
 /// Reading only on purpose: a table cell is a poor place to write a
@@ -4860,14 +5308,34 @@ class _SpecViewToggle extends StatelessWidget {
 class _SpecificationsInlineTable extends StatelessWidget {
   const _SpecificationsInlineTable({
     required this.rows,
+    required this.requirementLabels,
     required this.onOpenCards,
   });
 
   final List<_SpecificationOption> rows;
+
+  /// Requirement id → label, so the table says which requirement(s) a
+  /// specification applies to instead of showing raw ids.
+  final Map<String, String> requirementLabels;
   final VoidCallback onOpenCards;
+
+  /// The requirements a row applies to, as names. "Not mapped" is the coverage
+  /// gap the owner wants visible ("Every listed specification must be mapped
+  /// to a requirement").
+  String _appliesTo(_SpecificationOption row) {
+    final names = row.attachedRequirementIds
+        .map((id) => (requirementLabels[id.trim()] ?? id.trim()))
+        .where((label) => label.isNotEmpty)
+        .toList(growable: false);
+    return names.isEmpty ? 'Not mapped' : names.join('; ');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final unmapped = rows
+        .where((row) =>
+            row.attachedRequirementIds.every((id) => id.trim().isEmpty))
+        .length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -4884,7 +5352,9 @@ class _SpecificationsInlineTable extends StatelessWidget {
               Expanded(
                 child: Text(
                   '${rows.length} specification row'
-                  '${rows.length == 1 ? '' : 's'}. Edit a row on the Cards view, '
+                  '${rows.length == 1 ? '' : 's'}'
+                  '${unmapped == 0 ? '' : ' — $unmapped not mapped to a requirement yet'}'
+                  '. Edit a row on the Cards view, '
                   'or export the rows, change them in a spreadsheet, and import '
                   'them back.',
                   style:
@@ -4901,15 +5371,16 @@ class _SpecificationsInlineTable extends StatelessWidget {
         const SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(
+          child: NduResponsiveDataTable(
             headingRowHeight: 38,
             dataRowMinHeight: 40,
             dataRowMaxHeight: 64,
             columnSpacing: 20,
             columns: const [
               DataColumn(label: Text('#')),
-              DataColumn(label: Text('Title')),
+              DataColumn(label: Text('Code / standard / specification')),
               DataColumn(label: Text('Spec type')),
+              DataColumn(label: Text('Applies to requirements')),
               DataColumn(label: Text('Discipline')),
               DataColumn(label: Text('Area')),
               DataColumn(label: Text('WBS Work Package')),
@@ -4930,6 +5401,21 @@ class _SpecificationsInlineTable extends StatelessWidget {
                     ),
                   )),
                   DataCell(Text(rows[i].specificationType)),
+                  DataCell(SizedBox(
+                    width: 240,
+                    child: Text(
+                      _appliesTo(rows[i]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: rows[i].attachedRequirementIds.every(
+                                  (id) => id.trim().isEmpty,
+                                )
+                            ? const Color(0xFF9A3412)
+                            : null,
+                      ),
+                    ),
+                  )),
                   DataCell(Text(rows[i].discipline)),
                   DataCell(Text(rows[i].area)),
                   DataCell(SizedBox(
@@ -5008,7 +5494,7 @@ class _ArchitectureModulesTable extends StatelessWidget {
     }
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: DataTable(
+      child: NduResponsiveDataTable(
         headingRowHeight: 38,
         dataRowMinHeight: 40,
         dataRowMaxHeight: 72,
@@ -6278,10 +6764,22 @@ class _FilterableCreatableDropdownFieldState
 }
 
 class _RequirementAttachmentOption {
-  const _RequirementAttachmentOption({required this.id, required this.label});
+  const _RequirementAttachmentOption({
+    required this.id,
+    required this.label,
+    this.index = 0,
+    this.codesStandards = const [],
+  });
 
   final String id;
   final String label;
+
+  /// Position in `frontEndPlanning.requirementItems`, so a value edited on the
+  /// Requirements Mapping table can be written back to the same requirement.
+  final int index;
+
+  /// The codes / standards already applied to the requirement.
+  final List<String> codesStandards;
 }
 
 class _SpecificationOption {
@@ -6298,6 +6796,7 @@ class _SpecificationOption {
     this.referenceLink = '',
     this.wbsWorkPackageId = '',
     this.wbsWorkPackageTitle = '',
+    this.attachedRequirementIds = const [],
   });
 
   final String id;
@@ -6312,6 +6811,9 @@ class _SpecificationOption {
   final String referenceLink;
   final String wbsWorkPackageId;
   final String wbsWorkPackageTitle;
+
+  /// The planning requirements this specification applies to.
+  final List<String> attachedRequirementIds;
 }
 
 class _WbsWorkPackageOption {

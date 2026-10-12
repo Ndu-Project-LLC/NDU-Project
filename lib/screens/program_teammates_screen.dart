@@ -233,12 +233,14 @@ class _ProgramTeammatesScreenState extends State<ProgramTeammatesScreen> {
           const SizedBox(width: 4),
           const Icon(Icons.people_outline, size: 20, color: _onSurfaceVariant),
           const SizedBox(width: 8),
-          const Text(
-            'Program Teammates',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: _onSurface,
+          const Flexible(
+            child: Text(
+              'Program Teammates',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: _onSurface,
+              ),
             ),
           ),
           const Spacer(),

@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/services/ops_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -20,6 +21,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
 class IdentifyStaffOpsTeamScreen extends StatefulWidget {
   const IdentifyStaffOpsTeamScreen({super.key});
 
@@ -60,7 +62,11 @@ class _IdentifyStaffOpsTeamScreenState
       screenTitle: 'Identify Staff & Ops Team',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+          {
+            'Project Name': projectData.projectName.isEmpty
+                ? 'N/A'
+                : projectData.projectName
+          },
         ]),
         PdfSection.text(
             'Notes',
@@ -105,10 +111,14 @@ class _IdentifyStaffOpsTeamScreenState
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
-              nextLabel: PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
-              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'identify_staff_ops_team'),
-              onNext: () => PlanningPhaseNavigation.goToNext(context, 'identify_staff_ops_team'),
+              backLabel:
+                  PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
+              nextLabel:
+                  PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(
+                  context, 'identify_staff_ops_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(
+                  context, 'identify_staff_ops_team'),
             ),
           ],
         ),
@@ -176,8 +186,7 @@ class _IdentifyStaffOpsTeamScreenState
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -211,8 +220,8 @@ class _IdentifyStaffOpsTeamScreenState
     }
 
     Map<String, List<LaunchEntry>> generated = {};
-if (!mounted) return;
-        try {
+    if (!mounted) return;
+    try {
       generated = await ExecutionPhaseAiSeed.generateEntries(
         context: context,
         section: 'Identify & Staff Ops Team',
@@ -323,197 +332,198 @@ if (!mounted) return;
       trailing: _actionButton(Icons.filter_list, 'Filter'),
       child: RepaintBoundary(
         child: StreamBuilder<List<OpsMemberModel>>(
-        stream: OpsService.streamMembers(_projectId!),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+          stream: OpsService.streamMembers(_projectId!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                  child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator()));
+            }
+
+            if (snapshot.hasError) {
+              return Center(
                 child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator()));
-          }
+                  padding: const EdgeInsets.all(24.0),
+                  child: Text('Error loading members: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red)),
+                ),
+              );
+            }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Text('Error loading members: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red)),
-              ),
-            );
-          }
+            final members = snapshot.data ?? [];
 
-          final members = snapshot.data ?? [];
+            if (members.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      const Text('No ops members found.',
+                          style: TextStyle(color: Color(0xFF64748B))),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddMemberDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add First Member'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
 
-          if (members.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    const Text('No ops members found.',
-                        style: TextStyle(color: Color(0xFF64748B))),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddMemberDialog(context),
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Add First Member'),
-                    ),
+            return FullScreenTableWrapper(
+              title: 'Staff & Ops Team',
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: NduResponsiveDataTable(
+                  headingRowHeight: 32,
+                  dataRowMinHeight: 28,
+                  dataRowMaxHeight: 36,
+                  columnSpacing: 14,
+                  horizontalMargin: 12,
+                  headingRowColor:
+                      WidgetStateProperty.all(const Color(0xFF1F2937)),
+                  columns: const [
+                    DataColumn(
+                        label: Text('Name',
+                            style: TextStyle(fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Role',
+                            style: TextStyle(fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Responsibility',
+                            style: TextStyle(fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Status',
+                            style: TextStyle(fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Readiness',
+                            style: TextStyle(fontWeight: FontWeight.w600))),
+                    DataColumn(
+                        label: Text('Actions',
+                            style: TextStyle(fontWeight: FontWeight.w600))),
                   ],
+                  rows: members.map((member) {
+                    return DataRow(cells: [
+                      DataCell(Text(member.name,
+                          style: const TextStyle(fontSize: 13))),
+                      DataCell(Text(member.role,
+                          style: const TextStyle(fontSize: 13))),
+                      DataCell(Text(member.responsibility,
+                          style: const TextStyle(
+                              fontSize: 13, color: Color(0xFF64748B)))),
+                      DataCell(_statusChip(member.status)),
+                      DataCell(_capacityChip(member.readinessScore)),
+                      DataCell(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () =>
+                                  _showEditMemberDialog(context, member),
+                              borderRadius: BorderRadius.circular(4),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(Icons.edit,
+                                    size: 16, color: Color(0xFF64748B)),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            InkWell(
+                              onTap: () =>
+                                  _showDeleteMemberDialog(context, member),
+                              borderRadius: BorderRadius.circular(4),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(Icons.delete,
+                                    size: 16, color: Color(0xFFEF4444)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]);
+                  }).toList(),
                 ),
               ),
+              tableBuilder: (fsContext) => NduResponsiveDataTable(
+                headingRowHeight: 32,
+                dataRowMinHeight: 28,
+                dataRowMaxHeight: 36,
+                columnSpacing: 14,
+                horizontalMargin: 12,
+                headingRowColor:
+                    WidgetStateProperty.all(const Color(0xFF1F2937)),
+                columns: const [
+                  DataColumn(
+                      label: Text('Name',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Role',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Responsibility',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Status',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Readiness',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Actions',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                ],
+                rows: members.map((member) {
+                  return DataRow(cells: [
+                    DataCell(Text(member.name,
+                        style: const TextStyle(fontSize: 13))),
+                    DataCell(Text(member.role,
+                        style: const TextStyle(fontSize: 13))),
+                    DataCell(Text(member.responsibility,
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFF64748B)))),
+                    DataCell(_statusChip(member.status)),
+                    DataCell(_capacityChip(member.readinessScore)),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkWell(
+                            onTap: () =>
+                                _showEditMemberDialog(fsContext, member),
+                            borderRadius: BorderRadius.circular(4),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.edit,
+                                  size: 16, color: Color(0xFF64748B)),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          InkWell(
+                            onTap: () =>
+                                _showDeleteMemberDialog(fsContext, member),
+                            borderRadius: BorderRadius.circular(4),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.delete,
+                                  size: 16, color: Color(0xFFEF4444)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]);
+                }).toList(),
+              ),
             );
-          }
-
-
- return FullScreenTableWrapper(
- title: 'Staff & Ops Team',
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: DataTable(
- headingRowHeight: 32,
- dataRowMinHeight: 28,
- dataRowMaxHeight: 36,
- columnSpacing: 14,
- horizontalMargin: 12,
- headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
- columns: const [
- DataColumn(
- label: Text('Name',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Role',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Responsibility',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Status',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Readiness',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Actions',
- style: TextStyle(fontWeight: FontWeight.w600))),
- ],
- rows: members.map((member) {
- return DataRow(cells: [
- DataCell(
- Text(member.name, style: const TextStyle(fontSize: 13))),
- DataCell(
- Text(member.role, style: const TextStyle(fontSize: 13))),
- DataCell(Text(member.responsibility,
- style: const TextStyle(
- fontSize: 13, color: Color(0xFF64748B)))),
- DataCell(_statusChip(member.status)),
- DataCell(_capacityChip(member.readinessScore)),
- DataCell(
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- InkWell(
- onTap: () =>
- _showEditMemberDialog(context, member),
- borderRadius: BorderRadius.circular(4),
- child: const Padding(
- padding: EdgeInsets.all(4),
- child: Icon(Icons.edit,
- size: 16, color: Color(0xFF64748B)),
- ),
- ),
- const SizedBox(width: 4),
- InkWell(
- onTap: () =>
- _showDeleteMemberDialog(context, member),
- borderRadius: BorderRadius.circular(4),
- child: const Padding(
- padding: EdgeInsets.all(4),
- child: Icon(Icons.delete,
- size: 16, color: Color(0xFFEF4444)),
- ),
- ),
- ],
- ),
- ),
- ]);
- }).toList(),
- ),
- ),
- tableBuilder: (fsContext) => DataTable(
- headingRowHeight: 32,
- dataRowMinHeight: 28,
- dataRowMaxHeight: 36,
- columnSpacing: 14,
- horizontalMargin: 12,
- headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
- columns: const [
- DataColumn(
- label: Text('Name',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Role',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Responsibility',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Status',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Readiness',
- style: TextStyle(fontWeight: FontWeight.w600))),
- DataColumn(
- label: Text('Actions',
- style: TextStyle(fontWeight: FontWeight.w600))),
- ],
- rows: members.map((member) {
- return DataRow(cells: [
- DataCell(
- Text(member.name, style: const TextStyle(fontSize: 13))),
- DataCell(
- Text(member.role, style: const TextStyle(fontSize: 13))),
- DataCell(Text(member.responsibility,
- style: const TextStyle(
- fontSize: 13, color: Color(0xFF64748B)))),
- DataCell(_statusChip(member.status)),
- DataCell(_capacityChip(member.readinessScore)),
- DataCell(
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- InkWell(
- onTap: () =>
- _showEditMemberDialog(fsContext, member),
- borderRadius: BorderRadius.circular(4),
- child: const Padding(
- padding: EdgeInsets.all(4),
- child: Icon(Icons.edit,
- size: 16, color: Color(0xFF64748B)),
- ),
- ),
- const SizedBox(width: 4),
- InkWell(
- onTap: () =>
- _showDeleteMemberDialog(fsContext, member),
- borderRadius: BorderRadius.circular(4),
- child: const Padding(
- padding: EdgeInsets.all(4),
- child: Icon(Icons.delete,
- size: 16, color: Color(0xFFEF4444)),
- ),
- ),
- ],
- ),
- ),
- ]);
- }).toList(),
- ),
- );
- },
- ),
+          },
+        ),
       ),
     );
- }
+  }
 
   Widget _buildChecklistPanel() {
     if (_projectId == null) {
@@ -523,7 +533,6 @@ if (!mounted) return;
         child: SizedBox.shrink(),
       );
     }
-
 
     return RepaintBoundary(
       child: StreamBuilder<List<OpsChecklistItemModel>>(
@@ -737,15 +746,18 @@ if (!mounted) return;
   Future<void> _showMemberDialog(
       BuildContext context, OpsMemberModel? member, String projectId) async {
     final isEdit = member != null;
-    final nameController = SpellCheckTextEditingController(text: member?.name ?? '');
-    final roleController = SpellCheckTextEditingController(text: member?.role ?? '');
+    final nameController =
+        SpellCheckTextEditingController(text: member?.name ?? '');
+    final roleController =
+        SpellCheckTextEditingController(text: member?.role ?? '');
     final responsibilityController =
         SpellCheckTextEditingController(text: member?.responsibility ?? '');
     final statusController =
         SpellCheckTextEditingController(text: member?.status ?? 'Active');
-    final readinessController =
-        SpellCheckTextEditingController(text: member?.readinessScore.toString() ?? '0');
-    final notesController = SpellCheckTextEditingController(text: member?.notes ?? '');
+    final readinessController = SpellCheckTextEditingController(
+        text: member?.readinessScore.toString() ?? '0');
+    final notesController =
+        SpellCheckTextEditingController(text: member?.notes ?? '');
 
     try {
       await showAppDialog(

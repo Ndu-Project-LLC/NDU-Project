@@ -2,7 +2,7 @@ name: ndu_project
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 1.0.0+3
+version: 1.0.0+5
 
 environment:
   sdk: ^3.6.0
@@ -88,13 +88,39 @@ flutter:
           weight: 300
           style: italic
 
+# Generates the launcher icons from the brand artwork. The Android resources on
+# disk were still the Dreamflow template mark, which is why Google Play reported
+# "App store listing mismatch: your app's installed icon ... differs from its
+# store listing". Run `dart run flutter_launcher_icons` after changing anything
+# here, and re-read the icons out of the built app bundle before shipping.
 flutter_launcher_icons:
   android: true
   ios: true
+  # The artwork: a finished tile — rounded gold frame on black, "NDU PROJECT"
+  # inside. Legacy Android and iOS use it as-is; the adaptive icon insets it (see
+  # below). Swap it with `scripts/make_launcher_icons.sh`, which reinstalls this
+  # file and re-derives the plate underneath it.
   image_path: assets/icons/app_icon.png
+  # Derived from the artwork by scripts/make_launcher_icons.sh: the art scaled to
+  # the 68% that the inset leaves visible, with its outermost row and column
+  # replicated outward. The artwork is opaque and its edge glows rather than
+  # ending at flat black (up to 25/255 on the top edge), so a plain black plate
+  # would cut that glow off at the artwork's frame and show as a faint warm
+  # square. Extending the artwork's own edge makes the two layers meet at the
+  # same colour all the way round.
   adaptive_icon_background: assets/icons/app_icon_background.png
-  adaptive_icon_foreground: assets/icons/app_icon_foreground.png
+  # The artwork itself, inset to Android's 72dp safe zone: the gold frame then
+  # spans ~68dp of the 108dp canvas, just inside the safe area, so no launcher
+  # mask shape cuts the frame. (assets/icons/app_icon_foreground.png is a ghost —
+  # 2.2% of its canvas carries any ink — so as a foreground it renders an almost
+  # empty icon.)
+  adaptive_icon_foreground: assets/icons/app_icon.png
+  adaptive_icon_foreground_inset: 16
   remove_alpha_ios: true
+  # A guard, not an active fill: the artwork is fully opaque so there is no
+  # alpha to replace. It only takes effect if a future artwork has transparent
+  # corners, and then it fills them with the brand plate, not the default white.
+  background_color_ios: "#130E19"
   android_frameworks: true
   min_sdk_android: 21
 

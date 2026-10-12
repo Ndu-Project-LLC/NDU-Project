@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -434,6 +435,17 @@ class _ProjectTeamActivitiesScreenState
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'project_team_activities',
+          pageTitle: 'Project Team Activities',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

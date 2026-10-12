@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -166,6 +167,17 @@ class _BusinessSystemIntegrationsScreenState
  const SizedBox(height: 32),
  ],
  ),
+ ),
+ bottomNavigationBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'business_system_integrations',
+       pageTitle: 'BusinessSystemIntegrationsScreen',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  }

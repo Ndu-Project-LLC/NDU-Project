@@ -382,7 +382,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
                   const Positioned(
                     right: 24,
                     bottom: 24,
-                    child: KazAiChatBubble(),
+                    child: KazAiChatBubble(positioned: false),
                   ),
                 ],
               ),

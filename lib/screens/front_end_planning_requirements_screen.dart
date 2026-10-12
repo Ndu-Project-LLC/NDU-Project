@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/screens/front_end_planning_risks_screen.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -808,55 +809,14 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   Widget _buildDesktopFooter(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          OutlinedButton(
-            onPressed: () => FrontEndPlanningNavigation.goToPrevious(
-              context,
-              'fep_requirements',
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF374151),
-              side: const BorderSide(color: Color(0xFFD1D5DB)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(child: SizedBox.shrink()),
-          const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: _handleSubmit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD700),
-              foregroundColor: Colors.black,
-              disabledBackgroundColor: const Color(0xFFE5E7EB),
-              disabledForegroundColor: const Color(0xFF9CA3AF),
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Submit',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+    // Lusaka 29: this used to be a bare back arrow plus a "Submit" button,
+    // leaving no forward affordance that named its destination. The shared
+    // footer supplies a labelled Previous and a "Continue to ..." button;
+    // onNext still runs this page's own submit/validation first.
+    return PageNavigationFooter(
+      checkpoint: 'fep_requirements',
+      pageTitle: 'Project Requirements',
+      onNext: () => _handleSubmit(),
     );
   }
 
@@ -1260,20 +1220,23 @@ class _FrontEndPlanningRequirementsScreenState
     );
   }
 
-  /// Codes / Standards column: the codes and standards the requirement must
-  /// satisfy, picked from the standards captured in Quality Management.
+  /// Codes / Standards column: what the requirement is mapped to, **read-only**.
+  ///
+  /// Lusaka 15: a requirement finishes at its WBS mapping, and the codes and
+  /// standards it must satisfy are authored in Design Planning (Design
+  /// Specifications → Requirements Mapping) — the owner: "The code standard
+  /// comes in in the design planning … it needs to be grayed out. So it's
+  /// something that they don't have to fill out now, for when they then go to
+  /// the codes and standards and map it to the requirements, then it can show
+  /// up on this requirements log." The picker that used to live here made both
+  /// requirements pages look like the place to fill them in.
   Widget _codesStandardsCell(_RequirementRow row) {
     return SizedBox(
       width: 220,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: CodesStandardsMultiSelect(
+        child: CodesStandardsReadOnly(
           selected: row.selectedCodesStandards,
-          enabled: !_isCharterLocked(context),
-          onChanged: (codes) {
-            setState(() => row.selectedCodesStandards = codes);
-            _scheduleAutoSave(showSnack: false);
-          },
         ),
       ),
     );
@@ -1672,29 +1635,18 @@ class _FrontEndPlanningRequirementsScreenState
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _handleSubmit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF4B400),
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor: const Color(0xFFE5E7EB),
-                        disabledForegroundColor: const Color(0xFF9CA3AF),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                      ),
-                      child: const Text(
-                        'Submit Requirements',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Lusaka 29: the mobile bar used to end on a bare "Submit
+            // Requirements"; it now carries the same footer as every other
+            // page so the forward action names the screen it opens.
+            PageNavigationFooter(
+              checkpoint: 'fep_requirements',
+              pageTitle: 'Project Requirements',
+              showBorders: false,
+              onNext: () => _handleSubmit(),
+            ),
             ],
           ),
         ),
@@ -2043,15 +1995,10 @@ class _FrontEndPlanningRequirementsScreenState
                             setLocalState(() => selectedWbsElements = ids),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
-                        'Codes / Standards',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 6),
-                      CodesStandardsMultiSelect(
+                      // Read-only here too: codes / standards are mapped to the
+                      // requirement in Design Planning, not typed on this page.
+                      CodesStandardsReadOnly(
                         selected: selectedCodesStandards,
-                        onChanged: (codes) =>
-                            setLocalState(() => selectedCodesStandards = codes),
                       ),
                       const SizedBox(height: 12),
                       VoiceTextField(
@@ -2109,8 +2056,9 @@ class _FrontEndPlanningRequirementsScreenState
                                           'ALL'
                                       ? <String>[]
                                       : List<String>.from(selectedWbsElements);
-                                  row.selectedCodesStandards =
-                                      List<String>.from(selectedCodesStandards);
+                                  // Codes / standards are not editable here, so
+                                  // the row keeps whatever Design Planning
+                                  // mapped to it.
                                 });
                                 _scheduleAutoSave(showSnack: false);
                               }

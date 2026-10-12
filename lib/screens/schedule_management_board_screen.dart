@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 
 import '../theme.dart';
 import '../widgets/responsive.dart';
@@ -117,6 +118,17 @@ class _ScheduleManagementBoardScreenState extends State<ScheduleManagementBoardS
  ),
  ),
  ),
+ ),
+ bottomNavigationBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'schedule_management',
+       pageTitle: 'Schedule Management',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  

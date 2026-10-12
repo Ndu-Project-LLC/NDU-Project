@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -213,6 +214,17 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
         ],
       ),
+    bottomBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'settings',
+          pageTitle: 'Settings',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 
@@ -970,13 +982,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                     icon: Icons.gavel,
                     label: 'Terms of service',
                     subtitle: 'Read our terms',
-                    onTap: () {},
+                    onTap: () => context.push('/${AppRoutes.termsConditions}'),
                   ),
                   _PrefActionTile(
                     icon: Icons.privacy_tip_outlined,
                     label: 'Privacy policy',
                     subtitle: 'How we handle your data',
-                    onTap: () {},
+                    onTap: () => context.push('/${AppRoutes.privacyPolicy}'),
                   ),
                 ],
               ),

@@ -20,6 +20,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/utils/schedule_duplicate_guard.dart';
@@ -52,7 +53,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(LightModeColors.accent),
                   ),
                   SizedBox(height: 16),
                   Text(
@@ -212,342 +214,354 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 child: filtered.isEmpty
                     ? _EmptyState(query: _search)
                     : FullScreenTableWrapper(
-                    title: 'Schedule Activities',
-                    child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          headingRowColor:
-                              WidgetStateProperty.all(const Color(0xFFF9FAFB)),
-                          dataRowColor:
-                              WidgetStateProperty.all(Colors.transparent),
-                          columnSpacing: 24,
-                          horizontalMargin: 16,
-                          sortColumnIndex: _sortBy.index,
-                          sortAscending: _sortAsc,
-                          columns: [
-                            DataColumn(
-                              label: const Text('Code',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.code, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Name',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.name, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Domain',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.domain, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Duration',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.duration, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Start',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.start, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Finish',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.finish, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Cost',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.cost, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Status',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.status, asc),
-                            ),
-                            const DataColumn(
-                              label: Text('Traceability',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                            ),
-                          ],
-                          rows: filtered
-                              .map((r) => DataRow(cells: [
-                                    DataCell(Text(r.code,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 11,
-                                            fontFamily: appFontFamily,
-                                            fontWeight: FontWeight.bold))),
-                                    DataCell(Row(
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                              color: Color(r.domainColor),
-                                              shape: BoxShape.circle),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(r.name,
-                                            style: const TextStyle(
-                                                color: Color(0xFF1A1D1F),
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500)),
-                                      ],
-                                    )),
-                                    DataCell(Text(r.domainLabel,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    // Lusaka 28: Duration / Start / Finish are
-                                    // editable inline — mass-populate a schedule
-                                    // without opening each item's editor.
-                                    DataCell(_InlineDurationCell(
-                                      value: r.sortDuration,
-                                      unit: r.durationUnit,
-                                      enabled: r.activityId != null,
-                                      onChanged: (days) => _updateActivityDates(
-                                          r, durationDays: days),
-                                    )),
-                                    DataCell(_InlineDateCell(
-                                      value: r.sortStart == 0
-                                          ? null
-                                          : DateTime
-                                              .fromMillisecondsSinceEpoch(
-                                                  r.sortStart),
-                                      enabled: r.activityId != null,
-                                      onChanged: (date) => _updateActivityDates(
-                                          r, start: date),
-                                    )),
-                                    DataCell(_InlineDateCell(
-                                      value: r.sortFinish == 0
-                                          ? null
-                                          : DateTime
-                                              .fromMillisecondsSinceEpoch(
-                                                  r.sortFinish),
-                                      enabled: r.activityId != null,
-                                      onChanged: (date) => _updateActivityDates(
-                                          r, finish: date),
-                                    )),
-                                    // Lusaka 32: cost is the headline
-                                    // number per work package — bold and
-                                    // dark when linked, muted when not.
-                                    DataCell(Text(r.cost,
-                                        style: TextStyle(
-                                            color: r.sortCost == null
-                                                ? const Color(0xFF9CA3AF)
-                                                : const Color(0xFF1A1D1F),
-                                            fontSize: 13,
-                                            fontWeight: r.sortCost == null
-                                                ? FontWeight.w400
-                                                : FontWeight.w800))),
-                                    DataCell(_StatusBadge(status: r.status)),
-                                    DataCell(r.dateMismatchMessage.isEmpty
-                                        ? _TraceabilityCell(row: r)
-                                        : _MilestoneMismatchCell(
-                                            message: r.dateMismatchMessage,
-                                            child: _TraceabilityCell(row: r),
-                                          )),
-                                  ]))
-                              .toList(),
+                        title: 'Schedule Activities',
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: NduResponsiveDataTable(
+                            headingRowColor: WidgetStateProperty.all(
+                                const Color(0xFFF9FAFB)),
+                            dataRowColor:
+                                WidgetStateProperty.all(Colors.transparent),
+                            columnSpacing: 24,
+                            horizontalMargin: 16,
+                            sortColumnIndex: _sortBy.index,
+                            sortAscending: _sortAsc,
+                            columns: [
+                              DataColumn(
+                                label: const Text('Code',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.code, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Name',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.name, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Domain',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.domain, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Duration',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.duration, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Start',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.start, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Finish',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.finish, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Cost',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.cost, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Status',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.status, asc),
+                              ),
+                              const DataColumn(
+                                label: Text('Traceability',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                            rows: filtered
+                                .map((r) => DataRow(cells: [
+                                      DataCell(Text(r.code,
+                                          style: const TextStyle(
+                                              color: Color(0xFF495057),
+                                              fontSize: 11,
+                                              fontFamily: appFontFamily,
+                                              fontWeight: FontWeight.bold))),
+                                      DataCell(Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                                color: Color(r.domainColor),
+                                                shape: BoxShape.circle),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(r.name,
+                                              style: const TextStyle(
+                                                  color: Color(0xFF1A1D1F),
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500)),
+                                        ],
+                                      )),
+                                      DataCell(Text(r.domainLabel,
+                                          style: const TextStyle(
+                                              color: Color(0xFF495057),
+                                              fontSize: 12))),
+                                      // Lusaka 28: Duration / Start / Finish are
+                                      // editable inline — mass-populate a schedule
+                                      // without opening each item's editor.
+                                      DataCell(_InlineDurationCell(
+                                        value: r.sortDuration,
+                                        unit: r.durationUnit,
+                                        enabled: r.activityId != null,
+                                        onChanged: (days) =>
+                                            _updateActivityDates(r,
+                                                durationDays: days),
+                                      )),
+                                      DataCell(_InlineDateCell(
+                                        value: r.sortStart == 0
+                                            ? null
+                                            : DateTime
+                                                .fromMillisecondsSinceEpoch(
+                                                    r.sortStart),
+                                        enabled: r.activityId != null,
+                                        onChanged: (date) =>
+                                            _updateActivityDates(r,
+                                                start: date),
+                                      )),
+                                      DataCell(_InlineDateCell(
+                                        value: r.sortFinish == 0
+                                            ? null
+                                            : DateTime
+                                                .fromMillisecondsSinceEpoch(
+                                                    r.sortFinish),
+                                        enabled: r.activityId != null,
+                                        onChanged: (date) =>
+                                            _updateActivityDates(r,
+                                                finish: date),
+                                      )),
+                                      // Lusaka 32: cost is the headline
+                                      // number per work package — bold and
+                                      // dark when linked, muted when not.
+                                      DataCell(Text(r.cost,
+                                          style: TextStyle(
+                                              color: r.sortCost == null
+                                                  ? const Color(0xFF9CA3AF)
+                                                  : const Color(0xFF1A1D1F),
+                                              fontSize: 13,
+                                              fontWeight: r.sortCost == null
+                                                  ? FontWeight.w400
+                                                  : FontWeight.w800))),
+                                      DataCell(_StatusBadge(status: r.status)),
+                                      DataCell(r.dateMismatchMessage.isEmpty
+                                          ? _TraceabilityCell(row: r)
+                                          : _MilestoneMismatchCell(
+                                              message: r.dateMismatchMessage,
+                                              child: _TraceabilityCell(row: r),
+                                            )),
+                                    ]))
+                                .toList(),
+                          ),
+                        ),
+                        tableBuilder: (fsContext) => SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: NduResponsiveDataTable(
+                            headingRowColor: WidgetStateProperty.all(
+                                const Color(0xFFF9FAFB)),
+                            dataRowColor:
+                                WidgetStateProperty.all(Colors.transparent),
+                            columnSpacing: 24,
+                            horizontalMargin: 16,
+                            sortColumnIndex: _sortBy.index,
+                            sortAscending: _sortAsc,
+                            columns: [
+                              DataColumn(
+                                label: const Text('Code',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.code, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Name',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.name, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Domain',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.domain, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Duration',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.duration, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Start',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.start, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Finish',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.finish, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Cost',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) => _onSort(_SortBy.cost, asc),
+                              ),
+                              DataColumn(
+                                label: const Text('Status',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                                onSort: (c, asc) =>
+                                    _onSort(_SortBy.status, asc),
+                              ),
+                              const DataColumn(
+                                label: Text('Traceability',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                            rows: filtered
+                                .map((r) => DataRow(cells: [
+                                      DataCell(Text(r.code,
+                                          style: const TextStyle(
+                                              color: Color(0xFF495057),
+                                              fontSize: 11,
+                                              fontFamily: appFontFamily,
+                                              fontWeight: FontWeight.bold))),
+                                      DataCell(Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                                color: Color(r.domainColor),
+                                                shape: BoxShape.circle),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(r.name,
+                                              style: const TextStyle(
+                                                  color: Color(0xFF1A1D1F),
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500)),
+                                        ],
+                                      )),
+                                      DataCell(Text(r.domainLabel,
+                                          style: const TextStyle(
+                                              color: Color(0xFF495057),
+                                              fontSize: 12))),
+                                      // Lusaka 28: Duration / Start / Finish are
+                                      // editable inline — mass-populate a schedule
+                                      // without opening each item's editor.
+                                      DataCell(_InlineDurationCell(
+                                        value: r.sortDuration,
+                                        unit: r.durationUnit,
+                                        enabled: r.activityId != null,
+                                        onChanged: (days) =>
+                                            _updateActivityDates(r,
+                                                durationDays: days),
+                                      )),
+                                      DataCell(_InlineDateCell(
+                                        value: r.sortStart == 0
+                                            ? null
+                                            : DateTime
+                                                .fromMillisecondsSinceEpoch(
+                                                    r.sortStart),
+                                        enabled: r.activityId != null,
+                                        onChanged: (date) =>
+                                            _updateActivityDates(r,
+                                                start: date),
+                                      )),
+                                      DataCell(_InlineDateCell(
+                                        value: r.sortFinish == 0
+                                            ? null
+                                            : DateTime
+                                                .fromMillisecondsSinceEpoch(
+                                                    r.sortFinish),
+                                        enabled: r.activityId != null,
+                                        onChanged: (date) =>
+                                            _updateActivityDates(r,
+                                                finish: date),
+                                      )),
+                                      // Lusaka 32: cost is the headline
+                                      // number per work package — bold and
+                                      // dark when linked, muted when not.
+                                      DataCell(Text(r.cost,
+                                          style: TextStyle(
+                                              color: r.sortCost == null
+                                                  ? const Color(0xFF9CA3AF)
+                                                  : const Color(0xFF1A1D1F),
+                                              fontSize: 13,
+                                              fontWeight: r.sortCost == null
+                                                  ? FontWeight.w400
+                                                  : FontWeight.w800))),
+                                      DataCell(_StatusBadge(status: r.status)),
+                                      DataCell(r.dateMismatchMessage.isEmpty
+                                          ? _TraceabilityCell(row: r)
+                                          : _MilestoneMismatchCell(
+                                              message: r.dateMismatchMessage,
+                                              child: _TraceabilityCell(row: r),
+                                            )),
+                                    ]))
+                                .toList(),
+                          ),
                         ),
                       ),
-                    tableBuilder: (fsContext) => SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          headingRowColor:
-                              WidgetStateProperty.all(const Color(0xFFF9FAFB)),
-                          dataRowColor:
-                              WidgetStateProperty.all(Colors.transparent),
-                          columnSpacing: 24,
-                          horizontalMargin: 16,
-                          sortColumnIndex: _sortBy.index,
-                          sortAscending: _sortAsc,
-                          columns: [
-                            DataColumn(
-                              label: const Text('Code',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.code, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Name',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.name, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Domain',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.domain, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Duration',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.duration, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Start',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.start, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Finish',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.finish, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Cost',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.cost, asc),
-                            ),
-                            DataColumn(
-                              label: const Text('Status',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) => _onSort(_SortBy.status, asc),
-                            ),
-                            const DataColumn(
-                              label: Text('Traceability',
-                                  style: TextStyle(
-                                      color: Color(0xFF6B7280),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
-                            ),
-                          ],
-                          rows: filtered
-                              .map((r) => DataRow(cells: [
-                                    DataCell(Text(r.code,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 11,
-                                            fontFamily: appFontFamily,
-                                            fontWeight: FontWeight.bold))),
-                                    DataCell(Row(
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                              color: Color(r.domainColor),
-                                              shape: BoxShape.circle),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(r.name,
-                                            style: const TextStyle(
-                                                color: Color(0xFF1A1D1F),
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500)),
-                                      ],
-                                    )),
-                                    DataCell(Text(r.domainLabel,
-                                        style: const TextStyle(
-                                            color: Color(0xFF495057),
-                                            fontSize: 12))),
-                                    // Lusaka 28: Duration / Start / Finish are
-                                    // editable inline — mass-populate a schedule
-                                    // without opening each item's editor.
-                                    DataCell(_InlineDurationCell(
-                                      value: r.sortDuration,
-                                      unit: r.durationUnit,
-                                      enabled: r.activityId != null,
-                                      onChanged: (days) => _updateActivityDates(
-                                          r, durationDays: days),
-                                    )),
-                                    DataCell(_InlineDateCell(
-                                      value: r.sortStart == 0
-                                          ? null
-                                          : DateTime
-                                              .fromMillisecondsSinceEpoch(
-                                                  r.sortStart),
-                                      enabled: r.activityId != null,
-                                      onChanged: (date) => _updateActivityDates(
-                                          r, start: date),
-                                    )),
-                                    DataCell(_InlineDateCell(
-                                      value: r.sortFinish == 0
-                                          ? null
-                                          : DateTime
-                                              .fromMillisecondsSinceEpoch(
-                                                  r.sortFinish),
-                                      enabled: r.activityId != null,
-                                      onChanged: (date) => _updateActivityDates(
-                                          r, finish: date),
-                                    )),
-                                    // Lusaka 32: cost is the headline
-                                    // number per work package — bold and
-                                    // dark when linked, muted when not.
-                                    DataCell(Text(r.cost,
-                                        style: TextStyle(
-                                            color: r.sortCost == null
-                                                ? const Color(0xFF9CA3AF)
-                                                : const Color(0xFF1A1D1F),
-                                            fontSize: 13,
-                                            fontWeight: r.sortCost == null
-                                                ? FontWeight.w400
-                                                : FontWeight.w800))),
-                                    DataCell(_StatusBadge(status: r.status)),
-                                    DataCell(r.dateMismatchMessage.isEmpty
-                                        ? _TraceabilityCell(row: r)
-                                        : _MilestoneMismatchCell(
-                                            message: r.dateMismatchMessage,
-                                            child: _TraceabilityCell(row: r),
-                                          )),
-                                  ]))
-                              .toList(),
-                        ),
-                      ),
-                    ),
               ),
               const SizedBox(height: 12),
               // Footer note (wraps on narrow windows)
@@ -684,9 +698,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
     return dedupeScheduleItems(
       rows,
       nameOf: (row) => row.name,
-      identityOf: (row) => row.activityId == null
-          ? null
-          : 'activity:${row.activityId}',
+      identityOf: (row) =>
+          row.activityId == null ? null : 'activity:${row.activityId}',
     );
   }
 
@@ -779,8 +792,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
   ({String text, double? amount}) _costFor(ScheduleActivity node) {
     final List<CostLine> lines;
     try {
-      lines =
-          context.read<CostEstimateProvider>().estimate?.lines ?? const [];
+      lines = context.read<CostEstimateProvider>().estimate?.lines ?? const [];
     } catch (_) {
       return (text: '—', amount: null);
     }
@@ -1438,53 +1450,51 @@ class _InlineDurationCellState extends State<_InlineDurationCell> {
       );
     }
     return SizedBox(
-        width: 84,
-        child: _editing
-            ? TextField(
-                controller: _controller,
-                focusNode: _focus,
-                autofocus: true,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
-                style: const TextStyle(fontSize: 12, color: Color(0xFF1A1D1F)),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                ),
-                onSubmitted: (_) => _commit(),
-              )
-            : InkWell(
-                onTap: () => setState(() => _editing = true),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _display,
-                        style: const TextStyle(
-                            color: Color(0xFF495057), fontSize: 12),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.edit_outlined,
-                          size: 12, color: Colors.grey.shade400),
-                    ],
-                  ),
+      width: 84,
+      child: _editing
+          ? TextField(
+              controller: _controller,
+              focusNode: _focus,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              style: const TextStyle(fontSize: 12, color: Color(0xFF1A1D1F)),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: OutlineInputBorder(),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              ),
+              onSubmitted: (_) => _commit(),
+            )
+          : InkWell(
+              onTap: () => setState(() => _editing = true),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _display,
+                      style: const TextStyle(
+                          color: Color(0xFF495057), fontSize: 12),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.edit_outlined,
+                        size: 12, color: Colors.grey.shade400),
+                  ],
                 ),
               ),
+            ),
     );
   }
 
   String get _display {
     if (widget.value <= 0) return '—';
-    final unit = widget.unit == 'day' || widget.unit == 'days'
-        ? 'd'
-        : widget.unit;
+    final unit =
+        widget.unit == 'day' || widget.unit == 'days' ? 'd' : widget.unit;
     return '${widget.value.round()} $unit';
   }
 }
@@ -1514,37 +1524,37 @@ class _InlineDateCell extends StatelessWidget {
       return _PlainTextCell(text: _formatted);
     }
     return InkWell(
-        onTap: () async {
-          final picked = await showDatePicker(
-            context: context,
-            initialDate: value ?? DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-          );
-          if (picked != null) {
-            onChanged(DateTime(picked.year, picked.month, picked.day));
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _formatted,
-                style: TextStyle(
-                  color: value == null
-                      ? const Color(0xFF9CA3AF)
-                      : const Color(0xFF495057),
-                  fontSize: 12,
-                ),
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: value ?? DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (picked != null) {
+          onChanged(DateTime(picked.year, picked.month, picked.day));
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _formatted,
+              style: TextStyle(
+                color: value == null
+                    ? const Color(0xFF9CA3AF)
+                    : const Color(0xFF495057),
+                fontSize: 12,
               ),
-              const SizedBox(width: 4),
-              Icon(Icons.edit_calendar_outlined,
-                  size: 12, color: Colors.grey.shade400),
-            ],
-          ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.edit_calendar_outlined,
+                size: 12, color: Colors.grey.shade400),
+          ],
         ),
+      ),
     );
   }
 }

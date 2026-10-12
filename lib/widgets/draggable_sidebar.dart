@@ -149,7 +149,10 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
                     child: Icon(
                       collapsed ? Icons.chevron_right : Icons.chevron_left,
                       size: 20,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -162,8 +165,8 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
   }
 }
 
-/// A floating hamburger button for mobile screens that opens a bottom sheet
-/// with the sidebar content. Place this as a positioned overlay in a Stack.
+/// A floating hamburger button for mobile screens that opens a full-height
+/// navigation drawer from the left. Place this as a positioned overlay in a Stack.
 ///
 /// Example:
 /// ```dart
@@ -183,7 +186,7 @@ class MobileSidebarHamburger extends StatelessWidget {
     required this.sidebar,
   });
 
-  /// The sidebar widget to show in the bottom sheet.
+  /// The sidebar widget to show in the mobile drawer.
   final Widget sidebar;
 
   @override
@@ -214,24 +217,47 @@ class MobileSidebarHamburger extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-              showModalBottomSheet<void>(
+              showGeneralDialog<void>(
                 context: context,
-                isScrollControlled: true,
-                backgroundColor: cs.surface,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (context) {
-                  final height = MediaQuery.sizeOf(context).height * 0.92;
-                  return SafeArea(
+                barrierDismissible: true,
+                barrierLabel:
+                    MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                barrierColor: Colors.black54,
+                transitionDuration: const Duration(milliseconds: 220),
+                pageBuilder: (dialogContext, animation, secondaryAnimation) {
+                  final screen = MediaQuery.sizeOf(dialogContext);
+                  final drawerWidth = AppBreakpoints.sidebarWidth(dialogContext)
+                      .clamp(0.0, screen.width)
+                      .toDouble();
+                  return Align(
+                    alignment: Alignment.centerLeft,
                     child: SizedBox(
-                      height: height,
-                      child: sidebar,
+                      width: drawerWidth,
+                      height: screen.height,
+                      child: Material(
+                        color: cs.surface,
+                        elevation: 16,
+                        child: SafeArea(
+                          child: SizedBox.expand(child: sidebar),
+                        ),
+                      ),
                     ),
                   );
                 },
+                transitionBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  final slide = Tween<Offset>(
+                    begin: const Offset(-1, 0),
+                    end: Offset.zero,
+                  ).chain(CurveTween(curve: Curves.easeOutCubic));
+                  return SlideTransition(
+                    position: animation.drive(slide),
+                    child: child,
+                  );
+                },
               );
-            },              child: Padding(
+            },
+            child: Padding(
               padding: const EdgeInsets.all(10),
               child: Icon(Icons.menu, color: cs.onSurface, size: 24),
             ),

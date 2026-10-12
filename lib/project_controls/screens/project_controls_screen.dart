@@ -11,6 +11,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -190,6 +191,17 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                 Expanded(child: PageShimmerSkeleton()),
               ],
             ),
+          bottomBar: const SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: PageNavigationFooter(
+                checkpoint: 'project_controls',
+                pageTitle: 'Project Controls',
+                showBorders: false,
+              ),
+            ),
+          ),
           );
         }
 
@@ -275,6 +287,17 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   ],
             ),
           ),
+        bottomBar: const SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: PageNavigationFooter(
+              checkpoint: 'project_controls',
+              pageTitle: 'Project Controls',
+              showBorders: false,
+            ),
+          ),
+        ),
         );
       },
     );

@@ -28,6 +28,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 
 const double _technicalAlignmentActionColumnWidth = 112;
 const double _technicalAlignmentActionButtonSize = 32;
@@ -671,39 +672,58 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       child: ListView(
         padding: EdgeInsets.all(padding),
         children: [
-          SafeSection(
-            title: 'Detailed Registers',
-            builder: (_) => _buildDetailedRegistersPanel(ownerOptions),
-          ),
-          const SizedBox(height: 24),
-          SafeSection(
-            title: 'Methodology Matrix',
-            builder: (_) => _buildStableMethodologyMatrix(),
-          ),
-          const SizedBox(height: 24),
-          SafeSection(
-            title: 'Readiness Gate',
-            builder: (_) => _buildStableReadinessGateTable(),
-          ),
-          const SizedBox(height: 24),
-          SafeSection(
-            title: 'Traceability Matrix',
-            builder: (_) => _buildStableTraceabilityTable(),
-          ),
-          const SizedBox(height: 24),
-          SafeSection(
-            title: 'Constraints',
-            builder: (_) => _buildStableConstraintPanel(ownerOptions),
-          ),
-          const SizedBox(height: 24),
-          SafeSection(
-            title: 'Mapping',
-            builder: (_) => _buildStableMappingPanel(),
-          ),
-          const SizedBox(height: 24),
-          SafeSection(
-            title: 'Dependencies',
-            builder: (_) => _buildStableDependencyPanel(ownerOptions),
+                    ExecutionSectionTabs(
+            tabs: [
+              SectionTab(
+                label: 'Detailed Registers',
+                builder: (_) => SafeSection(
+                  title: 'Detailed Registers',
+                  builder: (_) => _buildDetailedRegistersPanel(ownerOptions),
+                ),
+              ),
+              SectionTab(
+                label: 'Methodology Matrix',
+                builder: (_) => SafeSection(
+                  title: 'Methodology Matrix',
+                  builder: (_) => _buildStableMethodologyMatrix(),
+                ),
+              ),
+              SectionTab(
+                label: 'Readiness Gate',
+                builder: (_) => SafeSection(
+                  title: 'Readiness Gate',
+                  builder: (_) => _buildStableReadinessGateTable(),
+                ),
+              ),
+              SectionTab(
+                label: 'Traceability Matrix',
+                builder: (_) => SafeSection(
+                  title: 'Traceability Matrix',
+                  builder: (_) => _buildStableTraceabilityTable(),
+                ),
+              ),
+              SectionTab(
+                label: 'Constraints',
+                builder: (_) => SafeSection(
+                  title: 'Constraints',
+                  builder: (_) => _buildStableConstraintPanel(ownerOptions),
+                ),
+              ),
+              SectionTab(
+                label: 'Mapping',
+                builder: (_) => SafeSection(
+                  title: 'Mapping',
+                  builder: (_) => _buildStableMappingPanel(),
+                ),
+              ),
+              SectionTab(
+                label: 'Dependencies',
+                builder: (_) => SafeSection(
+                  title: 'Dependencies',
+                  builder: (_) => _buildStableDependencyPanel(ownerOptions),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           Container(

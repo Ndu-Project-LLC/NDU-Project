@@ -401,12 +401,14 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             children: [
               Icon(Icons.insights, color: Color(0xFF047857), size: 22),
               SizedBox(width: 10),
-              Text(
-                'Measure business outcomes',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF064E3B),
+              Flexible(
+                child: Text(
+                  'Measure business outcomes',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF064E3B),
+                  ),
                 ),
               ),
             ],

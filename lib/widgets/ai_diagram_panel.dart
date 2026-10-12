@@ -778,7 +778,13 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
       children: [
         const SizedBox(height: 16),
         // ── Header row: badge + generate button ──────────────────────────
-        Row(
+        // A Wrap, not a Row: the badge plus the generate button are wider than a
+        // phone, and the button label ("Regenerate Diagram") is the long half.
+        // Wrapping drops it onto its own line instead of clipping it.
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -796,7 +802,6 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                         color: Color(0xFF1F2937))),
               ]),
             ),
-            const SizedBox(width: 12),
             ElevatedButton.icon(
               onPressed: _loading ? null : _generate,
               icon: _loading

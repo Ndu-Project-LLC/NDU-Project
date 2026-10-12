@@ -15,7 +15,6 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wbs_mapping_selectors.dart';
 import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/charter_lock_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -35,6 +34,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_check_dialogs.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -45,9 +45,11 @@ class PlanningRequirementsScreen extends StatefulWidget {
 
 class _PlanningRequirementsScreenState
  extends State<PlanningRequirementsScreen> {
- final TextEditingController _notesController = SpellCheckTextEditingController();
+  final TextEditingController _notesController =
+      SpellCheckTextEditingController();
  final TextEditingController _requirementsPlanController =
- SpellCheckTextEditingController();  final ScrollController _requirementsHorizontalController = ScrollController();
+      SpellCheckTextEditingController();
+  final ScrollController _requirementsHorizontalController = ScrollController();
   final ScrollController _requirementsVerticalController = ScrollController();
 
   /// Controllers for the table shown by the Expand button.
@@ -87,9 +89,6 @@ class _PlanningRequirementsScreenState
  List<_AssignableMember> _memberOptions = const <_AssignableMember>[];
  final List<_RequirementRow> _rows = [];
 
- bool get _isRequirementsLocked =>
- CharterLockHelper.isFepLocked(ProjectDataHelper.getData(context));
-
  static const Set<String> _authorizedRequirementSubmitRoles = {
  'owner',
  'project manager',
@@ -120,8 +119,7 @@ class _PlanningRequirementsScreenState
  _rows.add(_createRow(1));
  }
 
- if (!_isRequirementsLocked &&
- _rows.length == 1 &&
+      if (_rows.length == 1 &&
  _rows.first.descriptionController.text.trim().isEmpty) {
  await _generateRequirementsFromContext();
  }
@@ -228,9 +226,8 @@ class _PlanningRequirementsScreenState
  _resolvePersonSelection(item.person, roleHint: item.role);
  row.selectedPhase = _normalizePhaseSelection(item.phase);
  row.sourceController.text = item.requirementSource;
- row.selectedWbsGoal = item.wbsGoalId.trim().isEmpty
- ? null
- : item.wbsGoalId.trim();
+          row.selectedWbsGoal =
+              item.wbsGoalId.trim().isEmpty ? null : item.wbsGoalId.trim();
  row.selectedWbsElements = List<String>.from(item.wbsElementIds);
  row.selectedCodesStandards = List<String>.from(item.codesStandards);
  return row;
@@ -282,7 +279,6 @@ class _PlanningRequirementsScreenState
  }
 
  Future<void> _generateRequirementsFromContext() async {
- if (_isRequirementsLocked) return;
  if (_isGeneratingRequirements) return;
  setState(() => _isGeneratingRequirements = true);
 
@@ -363,13 +359,11 @@ class _PlanningRequirementsScreenState
  }
 
  void _handleRequirementChanged() {
- if (_isRequirementsLocked) return;
  _scheduleAutoSave();
  _schedulePlanRegenerate();
  }
 
  void _handlePlanChanged() {
- if (_isRequirementsLocked) return;
  if (!_settingPlanFromAi) {
  _planEditedManually = _requirementsPlanController.text.trim().isNotEmpty;
  }
@@ -421,7 +415,6 @@ $requirementsList
  }
 
  Future<void> _generateRequirementsPlan({bool force = false}) async {
- if (_isRequirementsLocked) return;
  if (_isGeneratingRequirementsPlan) return;
  if (!force &&
  _planEditedManually &&
@@ -475,7 +468,6 @@ $requirementsList
  }
 
  Future<void> _regenerateRequirementRow(int index) async {
- if (_isRequirementsLocked) return;
  if (index < 0 || index >= _rows.length) return;
  if (_isGeneratingRequirements || _isRegeneratingRow) return;
 
@@ -562,7 +554,6 @@ $requirementsList
  }
 
  void _undoRequirementRow(int index) {
- if (_isRequirementsLocked) return;
  if (index < 0 || index >= _rows.length) return;
  final row = _rows[index];
  final previous = row.aiUndoText;
@@ -828,8 +819,9 @@ $requirementsList
 
  bool _isRoleAuthorizedForRequirementSubmit(String role) {
  return _authorizedRequirementSubmitRoles.contains(_normalizeRole(role));
- }  void _onReorder(int oldIndex, int newIndex) {
-    if (_isRequirementsLocked) return;
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
     if (newIndex > oldIndex) newIndex--;
     if (oldIndex < 0 || oldIndex >= _rows.length) return;
     if (newIndex < 0 || newIndex >= _rows.length) return;
@@ -844,7 +836,6 @@ $requirementsList
   }
 
   void _deleteRow(int index) {
-    if (_isRequirementsLocked) return;
     if (index < 0 || index >= _rows.length) return;
     setState(() {
       _rows[index].dispose();
@@ -1022,9 +1013,7 @@ if (!mounted) return;
  nextScreenBuilder: () =>
  PlanningPhaseNavigation.resolveNextScreen(context, 'requirements') ??
  const SsherStackedScreen(),
- dataUpdater: _isRequirementsLocked
- ? null
- : (data) => data.copyWith(
+      dataUpdater: (data) => data.copyWith(
  frontEndPlanning: ProjectDataHelper.updateFEPField(
  current: data.frontEndPlanning,
  requirements: requirementsText,
@@ -1041,7 +1030,6 @@ if (!mounted) return;
  }
 
  void _scheduleAutoSave({bool showSnack = true}) {
- if (_isRequirementsLocked) return;
  _autoSaveTimer?.cancel();
  _autoSaveTimer = Timer(const Duration(milliseconds: 500), () {
  _commitAutoSave(showSnack: showSnack);
@@ -1049,7 +1037,7 @@ if (!mounted) return;
  }
 
  void _commitAutoSave({bool showSnack = true}) {
- if (!mounted || _isRequirementsLocked) return;
+    if (!mounted) return;
 
  final items = _buildRequirementItems();
  final requirementsText = items
@@ -1115,7 +1103,6 @@ if (!mounted) return;
  }
 
  Future<void> _confirmRegenerate() async {
- if (_isRequirementsLocked) return;
  if (_isGeneratingRequirements) return;
  if (!_hasAnyRequirementInputs()) {
  await _generateRequirementsFromContext();
@@ -1150,7 +1137,8 @@ if (!mounted) return;
  @override
  void dispose() {
  _autoSaveTimer?.cancel();
- _planTimer?.cancel();    _requirementsHorizontalController.dispose();
+    _planTimer?.cancel();
+    _requirementsHorizontalController.dispose();
     _requirementsVerticalController.dispose();
     _fullScreenHorizontalController.dispose();
     _fullScreenVerticalController.dispose();
@@ -1194,14 +1182,19 @@ if (!mounted) return;
  children: [
  Expanded(
  child: SingleChildScrollView(
- padding: const EdgeInsets.symmetric(
- horizontal: 32,
- vertical: 24,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal:
+                                      AppBreakpoints.pagePadding(context),
+                                  vertical: AppBreakpoints.isMobile(context)
+                                      ? 16
+                                      : 24,
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- PlanningPhaseHeader(title: 'Requirements', onExportPdf: _exportPdf),
+                                    PlanningPhaseHeader(
+                                        title: 'Requirements',
+                                        onExportPdf: _exportPdf),
  const SizedBox(height: 16),
  CollapsibleNotesSection(
                     title: 'Notes',
@@ -1209,7 +1202,6 @@ if (!mounted) return;
                       controller: _notesController,
                       hint: 'Input your notes here...',
                       minLines: 3,
-                      readOnly: _isRequirementsLocked,
                     ),
                   ),
  const SizedBox(height: 20),
@@ -1259,7 +1251,7 @@ if (!mounted) return;
  color: Color(0xFFFFC812),
  ),
  onPressed:
- _isRequirementsLocked || _isGeneratingRequirementsPlan
+                                              _isGeneratingRequirementsPlan
  ? null
  : () =>
  _generateRequirementsPlan(
@@ -1273,13 +1265,15 @@ if (!mounted) return;
  // across the whole text. Disabled while the section is locked, because a
  // locked plan cannot accept an edit.
  IconButton(
- icon: const Icon(Icons.spellcheck, size: 20, color: Color(0xFF6B7280)),
- tooltip: 'Review spelling and grammar',
- onPressed: _isRequirementsLocked
- ? null
- : () => showSpellCheckDialog(
+                                          icon: const Icon(Icons.spellcheck,
+                                              size: 20,
+                                              color: Color(0xFF6B7280)),
+                                          tooltip:
+                                              'Review spelling and grammar',
+                                          onPressed: () => showSpellCheckDialog(
  context,
- controller: _requirementsPlanController,
+                                            controller:
+                                                _requirementsPlanController,
  ),
  ),
  ],
@@ -1290,7 +1284,6 @@ if (!mounted) return;
  hint:
  'AI will generate a requirements plan based on your entries...',
  minLines: 4,
- readOnly: _isRequirementsLocked,
  ),
  const SizedBox(height: 24),
  Row(
@@ -1338,7 +1331,7 @@ if (!mounted) return;
  size: 20,
  color: Color(0xFFFFC812),
  ),
- onPressed: _isRequirementsLocked || _isGeneratingRequirements
+                                          onPressed: _isGeneratingRequirements
  ? null
  : _confirmRegenerate,
  tooltip: 'Regenerate requirements',
@@ -1355,7 +1348,12 @@ if (!mounted) return;
  ),
  ),
  Padding(
- padding: const EdgeInsets.fromLTRB(32, 0, 96, 24),
+                              padding: EdgeInsets.fromLTRB(
+                                AppBreakpoints.pagePadding(context),
+                                0,
+                                AppBreakpoints.isMobile(context) ? 16 : 96,
+                                24,
+                              ),
  child: _buildDesktopFooter(context),
  ),
  ],
@@ -1378,6 +1376,7 @@ if (!mounted) return;
  }
 
  Widget _buildHeader(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
  final user = FirebaseAuth.instance.currentUser;
  final displayName =
  FirebaseAuthService.displayNameOrEmail(fallback: 'User');
@@ -1388,7 +1387,7 @@ if (!mounted) return;
 
  return Container(
  height: 88,
- padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 24),
  decoration: const BoxDecoration(
  color: Colors.white,
  border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
@@ -1396,15 +1395,33 @@ if (!mounted) return;
  child: Row(
  children: [
  IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 40),
  icon: const Icon(Icons.arrow_back_ios, size: 16),
  onPressed: () =>
  PlanningPhaseNavigation.goToPrevious(context, 'requirements'),
  ),
  IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 40),
  icon: const Icon(Icons.arrow_forward_ios, size: 16),
  onPressed: () =>
  PlanningPhaseNavigation.goToNext(context, 'requirements'),
  ),
+          if (isMobile)
+            const Expanded(
+              child: Center(
+                child: Text(
+                  'Planning Phase',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+            )
+          else ...[
  const Spacer(),
  const Text(
  'Planning Phase',
@@ -1416,6 +1433,21 @@ if (!mounted) return;
  ),
  const Spacer(),
  const SizedBox(width: 12),
+          ],
+          if (isMobile)
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: const Color(0xFFFFC812),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            )
+          else
  Row(
  children: [
  CircleAvatar(
@@ -1461,7 +1493,9 @@ if (!mounted) return;
  ],
  ),
  );
- }  Widget _buildRequirementsTable(BuildContext context) {
+  }
+
+  Widget _buildRequirementsTable(BuildContext context) {
     const headerStyle = TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w700,
@@ -1496,7 +1530,9 @@ if (!mounted) return;
         width: w,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Center(child: Text(text, style: headerStyle, textAlign: TextAlign.center)),
+          child: Center(
+              child:
+                  Text(text, style: headerStyle, textAlign: TextAlign.center)),
         ),
       );
     }
@@ -1514,24 +1550,7 @@ if (!mounted) return;
         child: Row(
           children: [
             // Col 0: No + drag handle
-            _isRequirementsLocked
-                ? SizedBox(
-                    width: colW[0],
-                    child: Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.lock_outline,
-                              size: 16, color: Color(0xFFCBD5E1)),
-                          const SizedBox(width: 4),
-                          Text('${row.number}',
-                              style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF111827))),
-                        ],
-                      ),
-                    ),
-                  )
-                : ReorderableDragStartListener(
+            ReorderableDragStartListener(
                     index: index,
                     child: SizedBox(
                 width: colW[0],
@@ -1539,20 +1558,25 @@ if (!mounted) return;
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.drag_indicator, size: 18, color: Color(0xFF9CA3AF)),
+                      const Icon(Icons.drag_indicator,
+                          size: 18, color: Color(0xFF9CA3AF)),
                       const SizedBox(width: 2),
-                      Text('${row.number}',
-                        style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                      Text(
+                        '${row.number}',
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFF111827)),
                       ),
                     ],
                   ),
-                ),                    ),
+                ),
+              ),
                   ),
             // Col 1: Requirement
             SizedBox(
               width: colW[1],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
@@ -1565,26 +1589,32 @@ if (!mounted) return;
                           Tooltip(
                             message: 'Regenerate (AI)',
                             child: IconButton(
-                              onPressed: _isRequirementsLocked || isRowLoading
+                              onPressed: isRowLoading
                                   ? null
                                   : () => _regenerateRequirementRow(index),
                               icon: isRowLoading
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFFFFC812)),
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2))
+                                  : const Icon(Icons.refresh,
+                                      size: 18, color: Color(0xFFFFC812)),
                               padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              constraints: const BoxConstraints(
+                                  minWidth: 36, minHeight: 36),
                               splashRadius: 18,
                             ),
                           ),
                           Tooltip(
                             message: 'Undo',
                             child: IconButton(
-                              onPressed: _isRequirementsLocked
-                                  ? null
-                                  : () => _undoRequirementRow(index),
-                              icon: const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
+                              onPressed: () => _undoRequirementRow(index),
+                              icon: const Icon(Icons.undo,
+                                  size: 18, color: Color(0xFF6B7280)),
                               padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                              constraints: const BoxConstraints(
+                                  minWidth: 36, minHeight: 36),
                               splashRadius: 18,
                             ),
                           ),
@@ -1595,17 +1625,15 @@ if (!mounted) return;
                       controller: row.descriptionController,
                       minLines: 2,
                       maxLines: null,
-                      readOnly: _isRequirementsLocked,
-                      onChanged: _isRequirementsLocked
-                          ? null
-                          : (_) => _handleRequirementChanged(),
+                      onChanged: (_) => _handleRequirementChanged(),
                       decoration: const InputDecoration(
                         hintText: 'Requirement description',
                         hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
                         border: InputBorder.none,
                         isDense: true,
                       ),
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                      style: const TextStyle(
+                          fontSize: 14, color: Color(0xFF111827)),
                     ),
                   ],
                 ),
@@ -1615,10 +1643,10 @@ if (!mounted) return;
             SizedBox(
               width: colW[2],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _TypeDropdown(
                   value: row.selectedType,
-                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedType = value;
                     _handleRequirementChanged();
@@ -1630,10 +1658,10 @@ if (!mounted) return;
             SizedBox(
               width: colW[3],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _DisciplineDropdown(
                   value: row.selectedDiscipline,
-                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedDiscipline = value;
                     _handleRequirementChanged();
@@ -1645,7 +1673,8 @@ if (!mounted) return;
             SizedBox(
               width: colW[4],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: VoiceTextField(
                   controller: row.roleController,
                   maxLines: 1,
@@ -1656,7 +1685,8 @@ if (!mounted) return;
                     border: InputBorder.none,
                     isDense: true,
                   ),
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFF111827)),
                 ),
               ),
             ),
@@ -1664,12 +1694,12 @@ if (!mounted) return;
             SizedBox(
               width: colW[5],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: _PersonDropdownField(
                   value: row.personController.text,
                   options: _memberOptions,
                   hint: 'Person',
-                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.personController.text = value;
                     _handleRequirementChanged();
@@ -1681,10 +1711,10 @@ if (!mounted) return;
             SizedBox(
               width: colW[6],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: _PhaseDropdown(
                   value: row.selectedPhase,
-                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     row.selectedPhase = value;
                     _handleRequirementChanged();
@@ -1696,10 +1726,10 @@ if (!mounted) return;
             SizedBox(
               width: colW[7],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: WbsGoalDropdown(
                   value: row.selectedWbsGoal,
-                  enabled: !_isRequirementsLocked,
                   onChanged: (value) {
                     setState(() {
                       row.selectedWbsGoal = value;
@@ -1716,11 +1746,11 @@ if (!mounted) return;
             SizedBox(
               width: colW[8],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: WbsElementMultiSelect(
                   goalId: row.selectedWbsGoal,
                   selectedIds: row.selectedWbsElements,
-                  enabled: !_isRequirementsLocked,
                   onChanged: (ids) {
                     setState(() => row.selectedWbsElements = ids);
                     _handleRequirementChanged();
@@ -1732,7 +1762,8 @@ if (!mounted) return;
             SizedBox(
               width: colW[9],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: VoiceTextField(
                   controller: row.sourceController,
                   maxLines: 1,
@@ -1743,7 +1774,8 @@ if (!mounted) return;
                     border: InputBorder.none,
                     isDense: true,
                   ),
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFF111827)),
                 ),
               ),
             ),
@@ -1751,7 +1783,8 @@ if (!mounted) return;
             SizedBox(
               width: colW[10],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: VoiceTextField(
                   controller: row.commentsController,
                   minLines: 2,
@@ -1763,22 +1796,26 @@ if (!mounted) return;
                     border: InputBorder.none,
                     isDense: true,
                   ),
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFF111827)),
                 ),
               ),
             ),
-            // Col 11: Codes / standards — Lusaka 14
+            // Col 11: Codes / standards — read-only (Lusaka 15).
+            //
+            // A requirement finishes at its WBS mapping; the codes and
+            // standards it must satisfy are authored in Design Planning
+            // (Design Specifications → Requirements Mapping) and surface here.
+            // The picker that used to live in this cell let the page look like
+            // the place to fill them in, so the cell is now a greyed,
+            // non-tappable report of what Design Planning mapped.
             SizedBox(
               width: colW[11],
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: CodesStandardsMultiSelect(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: CodesStandardsReadOnly(
                   selected: row.selectedCodesStandards,
-                  enabled: !_isRequirementsLocked,
-                  onChanged: (codes) {
-                    setState(() => row.selectedCodesStandards = codes);
-                    _handleRequirementChanged();
-                  },
                 ),
               ),
             ),
@@ -1787,8 +1824,9 @@ if (!mounted) return;
               width: colW[12],
               child: Center(
                 child: IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
-                  onPressed: _isRequirementsLocked ? null : () => _deleteRow(index),
+                  icon: const Icon(Icons.delete_outline,
+                      size: 20, color: Color(0xFFEF4444)),
+                  onPressed: () => _deleteRow(index),
                   tooltip: 'Delete requirement',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -1800,9 +1838,262 @@ if (!mounted) return;
       );
     }
 
+    Widget mobileField(String label, Widget field) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 4),
+            field,
+          ],
+        ),
+      );
+    }
+
+    Widget buildMobileCard(int index) {
+      final row = _rows[index];
+      final isRowLoading = _isRegeneratingRow && _regeneratingRowIndex == index;
+
+      return Container(
+        key: ValueKey('req_mobile_card_$index'),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x08000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.drag_indicator,
+                        size: 20, color: Color(0xFF9CA3AF)),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Requirement ${row.number}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Regenerate (AI)',
+                  onPressed: isRowLoading
+                      ? null
+                      : () => _regenerateRequirementRow(index),
+                  icon: isRowLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh,
+                          size: 18, color: Color(0xFFFFC812)),
+                ),
+                IconButton(
+                  tooltip: 'Undo',
+                  onPressed: () => _undoRequirementRow(index),
+                  icon: const Icon(Icons.undo,
+                      size: 18, color: Color(0xFF6B7280)),
+                ),
+                IconButton(
+                  tooltip: 'Delete requirement',
+                  onPressed: () => _deleteRow(index),
+                  icon: const Icon(Icons.delete_outline,
+                      size: 20, color: Color(0xFFEF4444)),
+                ),
+              ],
+            ),
+            mobileField(
+              'Requirement',
+              VoiceTextField(
+                controller: row.descriptionController,
+                minLines: 2,
+                maxLines: null,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Requirement description',
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+            mobileField(
+              'Requirement type',
+              _TypeDropdown(
+                value: row.selectedType,
+                onChanged: (value) {
+                  row.selectedType = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            mobileField(
+              'Discipline',
+              _DisciplineDropdown(
+                value: row.selectedDiscipline,
+                onChanged: (value) {
+                  row.selectedDiscipline = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            mobileField(
+              'Role',
+              VoiceTextField(
+                controller: row.roleController,
+                maxLines: 1,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Role',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+            mobileField(
+              'Person',
+              _PersonDropdownField(
+                value: row.personController.text,
+                options: _memberOptions,
+                hint: 'Person',
+                onChanged: (value) {
+                  row.personController.text = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            mobileField(
+              'Phase',
+              _PhaseDropdown(
+                value: row.selectedPhase,
+                onChanged: (value) {
+                  row.selectedPhase = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            mobileField(
+              'WBS Goal (Level 1)',
+              WbsGoalDropdown(
+                value: row.selectedWbsGoal,
+                onChanged: (value) {
+                  setState(() {
+                    row.selectedWbsGoal = value;
+                    row.selectedWbsElements = [];
+                  });
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            mobileField(
+              'WBS Elements (Level 2)',
+              WbsElementMultiSelect(
+                goalId: row.selectedWbsGoal,
+                selectedIds: row.selectedWbsElements,
+                onChanged: (ids) {
+                  setState(() => row.selectedWbsElements = ids);
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            mobileField(
+              'Requirement source',
+              VoiceTextField(
+                controller: row.sourceController,
+                maxLines: 1,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Requirement source',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+            mobileField(
+              'Comments and source links',
+              VoiceTextField(
+                controller: row.commentsController,
+                minLines: 2,
+                maxLines: null,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Comments / source links',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+            mobileField(
+              'Codes / Standards',
+              CodesStandardsReadOnly(selected: row.selectedCodesStandards),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget buildMobileCards() {
+      if (_rows.isEmpty) {
+        return const Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(
+            child: Text(
+              'No requirements yet. Add one or import from CSV.',
+              style: TextStyle(color: Color(0xFF9CA3AF)),
+            ),
+          ),
+        );
+      }
+
+      return ReorderableListView(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        buildDefaultDragHandles: false,
+        onReorder: _onReorder,
+        children: List.generate(_rows.length, buildMobileCard),
+      );
+    }
+
+    final isMobile = AppBreakpoints.isMobile(context);
+
     return FullScreenTableWrapper(
     title: 'Planning Requirements',
-    child: Container(
+      showExpandButton: !isMobile,
+      child: isMobile
+          ? buildMobileCards()
+          : Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1851,7 +2142,8 @@ if (!mounted) return;
                         hCell('WBS Goal (Level 1)', colW[7]),
                         hCell('WBS Elements (Level 2)', colW[8]),
                         hCell('Requirement source', colW[9]),
-                        hCell('Comments and Requirement Source Links', colW[10]),
+                                hCell('Comments and Requirement Source Links',
+                                    colW[10]),
                         hCell('Codes / Standards', colW[11]),
                         hCell('', colW[12]),
                       ],
@@ -1863,7 +2155,8 @@ if (!mounted) return;
                         ? const Center(
                             child: Text(
                               'No requirements yet. Add one or import from CSV.',
-                              style: TextStyle(color: Color(0xFF9CA3AF)),
+                                      style:
+                                          TextStyle(color: Color(0xFF9CA3AF)),
                             ),
                           )
                         : Scrollbar(
@@ -1875,10 +2168,12 @@ if (!mounted) return;
                               // otherwise the Scrollbar throws "The Scrollbar's
                               // ScrollController has no ScrollPosition
                               // attached" every frame.
-                              scrollController: _requirementsVerticalController,
+                                      scrollController:
+                                          _requirementsVerticalController,
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
-                              children: List.generate(_rows.length, (i) => buildDataRow(i)),
+                                      children: List.generate(
+                                          _rows.length, (i) => buildDataRow(i)),
                             ),
                           ),
                   ),
@@ -1889,7 +2184,6 @@ if (!mounted) return;
         ),
       ),
     ),
-
     tableBuilder: (fsContext) => Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1939,7 +2233,8 @@ if (!mounted) return;
                         hCell('WBS Goal (Level 1)', colW[7]),
                         hCell('WBS Elements (Level 2)', colW[8]),
                         hCell('Requirement source', colW[9]),
-                        hCell('Comments and Requirement Source Links', colW[10]),
+                          hCell('Comments and Requirement Source Links',
+                              colW[10]),
                         hCell('Codes / Standards', colW[11]),
                         hCell('', colW[12]),
                       ],
@@ -1953,7 +2248,8 @@ if (!mounted) return;
                               'No requirements yet. Add one or import from CSV.',
                               style: TextStyle(color: Color(0xFF9CA3AF)),
                             ),
-                          )                        : Scrollbar(
+                            )
+                          : Scrollbar(
                             controller: _fullScreenVerticalController,
                             thumbVisibility: true,
                             child: ReorderableListView(
@@ -1962,7 +2258,8 @@ if (!mounted) return;
                               scrollController: _fullScreenVerticalController,
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
-                              children: List.generate(_rows.length, (i) => buildDataRow(i)),
+                                children: List.generate(
+                                    _rows.length, (i) => buildDataRow(i)),
                             ),
                           ),
                   ),
@@ -1973,8 +2270,6 @@ if (!mounted) return;
         ),
       ),
     ),
-
-
     );
   }
 
@@ -2030,17 +2325,49 @@ if (!mounted) return;
  }
 
   List<CsvColumnSpec> get _csvColumns => [
-    const CsvColumnSpec(key: 'description', label: 'Requirement', required: true, sampleValue: 'The system shall support user authentication'),
-    const CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _RequirementRow.requirementTypeOptions, defaultValue: 'Functional', sampleValue: 'Functional'),
-    const CsvColumnSpec(key: 'discipline', label: 'Discipline', allowedValues: _RequirementRow.disciplineOptions, defaultValue: 'IT', sampleValue: 'IT'),
-    const CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
-    const CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
-    const CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
-    const CsvColumnSpec(key: 'wbsGoal', label: 'WBS Goal (Level 1)', sampleValue: 'G1'),
-    const CsvColumnSpec(key: 'wbsElements', label: 'WBS Elements (Level 2)', sampleValue: 'G1.1, G1.2'),
-    const CsvColumnSpec(key: 'codesStandards', label: 'Codes / Standards', sampleValue: 'ISO 9001'),
-    const CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
-    const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
+        const CsvColumnSpec(
+            key: 'description',
+            label: 'Requirement',
+            required: true,
+            sampleValue: 'The system shall support user authentication'),
+        const CsvColumnSpec(
+            key: 'type',
+            label: 'Type',
+            allowedValues: _RequirementRow.requirementTypeOptions,
+            defaultValue: 'Functional',
+            sampleValue: 'Functional'),
+        const CsvColumnSpec(
+            key: 'discipline',
+            label: 'Discipline',
+            allowedValues: _RequirementRow.disciplineOptions,
+            defaultValue: 'IT',
+            sampleValue: 'IT'),
+        const CsvColumnSpec(
+            key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
+        const CsvColumnSpec(
+            key: 'person', label: 'Person', sampleValue: 'John Doe'),
+        const CsvColumnSpec(
+            key: 'phase',
+            label: 'Phase',
+            allowedValues: _RequirementRow.phaseOptions,
+            defaultValue: 'Planning',
+            sampleValue: 'Planning'),
+        const CsvColumnSpec(
+            key: 'wbsGoal', label: 'WBS Goal (Level 1)', sampleValue: 'G1'),
+        const CsvColumnSpec(
+            key: 'wbsElements',
+            label: 'WBS Elements (Level 2)',
+            sampleValue: 'G1.1, G1.2'),
+        const CsvColumnSpec(
+            key: 'codesStandards',
+            label: 'Codes / Standards',
+            sampleValue: 'ISO 9001'),
+        const CsvColumnSpec(
+            key: 'source',
+            label: 'Source',
+            sampleValue: 'Stakeholder interview'),
+        const CsvColumnSpec(
+            key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
 
   /// Excel template with a numbered `Data` sheet plus a `Definitions` sheet.
@@ -2095,14 +2422,14 @@ if (!mounted) return;
   }
 
   Widget _buildActionButtons() {
-  return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
   children: [
   SizedBox(
   height: 44,
   child: OutlinedButton.icon(
-                  onPressed: _isRequirementsLocked
-                      ? null
-                      : () async {
+            onPressed: () async {
   final rows = await showCsvImportDialog(
   context,
   tableTitle: 'Project Requirements',
@@ -2113,9 +2440,18 @@ if (!mounted) return;
  for (final row in rows) {
  final newRow = _createRow(_rows.length + 1);
  newRow.descriptionController.text = row['description'] ?? '';
- newRow.selectedType = _RequirementRow.requirementTypeOptions.contains(row['type']) ? row['type'] : 'Functional';
- newRow.selectedDiscipline = _RequirementRow.disciplineOptions.contains(row['discipline']) ? row['discipline'] : 'IT';
- newRow.selectedPhase = _RequirementRow.phaseOptions.contains(row['phase']) ? row['phase'] : 'Planning';
+                  newRow.selectedType = _RequirementRow.requirementTypeOptions
+                          .contains(row['type'])
+                      ? row['type']
+                      : 'Functional';
+                  newRow.selectedDiscipline = _RequirementRow.disciplineOptions
+                          .contains(row['discipline'])
+                      ? row['discipline']
+                      : 'IT';
+                  newRow.selectedPhase =
+                      _RequirementRow.phaseOptions.contains(row['phase'])
+                          ? row['phase']
+                          : 'Planning';
  newRow.roleController.text = row['role'] ?? '';
  newRow.personController.text = row['person'] ?? '';
  newRow.sourceController.text = row['source'] ?? '';
@@ -2139,14 +2475,17 @@ if (!mounted) return;
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
- content: Text('${rows.length} requirements imported from CSV'),
+                    content:
+                        Text('${rows.length} requirements imported from CSV'),
  backgroundColor: Colors.green,
  behavior: SnackBarBehavior.floating,
  ),
  );
- }  },
+              }
+            },
   icon: const Icon(Icons.upload_file_outlined, size: 18),
- label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            label: const Text('Import CSV',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
  style: OutlinedButton.styleFrom(
  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
  foregroundColor: const Color(0xFFFFC812),
@@ -2158,28 +2497,29 @@ if (!mounted) return;
  ),
   ),
   ),
-  const SizedBox(width: 12),
   SizedBox(
   height: 44,
   child: OutlinedButton.icon(
   onPressed: _exportCsv,
   icon: const Icon(Icons.file_download_outlined, size: 18),
-  label: const Text('Export CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            label: const Text('Export CSV',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
   foregroundColor: const Color(0xFFFFC812),
   side: const BorderSide(color: Color(0xFFFFC812)),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
   ),
   ),
   ),
-  const SizedBox(width: 12),
   SizedBox(
   height: 44,
   child: OutlinedButton.icon(
   onPressed: _downloadTemplate,
   icon: const Icon(Icons.download, size: 18),
-  label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            label: const Text('Template',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
   foregroundColor: const Color(0xFFFFC812),
@@ -2191,13 +2531,10 @@ if (!mounted) return;
   ),
   ),
   ),
-  const SizedBox(width: 12),
   SizedBox(
   height: 44,
   child: OutlinedButton(
-  onPressed: _isRequirementsLocked
-      ? null
-      : () {
+            onPressed: () {
   setState(() {
   _rows.add(_createRow(_rows.length + 1));
   });
@@ -2259,10 +2596,21 @@ if (!mounted) return;
  screenTitle: 'Planning Requirements',
  sections: [
  PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
- {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
+          {
+            'Project Name': projectData.projectName.isEmpty
+                ? 'N/A'
+                : projectData.projectName
+          },
+          {
+            'Solution Title': projectData.solutionTitle.isEmpty
+                ? 'N/A'
+                : projectData.solutionTitle
+          },
  ]),
- PdfSection.text('Notes', projectData.planningNotes['planning_requirements_notes'] ?? 'No data recorded.'),
+        PdfSection.text(
+            'Notes',
+            projectData.planningNotes['planning_requirements_notes'] ??
+                'No data recorded.'),
  ],
  );
  }
@@ -2392,12 +2740,10 @@ class _TypeDropdown extends StatefulWidget {
  const _TypeDropdown({
  this.value,
  required this.onChanged,
- this.enabled = true,
  });
 
  final String? value;
  final ValueChanged<String?> onChanged;
- final bool enabled;
 
  @override
  State<_TypeDropdown> createState() => _TypeDropdownState();
@@ -2444,12 +2790,10 @@ class _TypeDropdownState extends State<_TypeDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: widget.enabled
- ? (value) {
+          onChanged: (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- }
- : null,
+          },
  items: _RequirementRow.requirementTypeOptions
  .map(
  (option) => DropdownMenuItem<String?>(
@@ -2472,12 +2816,10 @@ class _DisciplineDropdown extends StatefulWidget {
  const _DisciplineDropdown({
  this.value,
  required this.onChanged,
- this.enabled = true,
  });
 
  final String? value;
  final ValueChanged<String?> onChanged;
- final bool enabled;
 
  @override
  State<_DisciplineDropdown> createState() => _DisciplineDropdownState();
@@ -2522,12 +2864,10 @@ class _DisciplineDropdownState extends State<_DisciplineDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: widget.enabled
- ? (value) {
+          onChanged: (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- }
- : null,
+          },
  items: _RequirementRow.disciplineOptions
  .map(
  (option) => DropdownMenuItem<String>(
@@ -2550,12 +2890,10 @@ class _PhaseDropdown extends StatefulWidget {
  const _PhaseDropdown({
  this.value,
  required this.onChanged,
- this.enabled = true,
  });
 
  final String? value;
  final ValueChanged<String?> onChanged;
- final bool enabled;
 
  @override
  State<_PhaseDropdown> createState() => _PhaseDropdownState();
@@ -2600,12 +2938,10 @@ class _PhaseDropdownState extends State<_PhaseDropdown> {
  size: 20,
  ),
  isExpanded: true,
- onChanged: widget.enabled
- ? (value) {
+          onChanged: (value) {
  setState(() => _value = value);
  widget.onChanged(value);
- }
- : null,
+          },
  items: _RequirementRow.phaseOptions
  .map(
  (option) => DropdownMenuItem<String>(
@@ -2630,14 +2966,12 @@ class _PersonDropdownField extends StatelessWidget {
  required this.options,
  required this.hint,
  required this.onChanged,
- this.enabled = true,
  });
 
  final String value;
  final List<_AssignableMember> options;
  final String hint;
  final ValueChanged<String> onChanged;
- final bool enabled;
 
  @override
  Widget build(BuildContext context) {
@@ -2645,7 +2979,7 @@ class _PersonDropdownField extends StatelessWidget {
  final noMembers = options.isEmpty;
 
  return InkWell(
- onTap: !enabled || noMembers
+      onTap: noMembers
  ? null
  : () async {
  final selected = await showAppDialog<_AssignableMember>(
@@ -2689,9 +3023,8 @@ class _PersonDropdownField extends StatelessWidget {
  Icon(
  Icons.search_rounded,
  size: 18,
- color: !enabled || noMembers
- ? const Color(0xFFCBD5E1)
- : const Color(0xFF6B7280),
+              color:
+                  noMembers ? const Color(0xFFCBD5E1) : const Color(0xFF6B7280),
  ),
  ],
  ),

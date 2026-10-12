@@ -3582,8 +3582,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openCostEstimate,
           isActive: _isActiveLabel('Cost Estimate')));
     }
-    if ('project services'.contains(query) ||
-        'scope tracking plan'.contains(query) ||
+    if ('project services'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.track_changes_outlined, 'Scope Tracking Plan',
+          onTap: _openScopeTrackingPlan,
+          isActive: _isActiveLabel('Scope Tracking Plan')));
+      results.add(_buildMenuItem(
+          Icons.track_changes_outlined, 'Project Controls',
+          onTap: _openProjectControls,
+          isActive: _isActiveLabel('Project Controls')));
+    }
+    if ('scope tracking plan'.contains(query) ||
         'scope tracking'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.track_changes_outlined, 'Scope Tracking Plan',

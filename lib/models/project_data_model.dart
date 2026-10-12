@@ -1518,6 +1518,14 @@ class PlanningGoal {
   List<String> milestoneIds;
   List<PlanningMilestone> milestones;
 
+  /// Lusaka 15: the WBS element this goal *is* — the Level-1 code ("G1", "G2").
+  ///
+  /// Goals are the WBS's second level, so this is what ties a goal back to the
+  /// WBS even when the node is re-created with a new id. The Goals & Milestones
+  /// page matches on it when carrying the milestone mapping over, so deleting
+  /// and re-adding a goal in the WBS does not silently drop its milestones.
+  String wbsCode;
+
   PlanningGoal({
     String? id,
     required this.goalNumber,
@@ -1525,6 +1533,7 @@ class PlanningGoal {
     this.description = '',
     this.targetYear = '',
     this.priority = 'Medium Priority',
+    this.wbsCode = '',
     List<String>? milestoneIds,
     List<PlanningMilestone>? milestones,
   })  : id = id ?? newId(),
@@ -1538,6 +1547,7 @@ class PlanningGoal {
         'description': description,
         'targetYear': targetYear,
         'priority': priority,
+        'wbsCode': wbsCode,
         'isHighPriority': priority == 'High Priority',
         'milestoneIds': milestoneIds,
         'milestones': milestones.map((m) => m.toJson()).toList(),
@@ -1552,6 +1562,9 @@ class PlanningGoal {
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       targetYear: json['targetYear'] ?? '',
+      wbsCode: json['wbsCode']?.toString() ??
+          json['wbs_code']?.toString() ??
+          '',
       priority: rawPriority.isNotEmpty
           ? rawPriority
           : (legacyHigh ? 'High Priority' : 'Medium Priority'),

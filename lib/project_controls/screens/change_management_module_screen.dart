@@ -25,6 +25,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
@@ -34,6 +35,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/theme.dart';
@@ -300,6 +302,17 @@ class _ChangeManagementModuleScreenState
               ),
             ],
           ),
+        bottomBar: const SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: PageNavigationFooter(
+              checkpoint: 'change_management',
+              pageTitle: 'Change Management',
+              showBorders: false,
+            ),
+          ),
+        ),
         );
       },
     );
@@ -1120,7 +1133,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: DataTable(
+        child: NduResponsiveDataTable(
           columnSpacing: 20,
           horizontalMargin: 16,
           headingRowColor: WidgetStateProperty.all(const Color(0xFFF5F7FB)),
@@ -2062,8 +2075,8 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
 
     Future<void> uploadDocument(StateSetter setDialogState) async {
       if (uploading) return;
-      final projectId = (ProjectDataHelper.getData(context).projectId ?? '')
-          .trim();
+      final projectId =
+          (ProjectDataHelper.getData(context).projectId ?? '').trim();
       setDialogState(() => uploading = true);
       try {
         final result = await FileUploadHelper.pickAndUpload(
@@ -2145,7 +2158,8 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   const SizedBox(height: 8),
                   CheckboxListTile(
                       value: isEmergency,
-                      onChanged: (v) => setState(() => isEmergency = v ?? false),
+                      onChanged: (v) =>
+                          setState(() => isEmergency = v ?? false),
                       title: const Text('Emergency Change',
                           style: TextStyle(fontSize: 13)),
                       dense: true,
@@ -2155,10 +2169,9 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   // Scope impact — always from the WBS.
                   ChangeRequestScopePicker(
                     selected: selectedScope,
-                    onChanged: (next) =>
-                        setState(() => selectedScope
-                          ..clear()
-                          ..addAll(next)),
+                    onChanged: (next) => setState(() => selectedScope
+                      ..clear()
+                      ..addAll(next)),
                   ),
                   const SizedBox(height: 8),
                   // Supporting documents.
@@ -2211,8 +2224,8 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                           IconButton(
                             tooltip: 'Remove',
                             visualDensity: VisualDensity.compact,
-                            onPressed: () => setState(
-                                () => attachments.remove(attachment)),
+                            onPressed: () =>
+                                setState(() => attachments.remove(attachment)),
                             icon: const Icon(Icons.close,
                                 size: 14, color: Color(0xFFEF4444)),
                           ),
@@ -3253,14 +3266,13 @@ class _CreateCRTabState extends State<_CreateCRTab> {
   /// Adds the picked document to the pending list on this CR.
   Future<void> _pickAndUploadDocument() async {
     if (_uploadingDocument) return;
-    final projectId =
-        (() {
-          try {
-            return ProjectDataHelper.getData(context).projectId ?? '';
-          } catch (_) {
-            return '';
-          }
-        })();
+    final projectId = (() {
+      try {
+        return ProjectDataHelper.getData(context).projectId ?? '';
+      } catch (_) {
+        return '';
+      }
+    })();
     if (projectId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -3880,8 +3892,8 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                     Expanded(
                       child: Text(
                         attachment.name,
-                        style: const TextStyle(
-                            color: _textPrimary, fontSize: 12),
+                        style:
+                            const TextStyle(color: _textPrimary, fontSize: 12),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -3927,10 +3939,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                 r.nameCtrl.dispose();
                 r.notesCtrl.dispose();
               }
-      _deliverableRows.clear();
-      _scheduleUnit = _ScheduleUnit.days;
-      _selectedWbs.clear();
-      _attachments.clear();
+              _deliverableRows.clear();
+              _scheduleUnit = _ScheduleUnit.days;
+              _selectedWbs.clear();
+              _attachments.clear();
               _type = CMChangeType.scope;
               _priority = CMPriority.medium;
               _isEmergency = false;
@@ -4253,8 +4265,8 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
       _ownerCtrls.clear();
       _dueDates.clear();
       for (var i = 0; i < cr.impact.all.length; i++) {
-        _narrativeCtrls[i] =
-            SpellCheckTextEditingController(text: cr.impact.all[i].narrative ?? '');
+        _narrativeCtrls[i] = SpellCheckTextEditingController(
+            text: cr.impact.all[i].narrative ?? '');
         _ownerCtrls[i] =
             SpellCheckTextEditingController(text: cr.impact.all[i].owner ?? '');
         _dueDates[i] = cr.impact.all[i].dueDate;

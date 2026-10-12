@@ -1029,7 +1029,7 @@ class _IntegrationMapCard extends StatelessWidget {
                         Expanded(
                           child: _MapArrow(tokens: tokens, label: arrows[i - 1]),
                         ),
-                      _MapNodeTile(tokens: tokens, node: nodes[i]),
+                      Expanded(child: _MapNodeTile(tokens: tokens, node: nodes[i])),
                     ],
                   ],
                 );
@@ -1071,34 +1071,39 @@ class _MapNodeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        decoration: BoxDecoration(
-          color: tokens.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: tokens.outline),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(node.icon, color: tokens.brandDeep, size: 20),
-            const SizedBox(height: 6),
-            Text(
-              node.title,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                color: tokens.ink,
-              ),
+    // No `Flexible` here. The tile is used in both orientations of the
+    // integration map: inside a Row it shares the width, and inside the
+    // stacked Column the same Flexible became a *vertical* flex child — which
+    // is illegal when the height is unbounded (the card sits in a scroll view),
+    // and blew the whole baseline view out with "RenderFlex children have
+    // non-zero flex but incoming height constraints are unbounded". The row is
+    // what decides a tile shares the axis, so the Row wraps it in Expanded.
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: tokens.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(node.icon, color: tokens.brandDeep, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            node.title,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              color: tokens.ink,
             ),
-            Text(
-              node.subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 10.5, color: tokens.muted),
-            ),
-          ],
-        ),
+          ),
+          Text(
+            node.subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 10.5, color: tokens.muted),
+          ),
+        ],
       ),
     );
   }

@@ -1752,8 +1752,9 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
               active: true,
             ),
             const SizedBox(width: 36),
-            const _MobileBottomItem(
-                icon: Icons.notifications_none, label: 'Alerts'),
+            // No "Alerts" tab: the app has no alerts feed, and a tab that does
+            // nothing when tapped is the dead-control class Play rejected the
+            // build for. Add it back together with a real destination.
             _MobileBottomItem(
               icon: Icons.settings_outlined,
               label: 'Settings',

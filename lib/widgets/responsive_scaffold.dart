@@ -24,6 +24,7 @@ class ResponsiveScaffold extends StatelessWidget {
     this.backgroundColor,
     this.floatingActionButton,
     this.showSidebar = true,
+    this.bottomBar,
     this.appBarTitle,
     this.onBackPressed,
     this.onForwardPressed,
@@ -45,6 +46,15 @@ class ResponsiveScaffold extends StatelessWidget {
 
   /// Whether to show the sidebar at all (useful for screens that don't need it)
   final bool showSidebar;
+
+  /// Optional pinned footer.
+  ///
+  /// Pages pass their [PageNavigationFooter] here so the Previous / Continue
+  /// strip sits at the bottom of the page on BOTH layouts. [onBackPressed] and
+  /// [onForwardPressed] only reach [UnifiedPhaseHeader], which is mobile-only —
+  /// before this slot existed a desktop viewport got no forward/back controls
+  /// at all.
+  final Widget? bottomBar;
 
   /// When set, a [UnifiedPhaseHeader] is automatically prepended to the body
   /// on mobile viewports. This provides the hamburger menu, back/forward
@@ -98,6 +108,7 @@ class ResponsiveScaffold extends StatelessWidget {
         backgroundColor: bgColor,
         floatingActionButton: floatingActionButton,
         showSidebar: showSidebar,
+        bottomBar: bottomBar,
       );
     }
 
@@ -107,6 +118,7 @@ class ResponsiveScaffold extends StatelessWidget {
       backgroundColor: bgColor,
       floatingActionButton: floatingActionButton,
       showSidebar: showSidebar,
+      bottomBar: bottomBar,
     );
   }
 }
@@ -118,6 +130,7 @@ class _MobileScaffold extends StatelessWidget {
     required this.backgroundColor,
     this.floatingActionButton,
     required this.showSidebar,
+    this.bottomBar,
   });
 
   final Widget body;
@@ -125,11 +138,13 @@ class _MobileScaffold extends StatelessWidget {
   final Color backgroundColor;
   final Widget? floatingActionButton;
   final bool showSidebar;
+  final Widget? bottomBar;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+      bottomNavigationBar: bottomBar,
       drawer: showSidebar
           ? Drawer(
               width: AppBreakpoints.sidebarWidth(context),
@@ -184,6 +199,7 @@ class _DesktopScaffold extends StatelessWidget {
     required this.backgroundColor,
     this.floatingActionButton,
     required this.showSidebar,
+    this.bottomBar,
   });
 
   final Widget body;
@@ -191,11 +207,13 @@ class _DesktopScaffold extends StatelessWidget {
   final Color backgroundColor;
   final Widget? floatingActionButton;
   final bool showSidebar;
+  final Widget? bottomBar;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+      bottomNavigationBar: bottomBar,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

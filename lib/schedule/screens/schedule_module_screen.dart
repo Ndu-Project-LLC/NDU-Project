@@ -10,6 +10,7 @@ library;
 /// Project Controls screen), replacing the old dark navy left rail.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -355,6 +356,17 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                 ),
               ],
             ),
+          bottomBar: const SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: PageNavigationFooter(
+                checkpoint: 'schedule',
+                pageTitle: 'Schedule',
+                showBorders: false,
+              ),
+            ),
+          ),
           );
         }
 

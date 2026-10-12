@@ -1,6 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart'
@@ -906,6 +907,17 @@ class _ExecutionWorkPackagesScreenState
                 ],
               ),
       ),
+    bottomBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'execution_work_packages',
+          pageTitle: 'Execution Work Packages',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

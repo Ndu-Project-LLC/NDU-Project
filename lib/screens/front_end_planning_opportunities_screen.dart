@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
@@ -809,9 +810,15 @@ Opportunity generation constraints:
                             ),
                           ),
                         ),
+                    const SizedBox(height: 12),
+                    // Lusaka 29: shared forward/back footer - this page previously had
+                    // no Previous on desktop and a generic "Next" overlay.
+                    const PageNavigationFooter(
+                      checkpoint: 'fep_opportunities',
+                      pageTitle: 'Project Opportunities',
+                    ),
                     ],
                   ),
-                  _BottomOverlays(onSubmit: _submitOpportunities),
                 ],
               ),
             ),
@@ -2137,83 +2144,6 @@ class _OpportunityTableState extends State<_OpportunityTable> {
             fontWeight: FontWeight.w700,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _BottomOverlays extends StatelessWidget {
-  const _BottomOverlays({required this.onSubmit});
-  final Future<void> Function() onSubmit;
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        ignoring: false,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 24,
-              bottom: 24,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                    color: Color(0xFFB3D9FF), shape: BoxShape.circle),
-                child: const Icon(Icons.info_outline, color: Colors.white),
-              ),
-            ),
-            Positioned(
-              right: 24,
-              bottom: 24,
-              child: Row(
-                children: [
-                  _aiHint(),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () => onSubmit(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Submit',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _aiHint() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE6F1FF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD7E5FF)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
-          SizedBox(width: 8),
-          Text('Hint',
-              style: TextStyle(
-                  fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
-          SizedBox(width: 10),
-          Text(
-              'Keep opportunities tied to scope, discipline, role, owner, and phase.',
-              style: TextStyle(color: Color(0xFF1F2937))),
-        ],
       ),
     );
   }

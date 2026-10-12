@@ -11,6 +11,7 @@ library;
 /// app.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -145,6 +146,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           ),
         ),
       ),
+    bottomBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'cost_estimate_setup',
+          pageTitle: 'SetupWizardScreen',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

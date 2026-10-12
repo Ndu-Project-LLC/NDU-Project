@@ -25,6 +25,8 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 class SpecializedDesignScreen extends StatefulWidget {
  const SpecializedDesignScreen({super.key});
@@ -308,17 +310,34 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (_isLoading) const SizedBox(height: 16),
  _buildHeader(),
  const SizedBox(height: 20),
- _buildFrameworkGuide(),
- const SizedBox(height: 24),
- _buildSecurityRegister(),
- const SizedBox(height: 20),
- _buildPerformanceRegister(),
- const SizedBox(height: 20),
- _buildIntegrationRegister(),
- const SizedBox(height: 20),
- _buildComplianceRegister(),
- const SizedBox(height: 20),
- _buildReviewGatesPanel(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Framework guide',
+       builder: (_) => _buildFrameworkGuide(),
+     ),
+     SectionTab(
+       label: 'Security',
+       builder: (_) => _buildSecurityRegister(),
+     ),
+     SectionTab(
+       label: 'Performance',
+       builder: (_) => _buildPerformanceRegister(),
+     ),
+     SectionTab(
+       label: 'Integration',
+       builder: (_) => _buildIntegrationRegister(),
+     ),
+     SectionTab(
+       label: 'Compliance',
+       builder: (_) => _buildComplianceRegister(),
+     ),
+     SectionTab(
+       label: 'Review gates',
+       builder: (_) => _buildReviewGatesPanel(),
+     ),
+   ],
+ ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel('specialized_design'),
@@ -467,8 +486,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
  child: Row(children: columns.map((col) {
- if (col.flex != null) return Expanded(flex: col.flex!, child: Text(col.label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8)));
- return SizedBox(width: col.width, child: Text(col.label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8), textAlign: TextAlign.center));
+ if (col.flex != null) return Expanded(flex: col.flex!, child: Text(col.label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8)));      return SizedBox(width: col.width, child: Text(col.label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF6B7280), letterSpacing: 0.8), textAlign: TextAlign.center));
  }).toList()),
  );
  }
@@ -650,7 +668,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _securityRows.isEmpty
  ? const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No security patterns defined. Add a control to start tracking.', style: TextStyle(color: Color(0xFF64748B)))))
- : Column(children: [
+ : ResponsiveDataTableWrapper(minWidth: 520, child: Column(children: [
  _buildTableHeader([_ColDef('PATTERN', flex: 3), _ColDef('DECISION & SCOPE', flex: 5), _ColDef('OWNER', width: 120), _ColDef('STATUS', width: 100), _ColDef('', width: 60)]),
  ...List.generate(_securityRows.length, (i) {
  final row = _securityRows[i];
@@ -662,7 +680,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _crudButtons(() => _showSecurityDialog(existing: row), () => _confirmDelete(() { setState(() => _securityRows.remove(row)); _scheduleSave(); })),
  ]);
  }),
- ]),
+ ])),
  );
  }
 
@@ -709,7 +727,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _performanceRows.isEmpty
  ? const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No performance hotspots defined. Add a scaling decision to start tracking.', style: TextStyle(color: Color(0xFF64748B)))))
- : Column(children: [
+ : ResponsiveDataTableWrapper(minWidth: 530, child: Column(children: [
  _buildTableHeader([_ColDef('HOTSPOT', flex: 3), _ColDef('DESIGN FOCUS', flex: 5), _ColDef('SLA', width: 130), _ColDef('STATUS', width: 100), _ColDef('', width: 60)]),
  ...List.generate(_performanceRows.length, (i) {
  final row = _performanceRows[i];
@@ -721,7 +739,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _crudButtons(() => _showPerformanceDialog(existing: row), () => _confirmDelete(() { setState(() => _performanceRows.remove(row)); _scheduleSave(); })),
  ]);
  }),
- ]),
+ ])),
  );
  }
 
@@ -768,7 +786,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _integrationRows.isEmpty
  ? const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No integration flows defined. Add an integration contract to start tracking.', style: TextStyle(color: Color(0xFF64748B)))))
- : Column(children: [
+ : ResponsiveDataTableWrapper(minWidth: 550, child: Column(children: [
  _buildTableHeader([_ColDef('FLOW', flex: 4), _ColDef('SYSTEM', width: 150), _ColDef('OWNER', width: 120), _ColDef('STATUS', width: 100), _ColDef('', width: 60)]),
  ...List.generate(_integrationRows.length, (i) {
  final row = _integrationRows[i];
@@ -780,7 +798,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _crudButtons(() => _showIntegrationDialog(existing: row), () => _confirmDelete(() { setState(() => _integrationRows.remove(row)); _scheduleSave(); })),
  ]);
  }),
- ]),
+ ])),
  );
  }
 
@@ -829,7 +847,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _complianceRows.isEmpty
  ? const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No compliance standards defined. Add a standard to start tracking.', style: TextStyle(color: Color(0xFF64748B)))))
- : Column(children: [
+ : ResponsiveDataTableWrapper(minWidth: 530, child: Column(children: [
  _buildTableHeader([_ColDef('STANDARD', flex: 3), _ColDef('DESCRIPTION', flex: 4), _ColDef('OWNER', width: 120), _ColDef('STATUS', width: 110), _ColDef('', width: 60)]),
  ...List.generate(_complianceRows.length, (i) {
  final row = _complianceRows[i];
@@ -841,7 +859,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _crudButtons(() => _showComplianceDialog(existing: row), () => _confirmDelete(() { setState(() => _complianceRows.removeWhere((r) => r.id == row.id)); _scheduleSave(); })),
  ]);
  }),
- ]),
+ ])),
  );
  }
 
@@ -895,7 +913,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _reviewGates.isEmpty
  ? const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No review gates defined. Add a gate to start tracking specialized design reviews.', style: TextStyle(color: Color(0xFF64748B)))))
- : Column(children: [
+ : ResponsiveDataTableWrapper(minWidth: 490, child: Column(children: [
  _buildTableHeader([_ColDef('GATE', flex: 4), _ColDef('APPROVER', width: 130), _ColDef('PRIORITY', width: 80), _ColDef('STATUS', width: 100), _ColDef('', width: 60)]),
  ...List.generate(_reviewGates.length, (i) {
  final row = _reviewGates[i];
@@ -911,7 +929,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _crudButtons(() => _showReviewGateDialog(existing: row), () => _confirmDelete(() { setState(() => _reviewGates.removeWhere((g) => g.id == row.id)); _scheduleSave(); })),
  ]);
  }),
- ]),
+ ])),
  );
  }
 

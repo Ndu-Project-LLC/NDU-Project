@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/app_content_model.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
@@ -58,9 +59,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  const Icon(Icons.admin_panel_settings,
  color: Color(0xFFFFC107), size: 28),
  const SizedBox(width: 12),
- const Text('Admin Content Management',
+ const Flexible(
+ child: Text('Admin Content Management',
  style:
- TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+ TextStyle(fontSize: 28, fontWeight: FontWeight.w700))),
  const Spacer(),
  ElevatedButton.icon(
  onPressed: _showAddContentDialog,
@@ -212,6 +214,17 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  const KazAiChatBubble(),
  ],
  ),
+ ),
+ bottomNavigationBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'admin_content',
+       pageTitle: 'Admin Content',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  }

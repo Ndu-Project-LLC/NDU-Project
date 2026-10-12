@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -201,6 +202,17 @@ class _TechnologyDefinitionsScreenState extends State<TechnologyDefinitionsScree
  ),
  ),
  ]),
+ ),
+ bottomBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'technology_definitions',
+       pageTitle: 'Technology Definitions',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  }

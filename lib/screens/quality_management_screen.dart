@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/section_flow_gate.dart';
 import 'package:ndu_project/widgets/section_progress_bar.dart';
@@ -1509,58 +1510,105 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(
+                LayoutBuilder(
+                  key: const ValueKey('quality_plan_header'),
+                  builder: (context, constraints) {
+                    final icon = Icon(
                       _aiEnabled ? Icons.auto_awesome : Icons.edit_note,
                       color: _aiEnabled
                           ? const Color(0xFFFFC812)
                           : const Color(0xFF6B7280),
                       size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        // The "(AI-Generated)" suffix is itself an AI surface, so
-                        // it needs AI on AND a narrative AI actually wrote.
-                        _aiEnabled && _planIsAiGenerated(q)
-                            ? '$_tabLabel (AI-Generated)'
-                            : _tabLabel,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF111827),
-                        ),
+                    );
+                    final title = Text(
+                      // The "(AI-Generated)" suffix is itself an AI surface, so
+                      // it needs AI on AND a narrative AI actually wrote.
+                      _aiEnabled && _planIsAiGenerated(q)
+                          ? '$_tabLabel (AI-Generated)'
+                          : _tabLabel,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
                       ),
-                    ),
-                    if (_isGeneratingPlan)
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    const SizedBox(width: 8),
+                    );
+                    final spinner = _isGeneratingPlan
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : null;
                     // The AI switch sits on the block it controls: "they'll have
                     // maybe one user on each page so they can turn it on and off
                     // when they need to".
-                    const Text('AI', style: TextStyle(fontSize: 12)),
-                    Switch(
-                      value: _aiEnabled,
-                      onChanged: _setAiEnabled,
-                    ),
-                    if (_aiEnabled)
-                      OutlinedButton.icon(
-                        onPressed: _isGeneratingPlan ? null : _regeneratePlan,
-                        icon: const Icon(Icons.refresh, size: 14),
-                        label: const Text('Regenerate'),
+                    final aiControls = <Widget>[
+                      const Text('AI', style: TextStyle(fontSize: 12)),
+                      Switch(
+                        value: _aiEnabled,
+                        onChanged: _setAiEnabled,
                       ),
-                    if (planText.isNotEmpty)
-                      TextButton.icon(
-                        onPressed: _isGeneratingPlan ? null : _deletePlan,
-                        icon: const Icon(Icons.delete_outline, size: 14),
-                        label: const Text('Delete'),
-                      ),
-                  ],
+                      if (_aiEnabled)
+                        OutlinedButton.icon(
+                          onPressed:
+                              _isGeneratingPlan ? null : _regeneratePlan,
+                          icon: const Icon(Icons.refresh, size: 14),
+                          label: const Text('Regenerate'),
+                        ),
+                      if (planText.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: _isGeneratingPlan ? null : _deletePlan,
+                          icon: const Icon(Icons.delete_outline, size: 14),
+                          label: const Text('Delete'),
+                        ),
+                    ];
+
+                    // The switch, Regenerate and Delete are all fixed-width, so
+                    // on a phone the single Row left the Expanded title with no
+                    // room at all — the section name rendered one character per
+                    // line and the row itself overflowed the card by >100px.
+                    // Below the single-line threshold the actions move to their
+                    // own wrapping line under the title instead.
+                    if (constraints.maxWidth < 560) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              icon,
+                              const SizedBox(width: 8),
+                              Expanded(child: title),
+                              if (spinner != null) ...[
+                                const SizedBox(width: 8),
+                                spinner,
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: aiControls,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        icon,
+                        const SizedBox(width: 8),
+                        Expanded(child: title),
+                        if (spinner != null) ...[
+                          const SizedBox(width: 8),
+                          spinner,
+                        ],
+                        const SizedBox(width: 8),
+                        ...aiControls,
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 if (!_aiEnabled)
@@ -1757,7 +1805,7 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
           await _syncAuditsToTeamCalendar(projectId, projectData);
         }
       } catch (e) {
-      if (mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
@@ -2400,7 +2448,8 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
             onRemove: _removeStandard,
           ),
           const SizedBox(height: 24),
-          _ProjectChangeManagementLink(legacyEntryCount: quality.qualityChangeLog.length),
+          _ProjectChangeManagementLink(
+              legacyEntryCount: quality.qualityChangeLog.length),
         ],
       ),
     );
@@ -3690,7 +3739,7 @@ class _StandardsTable extends StatelessWidget {
     }
     return _DataTableShell(
       title: 'Quality Standards',
-      table: DataTable(
+      table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         headingRowHeight: 52,
         dataRowMinHeight: 56,
@@ -3790,7 +3839,7 @@ class _ObjectivesTable extends StatelessWidget {
 
     return _DataTableShell(
       title: 'Quality Objectives',
-      table: DataTable(
+      table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         headingRowHeight: 52,
         dataRowMinHeight: 56,
@@ -3887,7 +3936,7 @@ class _WorkflowControlsTable extends StatelessWidget {
 
     return _DataTableShell(
       title: 'Workflow Controls',
-      table: DataTable(
+      table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         headingRowHeight: 52,
         dataRowMinHeight: 56,
@@ -4011,7 +4060,7 @@ class _TaskLogTable extends StatelessWidget {
 
     return _DataTableShell(
       title: 'Task Log',
-      table: DataTable(
+      table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         columns: const [
           DataColumn(label: Text('Task')),
@@ -4096,7 +4145,7 @@ class _AuditPlanTable extends StatelessWidget {
 
     return _DataTableShell(
       title: 'Audit Plan',
-      table: DataTable(
+      table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         columns: const [
           DataColumn(label: Text('Audit')),
@@ -4180,7 +4229,7 @@ class _CorrectiveActionsTable extends StatelessWidget {
 
     return _DataTableShell(
       title: 'Corrective Actions',
-      table: DataTable(
+      table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         columns: const [
           DataColumn(label: Text('Action')),
@@ -4306,7 +4355,7 @@ class _EmptyState extends StatelessWidget {
 class _DataTableShell extends StatelessWidget {
   const _DataTableShell({required this.table, this.title});
 
-  final DataTable table;
+  final Widget table;
   final String? title;
 
   @override
@@ -5951,7 +6000,6 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
   }
 }
 
-
 class _TrainingShortcutDialog extends StatefulWidget {
   const _TrainingShortcutDialog({required this.defaultTitle});
 
@@ -6704,59 +6752,69 @@ class _QualityRegisterViewState extends State<_QualityRegisterView> {
     final result = await showAppDialog<CorrectiveActionEntry>(
       context: context,
       builder: (_) => _CorrectiveActionDialog(
-        ownerOptions: _ownerOptions(context), initialValue: entry),
+          ownerOptions: _ownerOptions(context), initialValue: entry),
     );
     if (!mounted || result == null) return;
-    await _updateQualityData(context, checkpoint: 'quality_management',
-      successMessage: 'Corrective action updated',
-      updater: (current) => current.copyWith(correctiveActions: [
-        for (final action in current.correctiveActions)
-          if (action.id == entry.id) result else action,
-      ]));
+    await _updateQualityData(context,
+        checkpoint: 'quality_management',
+        successMessage: 'Corrective action updated',
+        updater: (current) => current.copyWith(correctiveActions: [
+              for (final action in current.correctiveActions)
+                if (action.id == entry.id) result else action,
+            ]));
   }
 
   Future<void> _removeAction(CorrectiveActionEntry entry) async {
-    await _updateQualityData(context, checkpoint: 'quality_management',
-      successMessage: 'Corrective action removed',
-      updater: (current) => current.copyWith(correctiveActions:
-        current.correctiveActions.where((action) => action.id != entry.id).toList()));
+    await _updateQualityData(context,
+        checkpoint: 'quality_management',
+        successMessage: 'Corrective action removed',
+        updater: (current) => current.copyWith(
+            correctiveActions: current.correctiveActions
+                .where((action) => action.id != entry.id)
+                .toList()));
   }
 
   Future<void> _editAudit(QualityAuditEntry entry) async {
     final result = await showAppDialog<QualityAuditEntry>(
       context: context,
       builder: (_) => _QualityAuditDialog(
-        ownerOptions: _ownerOptions(context), initialValue: entry),
+          ownerOptions: _ownerOptions(context), initialValue: entry),
     );
     if (!mounted || result == null) return;
-    await _updateQualityData(context, checkpoint: 'quality_management',
-      successMessage: 'Audit result updated',
-      updater: (current) => current.copyWith(auditPlan: [
-        for (final audit in current.auditPlan)
-          if (audit.id == entry.id) result else audit,
-      ]));
+    await _updateQualityData(context,
+        checkpoint: 'quality_management',
+        successMessage: 'Audit result updated',
+        updater: (current) => current.copyWith(auditPlan: [
+              for (final audit in current.auditPlan)
+                if (audit.id == entry.id) result else audit,
+            ]));
   }
 
   Future<void> _removeAudit(QualityAuditEntry entry) async {
-    await _updateQualityData(context, checkpoint: 'quality_management',
-      successMessage: 'Audit entry removed',
-      updater: (current) => current.copyWith(auditPlan:
-        current.auditPlan.where((audit) => audit.id != entry.id).toList()));
+    await _updateQualityData(context,
+        checkpoint: 'quality_management',
+        successMessage: 'Audit entry removed',
+        updater: (current) => current.copyWith(
+            auditPlan: current.auditPlan
+                .where((audit) => audit.id != entry.id)
+                .toList()));
   }
 
   Future<void> _createAction(QualityAuditEntry audit) async {
     final result = await showAppDialog<CorrectiveActionEntry>(
       context: context,
       builder: (_) => _CorrectiveActionDialog(
-        ownerOptions: _ownerOptions(context),
-        initialValue: CorrectiveActionEntry.empty().copyWith(
-          auditEntryId: audit.id, title: 'Corrective action for ${audit.title}')),
+          ownerOptions: _ownerOptions(context),
+          initialValue: CorrectiveActionEntry.empty().copyWith(
+              auditEntryId: audit.id,
+              title: 'Corrective action for ${audit.title}')),
     );
     if (!mounted || result == null) return;
-    await _updateQualityData(context, checkpoint: 'quality_management',
-      successMessage: 'Corrective action created',
-      updater: (current) => current.copyWith(correctiveActions:
-        [...current.correctiveActions, result]));
+    await _updateQualityData(context,
+        checkpoint: 'quality_management',
+        successMessage: 'Corrective action created',
+        updater: (current) => current.copyWith(
+            correctiveActions: [...current.correctiveActions, result]));
   }
 
   @override
@@ -6780,7 +6838,8 @@ class _QualityRegisterViewState extends State<_QualityRegisterView> {
       children: [
         const _SectionHeader(
           title: 'Quality Results',
-          subtitle: 'The same audit records used in QC Tracking: record pass/fail '
+          subtitle:
+              'The same audit records used in QC Tracking: record pass/fail '
               'outcomes here without entering them twice.',
         ),
         const SizedBox(height: 12),
@@ -7224,7 +7283,7 @@ class _CoQEntryTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: DataTable(
+      child: NduResponsiveDataTable(
         headingRowHeight: 36,
         dataRowMinHeight: 40,
         dataRowMaxHeight: 56,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/utils/agile_project_context_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -441,7 +442,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                   const Positioned(
                     right: 24,
                     bottom: 24,
-                    child: KazAiChatBubble(),
+                    child: KazAiChatBubble(positioned: false),
                   ),
                 ],
               ),
@@ -449,6 +450,17 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'agile_ai_coach',
+          pageTitle: 'Agile Ai Coach',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../models/portfolio_model.dart';
 import '../models/program_model.dart';
 import '../providers/project_data_provider.dart';
+import '../routing/app_router.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
@@ -77,6 +78,13 @@ class _ProjectDashboardMobileShellState
  String _query = '';
  String _groupQuery = '';
  int _bottomNavIndex = 0;
+
+ // The two lists below render a capped number of rows and offer "See All".
+ // The buttons are only built when there is more to reveal, so neither can
+ // become a control that looks tappable and does nothing — which is the
+ // defect Play rejected the build for.
+ bool _showAllProjects = false;
+ bool _showAllGrouping = false;
 
  /// Active palette: warm-teal Runway for Regular (basic), royal-blue
  /// Command Center for Project (standard).
@@ -151,7 +159,9 @@ class _ProjectDashboardMobileShellState
 
  void _navigateToProgram() {
  context.push('/program-dashboard-mobile');
- }void _navigateToRegularProjects() {
+ }
+
+ void _navigateToRegularProjects() {
   // Regular Projects now lives on the Integration Dashboard's Workspaces
   // view; the route is kept stable so this deep link stays valid.
   context.push('/regular-project-dashboard');
@@ -161,8 +171,16 @@ class _ProjectDashboardMobileShellState
  context.push('/project-command-center');
  }
 
+ void _navigateToDashboard() {
+ context.go('/${AppRoutes.dashboard}');
+ }
+
  void _navigateToPortfolio() {
  context.push('/portfolio-dashboard');
+ }
+
+ void _navigateToSettings() {
+ context.go('/${AppRoutes.settings}?from=${AppRoutes.dashboard}');
  }
 
  // ─── Stat card matching the HTML 2×2 grid ───────────────────────────────
@@ -542,20 +560,10 @@ class _ProjectDashboardMobileShellState
  ),
  ),
  const Spacer(),
- // Right: Notification bell
- IconButton(
- icon: const Icon(
- Icons.notifications_none_rounded,
- color: _Tokens.onSurface,
- size: 22),
- tooltip: 'Notifications',
- padding: const EdgeInsets.all(8),
- constraints: const BoxConstraints(
- minWidth: 40, minHeight: 40),
- onPressed: () {
- // Placeholder for notification action
- },
- ),
+ // There is no notification bell here on purpose: the app has no
+ // notifications feed, and a bell that does nothing when tapped is the
+ // dead-control class Play rejected the build for. Restore it the day a
+ // real feed exists behind it.
  const SizedBox(width: 4),            // Right: KAZ AI copilot pill
             GestureDetector(
               onTap: () => KazAiChatBubble.openChat(context),
@@ -830,16 +838,19 @@ class _ProjectDashboardMobileShellState
  letterSpacing: -0.01,
  ),
  ),
+ if (filteredList.length > 5)
  TextButton(
- onPressed: () {},  style: TextButton.styleFrom(
+ onPressed: () =>
+ setState(() => _showAllProjects = !_showAllProjects),
+ style: TextButton.styleFrom(
   foregroundColor: _palette.primaryDeep,
   padding: EdgeInsets.zero,
   minimumSize: Size.zero,
   tapTargetSize:
   MaterialTapTargetSize
   .shrinkWrap,
- ),  child: const Text('See All',
-  style: TextStyle(
+ ),  child: Text(_showAllProjects ? 'Show Less' : 'See All',
+  style: const TextStyle(
   fontWeight: FontWeight.w600,
   fontSize: 15)),
  ),
@@ -912,8 +923,7 @@ class _ProjectDashboardMobileShellState
  _emptyState(
  message: 'No projects found')
  else
- ...filteredList
- .take(5)
+ ...(_showAllProjects ? filteredList : filteredList.take(5))
  .map((p) => _projectItem(p)),
  ],
  ),
@@ -957,8 +967,10 @@ class _ProjectDashboardMobileShellState
  ),
  ),
  ),
+ if (groupingList.length > 3)
  TextButton(
- onPressed: () {},
+ onPressed: () =>
+ setState(() => _showAllGrouping = !_showAllGrouping),
  style: TextButton.styleFrom(
  foregroundColor: _Tokens.error,
  padding: EdgeInsets.zero,
@@ -967,8 +979,8 @@ class _ProjectDashboardMobileShellState
  MaterialTapTargetSize
  .shrinkWrap,
  ),
- child: const Text('See All',
- style: TextStyle(
+ child: Text(_showAllGrouping ? 'Show Less' : 'See All',
+ style: const TextStyle(
  fontWeight:
  FontWeight.w600,
  fontSize: 15)),
@@ -1065,8 +1077,7 @@ class _ProjectDashboardMobileShellState
  _emptyState(
  message: 'No projects to group')
  else
- ...groupingList
- .take(3)
+ ...(_showAllGrouping ? groupingList : groupingList.take(3))
  .map((p) => _projectItem(p)),
  ],
  ),
@@ -1101,12 +1112,21 @@ class _ProjectDashboardMobileShellState
  currentIndex: _bottomNavIndex,
  onNavigate: (index) {
  setState(() => _bottomNavIndex = index);
+ // Every tab has to actually go somewhere. A missing case only moved the
+ // highlight, which left Portfolio and Settings looking tappable while
+ // doing nothing — the Play rejection this fixes.
  switch (index) {
+ case 0:
+ _navigateToDashboard();
+ break;
  case 1:
  _navigateToProgram();
  break;
  case 2:
  _navigateToPortfolio();
+ break;
+ case 3:
+ _navigateToSettings();
  break;
  }
  },

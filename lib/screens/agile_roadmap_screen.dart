@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -193,6 +194,17 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'agile_roadmap',
+          pageTitle: 'Agile Roadmap',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 
@@ -297,12 +309,14 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
         children: [
           Icon(icon, size: 16, color: const Color(0xFF78350F)),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF141414),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF141414),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

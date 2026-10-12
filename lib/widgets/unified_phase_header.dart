@@ -133,18 +133,26 @@ class UnifiedPhaseHeader extends StatelessWidget {
                         const BoxConstraints(minWidth: 40, minHeight: 40),
                     onPressed: () => _openDrawer(context),
                   ),
-                const Spacer(),
-                // Center: NDUPROJECT brand
-                const Text(
-                  'NDUPROJECT',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: _Tokens.onSurface,
-                    letterSpacing: -0.01,
+                // Center: NDUPROJECT brand. The action cluster on the right is
+                // fixed-width and takes whatever it needs, so the brand gets an
+                // Expanded slot rather than sitting between two Spacers — at
+                // phone widths the fixed children alone nearly fill the bar,
+                // and a rigid brand label pushed the row over.
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'NDUPROJECT',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: _Tokens.onSurface,
+                        letterSpacing: -0.01,
+                      ),
+                    ),
                   ),
                 ),
-                const Spacer(),
                 // Right: outstanding tasks (only when a project context exists).
                 _ProjectActivityHeaderActionSlot(
                   onOpenActivityLog: onOpenActivityLog ??

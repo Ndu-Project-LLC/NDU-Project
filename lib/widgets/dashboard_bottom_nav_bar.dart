@@ -63,11 +63,13 @@ class DashboardBottomNavBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
+            // Expanded, so the four tabs divide the viewport instead of each
+            // demanding its own intrinsic width — which overflowed a phone.
             children: [
-              _navItem(Icons.folder, 'Projects', 0),
-              _navItem(Icons.layers, 'Programs', 1),
-              _navItem(Icons.account_tree, 'Portfolios', 2),
-              _navItem(Icons.settings, 'Settings', 3),
+              Expanded(child: _navItem(Icons.folder, 'Projects', 0)),
+              Expanded(child: _navItem(Icons.layers, 'Programs', 1)),
+              Expanded(child: _navItem(Icons.account_tree, 'Portfolios', 2)),
+              Expanded(child: _navItem(Icons.settings, 'Settings', 3)),
             ],
           ),
         ),
@@ -94,13 +96,18 @@ class DashboardBottomNavBar extends StatelessWidget {
             children: [
               Icon(icon, size: 22, color: color),
               const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.05,
-                  color: color,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.05,
+                    color: color,
+                  ),
                 ),
               ),
             ],

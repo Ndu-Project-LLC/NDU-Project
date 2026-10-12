@@ -436,7 +436,13 @@ class WBSProvider extends ChangeNotifier {
   String addChildNode(String parentId, String name, [String? description]) {
     if (_wbs == null) return '';
     final parent = findNode(parentId);
-    if (parent == null) return '';
+    if (parent == null) {
+      debugPrint('WBS addChildNode: parent $parentId not found in tree. '
+          'A child cannot be attached to a missing parent, so the node was not '
+          'created. If you expected a parent here, check that it was created '
+          'under the WBS root before adding children to it.');
+      return '';
+    }
     final parentDepth = parent.level.value;
     final newLevel = parentDepth + 1;
     final maxDepth = _wbs!.framework.maxDepth;

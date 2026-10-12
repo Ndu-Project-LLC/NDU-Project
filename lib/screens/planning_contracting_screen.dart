@@ -31,6 +31,7 @@ import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/editable_table.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -5832,13 +5833,13 @@ if (!context.mounted) return;
  @override
  Widget build(BuildContext context) {
  final columns = [
- const _TableColumnDef('#', 50),
- const _TableColumnDef('Contract', 200),
- const _TableColumnDef('Base Value', 120),
- const _TableColumnDef('Contingency %', 100),
- const _TableColumnDef('Contingency', 110),
- const _TableColumnDef('Total', 110),
- const _TableColumnDef('', 60),
+ const EditableTableColumn('#', 50),
+ const EditableTableColumn('Contract', 200),
+ const EditableTableColumn('Base Value', 120),
+ const EditableTableColumn('Contingency %', 100),
+ const EditableTableColumn('Contingency', 110),
+ const EditableTableColumn('Total', 110),
+ const EditableTableColumn('', 60),
  ];
 
  return Column(
@@ -5861,7 +5862,8 @@ if (!context.mounted) return;
  ),
  ),
  ),
- _EditableTable(
+ EditableTable(
+ variant: EditableTableVariant.sheet,
  columns: columns,
  rows: [
  for (int index = 0; index < contracts.length; index++)
@@ -5877,119 +5879,96 @@ if (!context.mounted) return;
  ],
  );
  }
+}/// Row of the budget table. It is an [EditableTableRow] so the phone-width
+/// card presentation can label every value instead of scrolling a seven-column
+/// row sideways.
+class _BudgetEditableRow extends EditableTableRow {
+  _BudgetEditableRow({
+    super.key,
+    required super.columns,
+    required ContractModel contract,
+    required int index,
+    VoidCallback? onEdit,
+  }) : super(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          cells: _budgetCells(columns, contract, index, onEdit),
+        );
 }
 
-class _BudgetEditableRow extends StatelessWidget {
- const _BudgetEditableRow({
- super.key,
- required this.columns,
- required this.contract,
- required this.index,
- this.onEdit,
- });
+List<Widget> _budgetCells(
+  List<EditableTableColumn> columns,
+  ContractModel contract,
+  int index,
+  VoidCallback? onEdit,
+) {
+  final base = contract.estimatedValue;
+  final contPct = contract.contingencyPercent ?? 0;
+  final contAmt = contract.contingencyAmount ?? (base * contPct / 100);
+  final total = base + contAmt;
 
- final List<_TableColumnDef> columns;
- final ContractModel contract;
- final int index;
- final VoidCallback? onEdit;
-
- String get projectId => contract.projectId;
-
- @override
- Widget build(BuildContext context) {
- final base = contract.estimatedValue;
- final contPct = contract.contingencyPercent ?? 0;
- final contAmt = contract.contingencyAmount ?? (base * contPct / 100);
- final total = base + contAmt;
-
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- SizedBox(
- width: columns[0].width,
- child: _TableFieldShell(
- child: Center(
- child: Text(
- '${index + 1}',
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF6B7280),
- ),
- ),
- ),
- ),
- ),
- SizedBox(
- width: columns[1].width,
- child: _TableFieldShell(
- child: Text(
- contract.name,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w500,
- ),
- overflow: TextOverflow.ellipsis,
- ),
- ),
- ),
- SizedBox(
- width: columns[2].width,
- child: _TableFieldShell(
- child: Text(
- '\$${_formatCurrency(base)}',
- style: const TextStyle(fontSize: 12),
- ),
- ),
- ),
- SizedBox(
- width: columns[3].width,
- child: _TableFieldShell(
- child: Text(
- '${contPct.toStringAsFixed(0)}%',
- style: const TextStyle(fontSize: 12),
- ),
- ),
- ),
- SizedBox(
- width: columns[4].width,
- child: _TableFieldShell(
- child: Text(
- '\$${_formatCurrency(contAmt)}',
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFFF59E0B),
- ),
- ),
- ),
- ),
- SizedBox(
- width: columns[5].width,
- child: _TableFieldShell(
- child: Text(
- '\$${_formatCurrency(total)}',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF059669),
- ),
- ),
- ),
- ),
- SizedBox(
- width: columns[6].width,
- child: _TableFieldShell(
- child: IconButton(
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF9CA3AF)),
- onPressed: onEdit,
- tooltip: 'Edit budget',
- padding: EdgeInsets.zero,
- constraints: const BoxConstraints(),
- ),
- ),
- ),
- ],
- );
- }
+  return [
+    _TableFieldShell(
+      child: Center(
+        child: Text(
+          '${index + 1}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+      ),
+    ),
+    _TableFieldShell(
+      child: Text(
+        contract.name,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+    _TableFieldShell(
+      child: Text(
+        '\$${_formatCurrency(base)}',
+        style: const TextStyle(fontSize: 12),
+      ),
+    ),
+    _TableFieldShell(
+      child: Text(
+        '${contPct.toStringAsFixed(0)}%',
+        style: const TextStyle(fontSize: 12),
+      ),
+    ),
+    _TableFieldShell(
+      child: Text(
+        '\$${_formatCurrency(contAmt)}',
+        style: const TextStyle(
+          fontSize: 12,
+          color: Color(0xFFF59E0B),
+        ),
+      ),
+    ),
+    _TableFieldShell(
+      child: Text(
+        '\$${_formatCurrency(total)}',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF059669),
+        ),
+      ),
+    ),
+    _TableFieldShell(
+      child: IconButton(
+        icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF9CA3AF)),
+        onPressed: onEdit,
+        tooltip: 'Edit budget',
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+      ),
+    ),
+  ];
 }
 
 class _NumberInputCell extends StatefulWidget {
@@ -6077,99 +6056,6 @@ class _Debouncer {
 
  void dispose() {
  _timer?.cancel();
- }
-}
-
-class _TableColumnDef {
- const _TableColumnDef(this.label, this.width);
-
- final String label;
- final double width;
-}
-
-class _EditableTable extends StatelessWidget {
- const _EditableTable({required this.columns, required this.rows});
-
- final List<_TableColumnDef> columns;
- final List<Widget> rows;
-
- @override
- Widget build(BuildContext context) {
- const horizontalPadding = 16.0;
- final contentWidth =
- columns.fold<double>(0, (total, column) => total + column.width);
- final minTableWidth = contentWidth + (horizontalPadding * 2);
-
- return Container(
- width: double.infinity,
- decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- color: Colors.white,
- ),
- child: LayoutBuilder(
- builder: (context, constraints) {
- final tableWidth = constraints.maxWidth > minTableWidth
- ? constraints.maxWidth
- : minTableWidth;
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: SizedBox(
- width: tableWidth,
- child: Column(
- children: [
- Container(
- width: tableWidth,
- padding: const EdgeInsets.symmetric(
- horizontal: horizontalPadding, vertical: 14),
- decoration: const BoxDecoration(
- color: Color(0xFFF3F4F6),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(18),
- topRight: Radius.circular(18)),
- ),
- child: Row(
- children: columns
- .map((column) => SizedBox(
- width: column.width,
- child: Center(
- child: Text(
- column.label.toUpperCase(),
- textAlign: TextAlign.center,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- letterSpacing: 0.8,
- color: Color(0xFF6B7280)),
- ),
- ),
- ))
- .toList(),
- ),
- ),
- for (int i = 0; i < rows.length; i++)
- Container(
- width: tableWidth,
- padding: const EdgeInsets.symmetric(
- horizontal: horizontalPadding, vertical: 12),
- decoration: BoxDecoration(
- color:
- i.isEven ? Colors.white : const Color(0xFFF9FAFB),
- border: Border(
- top: BorderSide(
- color: const Color(0xFFE5E7EB),
- width: i == 0 ? 1 : 0.5),
- ),
- ),
- child: rows[i],
- ),
- ],
- ),
- ),
- );
- },
- ),
- );
  }
 }
 

@@ -1,0 +1,642 @@
+I was just trying to start my recorder.
+So for the same design work packages,
+I don't think they were actually designed to open up.
+It's like when you come on this section,
+you can then create a package from the one selected
+and then just a moment.
+(keyboard clicking)
+(keyboard clicking)
+(keyboard clicking)
+(keyboard clicking)
+I think for like how it works,
+I may have to check with a team like with Alec.
+(keyboard clicking)
+Um, Steve, help me understand.
+- The process for getting to this design work packages.
+- Okay.
+Just a moment.
+So it's like,
+so when you actually get on,
+so when you actually go to the WBF,
+just a moment as it loads.
+(phone ringing)
+(phone ringing)
+So on the like the WBF,
+we then break them down into smaller units.
+These are units once have been,
+so like they're like features in the stories.
+Once they have been made,
+this is what feeds into the design into the work packages.
+- So the second, sorry, can you please go back up?
+So the second level, so the 3.1, 3.2,
+I was talking about on the side, sidebar.
+And I think you mentioned that the requirements,
+so you did the WBS and the project goals and master's
+was done.
+- Project goals and master's, yes.
+- And then,
+okay, so can you scroll down?
+So local produce, the goals and look at the goals
+and master's.
+- Okay.
+- So scroll down on the right.
+Undergo the master's.
+- Yes.
+So the goals and master's,
+can you click on the goals and master's?
+Okay, on the goals and master's we have,
+so the goals and master's on time plan.
+- Someone doesn't open it.
+(indistinct)
+(indistinct)
+- Okay.
+Okay.
+(indistinct)
+- About, about the design.
+Oh, yes, yes.
+But asking me where the, I think the,
+as to where the, I think packet is come from,
+she's asking me about whether or not,
+about why when you actually click on them,
+they're not going there.
+So I'm like, okay.
+So I'm like, and she's asking me to actually book her through,
+I would write something like, I'm like, okay.
+And so I'll just go ahead for like five minutes.
+- You see, okay.
+- Okay.
+- Right.
+(indistinct)
+- Yes.
+Yes.
+I actually took it down as I'm not.
+- All right.
+So does, can I play master's table please?
+- Oh, so I think she actually caught up on me, on the call.
+- Okay.
+- Yeah. Okay.
+All right then.
+- Does it get bigger?
+- I have to just survive this ish.
+Okay.
+All right. Okay.
+So for this particular table, just a moment.
+I'm trying to move the screen.
+It doesn't, it's bad.
+We can do this.
+- Okay.
+(indistinct)
+So the better it goes itself.
+(indistinct)
+So these are the three main goals.
+- Yes.
+- And then we are mapping the FTP master's to those goals.
+- Yes.
+Yes we are.
+- So how do you map a master to the goal?
+- I think master's to the goal.
+Master's to the goal.
+Let me see.
+So I'd go.
+So when you click on the ads go, it lets you,
+so like when you click on like ad go,
+you then map the master to the goal from here.
+Like you then pick which one should be maps
+to the goal that you create.
+- Okay. Well, we're not creating goals.
+The goals came from the one way down structure.
+- Yes.
+(indistinct)
+- So in terms of actually tying them like you've described,
+I think I may have to do some further checking
+on planning for you.
+- Jungkook, this is not acceptable, okay.
+But what is happening right now,
+this one like these actually have already been done.
+We already like in the schedule section,
+but this part is not even fully done.
+So I don't understand how we add,
+like the goals come from the,
+from the one way down structure.
+That's where the goals come from.
+If you need to add,
+so here it appears like you can add a goal.
+So can you go back and watch,
+well, those are structure that go for is there.
+(indistinct)
+- So it didn't go for there, I don't see it.
+(indistinct)
+So the goal of the initiative here,
+well, wait, can you go back to the one with that structure?
+Says four children, oh, that's a soft one.
+I want to see the top one then.
+It says three children, so goal four wasn't added.
+This one's not connected, I'm sure you can see that, right?
+So just, just one, am I still on the call, hello?
+Oh, I wasn't able to think, I wasn't able to...
+(indistinct)
+- Can you do something on how many ethics you can add?
+- Yes, yes, I'm sorry, about 20, yes.
+- I'm sorry, what was the number?
+For the picks, when did three or four?
+- I think it was, did I find...
+(indistinct)
+- No, I was just trying to check on the simple view,
+like on the simple view, 'cause I was having a tough time,
+like I think with the breakdowns like this,
+I'm looking at it with a simple, I mean,
+on the advanced view, because I was having a tough time
+seeing them on this view.
+Yeah, so seeing that...
+So the issue is more of the synchronization.
+Because of this one, yeah.
+I'm trying to look at synchronization for it.
+So let's see if...
+Let me just restart.
+(keyboard clicking)
+I'm just wondering how the milestones
+were matched to the goals.
+That's really what I need to know.
+So the first step is listing the milestones.
+(keyboard clicking)
+(indistinct)
+(keyboard clicking)
+- So what should that error?
+- This is on my local host, and so, yeah.
+It's on my local host.
+- So why is this, so this is not supposed to stay there?
+- So like some of these things were actually
+recently finished, so it should be live on staging.
+Just that I think we just didn't want to check
+and see if it was pushed live or stuff.
+And so we want to just test on like what's actually there
+on an interface, because sometimes it could take long
+for it to show up.
+I think we had pushed maybe an hour before the call.
+And so we didn't want any issues of, okay, it's not showing.
+And so we just want to just push and then from there,
+everything else was true too.
+But then everything else...
+- Yeah.
+- Jim, I want to make a statement on this project
+for the masking section.
+First of all, the won't be done section, stroke structure,
+and I talked about this at the end of the presentation.
+For Agile, I believe I said five to seven ethics.
+For Agile, I could be wrong,
+but you haven't got communication.
+So Agile has maybe more where Agile could have more ethics.
+- I did say it should be called ethics for Agile.
+So we should use that in a language.
+What is that going to do from your perspective?
+If I had selected that is for ethics it's wrong.
+How does that impact you?
+- I able to actually see that, but once more,
+because it was cutting.
+I can hear clearly now.
+- At a work breakdown structure level?
+- Yeah.
+If the Agile project, it should be able to select up to,
+I believe it's five to seven ethics.
+- Yes.
+- So it should be able to have up to five to seven ethics
+that they can identify.
+I provided you guys the communication there.
+Let me just confirm this.
+(breathing heavily)
+(breathing heavily)
+- Yeah, so I think I have told you guys five to seven,
+maximum number of ethics.
+So this view looks better.
+So is this a simple view?
+- Yes.
+- All right, so the simple view should be the,
+what's the difference between the simple and the advanced?
+- So the advanced tabular system like this.
+- It does what?
+The tabular system.
+- Yeah.
+- So then like, yeah.
+So this is all that with the root and then.
+- So they are almost like at least them down.
+- Yes.
+- Okay, so the simple view of course should be the,
+but I don't think that one is advanced.
+I think it's just, okay.
+So now it's about to not being linked.
+I thought the advanced one was one that wasn't linked.
+But I think you need to correct this.
+In this view, the whole broken line is better.
+- Well, yeah.
+It's something I actually tried to correct.
+That's why it appeared to be connected.
+Like, yeah, that's it.
+Yeah, I spent time trying to correct that
+at some point like last week.
+- So Jungkook, if you can take notes.
+(indistinct)
+is the looking for ethics for ideas should have three
+to seven ethics that you can identify.
+And they add those here.
+So they can add an ethic and stuff like that here.
+Then of course, on that each ethic,
+they can identify features at the second level,
+there as well.
+So that's the three point, one point one.
+My question for you was,
+for waterfall, we are calling them goals.
+For agile, I think we should call them,
+for waterfall, we are calling them goals.
+And then for agile, if you maintain the one goal,
+then go one, two, three, which is the epic.
+Then that's fine.
+So let's just leave that for now.
+So this needs to be connected.
+Now, if you go to the goals and milestones,
+you should be fed from the WBS.
+So the goals and milestones kind of show
+the milestones that we have developed in initiation, right?
+That's where it starts off from.
+- Yes.
+- All right.
+And then those milestones are looked at it.
+So right now that he came to this page,
+I don't know what I'm looking for, looking at.
+This is not a good starting view for when you land here.
+You have to have like content that is usable.
+So we talked about the notes being hidden.
+It's a lot for us because it's great to have the notes
+at the top where it needs to be hidden.
+So that is not happening now.
+Then it has core platform native,
+like create objective, build and deploy that, okay.
+So that's a little higher.
+milestone timeline will come after they match
+the milestone to the goals.
+So if you scroll down a bit more.
+So before, can you scroll up a little bit?
+So you have the milestone timeline.
+They now have the milestone table.
+So this shows all shared milestones from FEP
+with the goals currently mapped to each milestone.
+But that's not possible.
+That description does not make sense
+because you haven't have the goals in it.
+So if you scroll down, if you open up the milestone table,
+it shows you the milestone.
+Yeah. So I think we need tabs here, okay.
+So there goes our milestones because what,
+what this is doing is this is,
+we haven't even looked at the main thing,
+which is marking the goals to the milestones.
+I hate to know what this page looks like
+when you haven't marked it,
+because if you scroll down,
+it shows all the goals.
+Okay.
+So if you scroll down.
+So then we talk about the goals, the project goals.
+I think this project goals has to be at the top.
+This success is for the goals and milestones.
+It takes a lot to get to it.
+This project goals has to be at the top.
+And then the milestones has to be under it.
+And then the mapping has to happen.
+So can you scroll down with this project goals.
+So it has the, what you need five plus forms,
+enable the stream and the local.
+Now, I don't know how,
+if you want to mark the milestones, how you do that.
+So you haven't been able to tell me how to do that.
+It sounds like we have marked a few.
+Everything is the same in Jungle Pharma
+and call out to the game portal.
+Oh, can you go down a little?
+I want to see what is mapped to this one.
+Jungle Pharma and call out and then pilot launch.
+Can you go just a little bit?
+I don't know what is on the set of the label,
+localized payments.
+Jungle Pharma.
+That's the middle one.
+What is the first thing under the map milestone?
+The middle one?
+Another map milestone?
+Yeah, right there.
+Yeah, what is that?
+Okay, so it's not quite a few.
+- Yes.
+- Okay.
+So the question is, how did it get mapped?
+Do you, did it list all the milestones
+and then you selected those?
+- Yes, answer after, sorry.
+- Yeah, but it doesn't make any sense.
+These screens are very small
+and it's hard to tell what is happening.
+So the question now is,
+so it looks like everybody has the same thing
+and you select which one is capable to it.
+Is that what it is?
+- Yes, yes, yes.
+And so you have to--
+- So can you make any of these bigger?
+- No, no, no.
+- Can you make any of the window,
+like if we can go one?
+In that part, let's see if it's big.
+Okay, so go one.
+So even though this is the full screen,
+it's still hard to see.
+Can you scroll up, let me see.
+It's still so tiny to look through everything.
+So it doesn't really,
+this is not user friendly at all.
+This is not user friendly.
+This is going to be very hard to use.
+So it's still, even when you're making big screen,
+though it was two times
+that I just keep screwing it down outside.
+That's going to be hard for people
+to remember what they're looking at.
+So when I was looking at by making the screen bigger,
+I said that the more information is available to see
+and they can select what is applicable to them.
+So the whole price of these goals
+and the master's exception was to ensure that
+that all the master's identified.
+So making sure that the master are still valid
+and there are any new master's to add them.
+And then the goals, you alter this or the goals.
+So if it's three goals or four goals,
+well, they should not be able to add any goal here.
+If that goal should take them to the WBS section.
+Because they should not be able to add a goal here
+and then it will show up on the WBS.
+The WBS is the source of truth for the project goals
+because they are just the second layer of the WBS.
+Chingu, does that make sense?
+- Yes, it does.
+- All right.
+So can you implement that and make sure that that happens?
+- Okay.
+- I thought that I would stay here 'cause...
+The project goals.
+It has to be more obvious.
+So I don't know like the milestone timer
+and the milestone table.
+The milestone table is important.
+So you can see the table for the milestones
+and add or edit the milestones.
+So the milestones have to be edited before the goals.
+So, before mapping into the goals.
+- Okay.
+- Well, I think the way this is flowing,
+it's not very user friendly.
+So first off, when they land on this project goal,
+the milestone, they should be able to see the milestone table
+that shows all of the milestones.
+They should be asked to edit the milestones
+when they're still applicable because of course,
+some will pull from the decision phase.
+Since the decision phase,
+they might have identified additional milestones
+that need to be met.
+So if they put milestones for the project,
+they should implement those dates and stuff on there.
+And then after that,
+they should then map the milestones to the goals.
+There should also be user friendly
+where they can go on.
+And if it's the selection thing that you have,
+they can do the selection to mark
+what milestones apply to that goal.
+Do the same for goal two, goal three,
+whatever number of goals,
+map all the milestones to whatever is applicable.
+So that way, you understand what goals
+are tied to which milestone.
+The milestone timeline is something that just shows,
+hey, this should be chronological.
+The way you guys have it,
+it's coming from 2026 to 2027,
+but it's 2026 to 2027.
+Usually, it should be chronological where you know,
+okay, starting from December, 2026.
+This is the first milestone.
+Next milestone is February, 2027.
+Next one is April, 2027.
+And that one is August, 2027.
+And the last one is December.
+So it should be clear what those main milestone dates are.
+Does that make sense?
+- Yes, it does.
+- All right.
+So that's my key comment around this is
+it has to be user friendly.
+When you do expand, at least it goes to the data,
+when you expand,
+you should be able to see everything quickly,
+not have to scroll down and scroll inside the scroll.
+But that is not user friendly.
+- No, don't grab anybody crazy.
+- Okay.
+- Okay, that is clear.
+- So then how you are going to do that,
+but that needs to be done from a milestone perspective
+to all the goals should have like any applicable milestone
+but to look at what's about the goal.
+It should have that.
+- Okay.
+- And just so you know, at some point,
+but in fact,
+the milestone is applicable to a goal
+or the chosen that milestone might not be tied to that,
+in that goal and not be tied to that milestone.
+So I do want you to pay to keep in mind that
+the fact that the milestone is tied to a goal,
+that does not mean all the children in that goal
+will need their milestone.
+At least one child must make the milestone.
+But it doesn't mean all the children in that goal
+but it could be just that one part that makes them awesome
+or it could be everything.
+So this milestone then also has to be sliced out a bit more
+especially around the schedule timing
+or in the work package as you're building them
+as you go to a lower level of the work package.
+I think that comes first in future development.
+- Yeah.
+- Or for expectation, when you go to the third level,
+you have to select if that milestone
+is applicable to that child.
+- Okay.
+- So that's not the first step for this milestone.
+Right now we're saying it's applicable to this level one.
+When you get to level two,
+the fact that that milestone was applicable to level one
+does not mean that all 1.1, 1.1, 1.3 are the most,
+they may be able to level one,
+they are able to open 1.3 or 1.4.
+1.2 may not be tied to that milestone.
+- Okay.
+- All right.
+So that's that for the both of us.
+So I think business is the work of us.
+So we first of all use that for a name.
+Second to start from like the milestones,
+validate the milestones so there'll be a prompt,
+like the prompt that you have showed yesterday
+that are right where you need to go.
+The first one is you have like a,
+they need to go to the milestone.
+The list of the milestones, validate them
+and then add any milestones in the list
+and then delete any, if they don't need those.
+Before they then go to the goals
+and then they should be able to open each goal up
+and map the applicable milestones to each goal.
+- Okay.
+(sniffs)
+- All right, then I think the requirements comes after that.
+Are you able to scroll to the left, to the.
+- To the?
+- Yes, we have to go up.
+After goal the milestone is requirements, right?
+- After goals and milestones, goals and milestones.
+- You have to go up to.
+- Oh yeah.
+Yes, it's a comment here.
+- All right, so that way the requirements have to be mapped
+to the applicable second level of the recipients.
+So this is our user friendly tool.
+So we talked about the notes box being auto hidden
+unless there's a note required.
+It just picks up the whole front once it land on the page.
+It does not show you where you came to the page from.
+So the requirements.
+So I think you were sharing something around this.
+Where you map it to the second level or to the BBL.
+So can I see that please?
+- Seeing like what exactly?
+- The requirements mapping to the BBL.
+- Requirements mapping, oh.
+So let's see, let's see, let's see.
+It goes from.
+My goodness, it's a little bit missing with the application.
+(keyboard clicking)
+I guess it's currently locked because of the chatter.
+For this project.
+- Well the checker being locked has nothing to do
+with the requirements.
+This is my initiation.
+- Oh.
+- This is current phase.
+- I don't know why my thing is behaving slow.
+- So I don't know why I'm trying to.
+But I do, I just want to see this table.
+So I don't know what it is going to do.
+- Oh, oh.
+Sorry, sorry, my, well my local host is a bit,
+you know, like it's always a bit slow.
+And a bit, yeah.
+So it's here.
+Here we go.
+There we go, nice and easy.
+Okay, there.
+- All right, so I'll say,
+the requirements, they have the reviews go on.
+The reviews element level two, the reviews level two.
+And then the comment source.
+And then things go to the right place.
+Comments and source events.
+Then I see other code standards here.
+So is there a reason why you have code standards here?
+- We thought just in case there'd be any defined standards
+for any of the requirements,
+it can be also predefined here.
+- How will it be predefined here?
+The code standard comes in in the design planning.
+- Okay, we can take it out.
+- So can you click down on that code standard?
+So because of the lag instability.
+- All right, so in this requirement section,
+I would just say that the key thing here
+is having a requirement.
+They should be able to import
+and it should have the mapping of the requirements
+to the first and second level of the VVS.
+And so that is where the requirements finish,
+but it doesn't have to mark the code standard.
+Now if you want to have the code,
+need the code standard, it needs to be grayed out.
+So it's something that they don't have to fill out
+now for when they then go to the codes and standards
+and map it to the requirements,
+then it can show up on this requirements log.
+So the product requirements log
+should have all the requirements in it.
+- Okay.
+- So that'll be my key comment.
+- Okay.
+- And then organizational plan,
+like at this point,
+I'm not even sure what we discussed around there.
+I know the racing matrix or something that has to be updated.
+I don't know if you guys did update that.
+But if you go back down to the design planning,
+it's to confirm that the,
+'cause when the desired work packages,
+really should show the second level of the VVS with the,
+with the, like the VVS with the second level
+and then if you click on any,
+it should give you the requirements
+and the specification code and standards
+that are associated with that package.
+There are below the package for that.
+- Okay.
+- So that's what the design work packages should look like.
+So when you go to the design specifications,
+that's where you actually mark the requirements.
+That's when you actually list all the specifications.
+So this, this question should have a table
+where you are listing all the codes,
+standards, specifications,
+their source and all of that.
+So that's what this discussion is supposed to do.
+And then in the requirements,
+my suggestion you mark the specifications
+to the requirements, all the specifications listed
+have to be mapped to a requirement,
+any requirement, some might be more than one requirement.
+So if you can click on the requirements mapping,
+I wanna see how that's gonna work.
+All right, I know we talked about it.
+This was supposed to be a table view or whatever view
+that made it easy to see what requirements need to be mapped.
+Like every requirement here has to be mapped to
+applicable codes and standards.
+So it might end up becoming a case
+of apply code and standard to whatever requirements.
+Okay.
+Okay, so what do you go next?
+- So I just wanted to add time.
+So I don't know what else you plan to show,
+but these key things we talked about
+is that we push live and then we can discuss tomorrow.
+There's two things we still have to get a schedule.
+And a schedule is gonna be based on a lot of these things.
+Before that the schedule, the ideal delivery model,
+like we talked about the ideal delivery model,
+we talked about the email I sent you yesterday,
+I don't know if you implemented that or not.
+- Okay.
+- Yes. - Did you implement it too?
+- Yes, yes, yes.
+- All right, if you can push that.
+So what this part is very important
+because it was marked everything.
+- Okay. - All right, thank you.
+- All right, thank you so much.
+Thank you. - Okay.
+- Okay.

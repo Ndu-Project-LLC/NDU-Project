@@ -414,12 +414,14 @@ class _FatMechanicalCompletionScreenState
             children: [
               Icon(Icons.engineering, color: Color(0xFFD97706), size: 22),
               SizedBox(width: 10),
-              Text(
-                'Engineering, Construction, Manufacturing & Installation Projects',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF92400E),
+              Flexible(
+                child: Text(
+                  'Engineering, Construction, Manufacturing & Installation Projects',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF92400E),
+                  ),
                 ),
               ),
             ],

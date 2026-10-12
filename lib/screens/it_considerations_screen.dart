@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -382,6 +383,17 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'it_considerations',
+          pageTitle: 'ITConsiderationsScreen',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

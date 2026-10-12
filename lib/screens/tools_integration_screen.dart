@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
@@ -652,17 +653,34 @@ showNavigationButtons: false,
  const SizedBox(height: 24),
  Column(
  children: [
- _buildIntegrationRegister(),
- const SizedBox(height: 20),
- _buildConnectionHealthPanel(),
- const SizedBox(height: 20),
- _buildRiskSignalsPanel(),
- const SizedBox(height: 20),
- _buildActionItemsPanel(),
- const SizedBox(height: 20),
- _buildApprovalGatesPanel(),
- const SizedBox(height: 20),
- _buildDataFlowPanel(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Integrations',
+       builder: (_) => _buildIntegrationRegister(),
+     ),
+     SectionTab(
+       label: 'Connection health',
+       builder: (_) => _buildConnectionHealthPanel(),
+     ),
+     SectionTab(
+       label: 'Risk signals',
+       builder: (_) => _buildRiskSignalsPanel(),
+     ),
+     SectionTab(
+       label: 'Action items',
+       builder: (_) => _buildActionItemsPanel(),
+     ),
+     SectionTab(
+       label: 'Approval gates',
+       builder: (_) => _buildApprovalGatesPanel(),
+     ),
+     SectionTab(
+       label: 'Data flow',
+       builder: (_) => _buildDataFlowPanel(),
+     ),
+   ],
+ ),
  ],
  ),
  const SizedBox(height: 24),

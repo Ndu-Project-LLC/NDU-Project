@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/kanban_config_service.dart';
@@ -127,6 +128,17 @@ class _AgileTaskBoardScreenState extends State<AgileTaskBoardScreen> {
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'agile_task_board',
+          pageTitle: 'AgileTaskBoardScreen',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 }

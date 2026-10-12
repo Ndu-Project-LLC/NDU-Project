@@ -1,64 +1,15 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // wrapped_table_primitives.dart
 //
-// Reusable primitives that guarantee:
-//   1. Table cell text always wraps (never overflows the screen).
-//   2. Every table can be expanded to a full-screen view.
-//
-// Public API:
-//   - WrappedText           : A Text that always wraps soft words and never
-//                             overflows. Drop-in replacement for Text inside
-//                             any table cell.
-//   - WrappedCell           : A table cell that constrains its child to a
-//                             flexible width and lets long text wrap.
-//   - FullScreenTableWrapper: Wraps any table widget and renders an "Expand"
-//                             FAB in the top-right corner. Tapping it opens
-//                             a full-screen dialog re-building the same table
-//                             with relaxed constraints so it can use all the
-//                             available width.
-//   - buildWrappedDataTable  : Convenience builder that returns a
-//                             FullScreenTableWrapper around an NDU-styled
-//                             DataTable whose cells use WrappedText.
-//
-// These primitives are pure additions — they do not modify any existing
-// widget. Existing call sites continue to work unchanged; new call sites
-// should prefer these primitives.
+// Reusable primitives for wrapping table-cell text and expanding tables to a
+// full-screen view. Existing call sites can keep using these widgets unchanged.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
-/// A [Text] that ALWAYS wraps and never overflows.
-///
-/// Use this anywhere a normal [Text] would otherwise trigger a
-/// "RenderFlex overflowed by N pixels" warning — most commonly inside
-/// [DataRow] cells, [Row]-based custom tables, and grid layouts.
-///
-/// Behaviour:
-///   * `softWrap: true` (always).
-///   * `overflow: TextOverflow.visible` (never clip / never ellipsize).
-///   * Optional `maxLines` (defaults to unset = unlimited).
-///   * Optional `maxWidth` to constrain the text to a fixed column width.
+/// A [Text] that wraps and does not ellipsize unless [overflow] is overridden.
 class WrappedText extends StatelessWidget {
-  final String data;
-  final TextStyle? style;
-  final TextAlign? textAlign;
-  final TextDirection? textDirection;
-  final Locale? locale;
-  final bool softWrap;
-  final TextOverflow overflow;
-  final int? maxLines;
-  final double? maxWidth;
-  final StrutStyle? strutStyle;
-
-  /// Creates a [Text] that always wraps and never overflows.
-  ///
-  /// By default [overflow] is [TextOverflow.visible] and [softWrap] is true,
-  /// which means the text wraps to fit the available width and any single
-  /// word that is wider than the line paints outside the bounds (rather
-  /// than being clipped or ellipsized). Pass [overflow] to override —
-  /// e.g. [TextOverflow.ellipsis] when the original [Text] used
-  /// `maxLines: 1, overflow: TextOverflow.ellipsis`.
   const WrappedText(
     this.data, {
     super.key,
@@ -71,6 +22,17 @@ class WrappedText extends StatelessWidget {
     this.strutStyle,
     this.overflow = TextOverflow.visible,
   }) : softWrap = true;
+
+  final String data;
+  final TextStyle? style;
+  final TextAlign? textAlign;
+  final TextDirection? textDirection;
+  final Locale? locale;
+  final bool softWrap;
+  final TextOverflow overflow;
+  final int? maxLines;
+  final double? maxWidth;
+  final StrutStyle? strutStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -85,28 +47,16 @@ class WrappedText extends StatelessWidget {
       maxLines: maxLines,
       strutStyle: strutStyle,
     );
-    if (maxWidth != null) {
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth!),
-        child: text,
-      );
-    }
-    return text;
+    if (maxWidth == null) return text;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth!),
+      child: text,
+    );
   }
 }
 
-/// A table cell that wraps its child to a flexible width.
-///
-/// Use inside [DataRow] cells or any [Row]-based custom table layout.
-/// The child — typically a [WrappedText] — is given an [Expanded] or
-/// [Flexible] parent so it claims a share of the row width and wraps
-/// internally instead of pushing siblings off-screen.
+/// A flexible-width cell for custom Row-based tables.
 class WrappedCell extends StatelessWidget {
-  final Widget child;
-  final int flex;
-  final EdgeInsets padding;
-  final Alignment alignment;
-
   const WrappedCell({
     super.key,
     required this.child,
@@ -115,55 +65,27 @@ class WrappedCell extends StatelessWidget {
     this.alignment = Alignment.centerLeft,
   });
 
+  final Widget child;
+  final int flex;
+  final EdgeInsets padding;
+  final Alignment alignment;
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
       child: Padding(
         padding: padding,
-        child: Align(
-          alignment: alignment,
-          child: child,
-        ),
+        child: Align(alignment: alignment, child: child),
       ),
     );
   }
 }
 
-/// Wraps any table widget and lets the user expand it to full-screen.
-///
-/// The wrapper renders the [child] table inline. A small "Expand" button
-/// is overlaid in the top-right corner of the table. When tapped, the
-/// [tableBuilder] is invoked inside a full-screen [Dialog] so the same
-/// table can be re-rendered with relaxed constraints (full available
-/// width / height). This avoids the common Flutter "RenderFlex overflow"
-/// issue when a wide table is squeezed into a narrow parent.
-///
-/// Both [child] and [tableBuilder] are required. [child] is what shows
-/// inline; [tableBuilder] is what shows full-screen. They can be the
-/// same widget tree, but [tableBuilder] typically uses wider column
-/// widths and a larger heading row height.
-///
-/// **Scroll controllers must not be shared between the two.** Expanding pushes a
-/// non-opaque route, so the inline [child] stays mounted and stays attached to
-/// whatever it was given. A [Scrollbar] with `thumbVisibility: true` asserts when
-/// its controller holds more than one [ScrollPosition] ("The provided
-/// ScrollController is attached to more than one ScrollPosition"), which throws on
-/// every frame of the expanded table and takes the page down. Give each copy its
-/// own controller — see `planning_requirements_screen.dart` and
-/// `front_end_planning_requirements_screen.dart`.
-///
-/// The optional [title] is shown in the full-screen app bar.
-/// The optional [onFullscreenClose] is invoked when the user closes the
-/// full-screen dialog (e.g. to persist any edits).
-class FullScreenTableWrapper extends StatefulWidget {
-  final Widget child;
-  final WidgetBuilder tableBuilder;
-  final String? title;
-  final bool showExpandButton;
-  final VoidCallback? onFullscreenClose;
-  final EdgeInsets expandButtonPadding;
-
+/// Shows [child] inline and provides an affordance to open [tableBuilder]
+/// full-screen. Separate table builders allow each view to own its scroll
+/// controllers instead of attaching one controller to two scroll positions.
+class FullScreenTableWrapper extends StatelessWidget {
   const FullScreenTableWrapper({
     super.key,
     required this.child,
@@ -171,65 +93,60 @@ class FullScreenTableWrapper extends StatefulWidget {
     this.title,
     this.showExpandButton = true,
     this.onFullscreenClose,
-    this.expandButtonPadding =
-        const EdgeInsets.only(top: 8, right: 8),
+    this.expandButtonPadding = const EdgeInsets.only(top: 8, right: 8),
   });
 
-  @override
-  State<FullScreenTableWrapper> createState() =>
-      _FullScreenTableWrapperState();
-}
+  final Widget child;
+  final WidgetBuilder tableBuilder;
+  final String? title;
+  final bool showExpandButton;
+  final VoidCallback? onFullscreenClose;
+  final EdgeInsets expandButtonPadding;
 
-class _FullScreenTableWrapperState extends State<FullScreenTableWrapper> {
   @override
   Widget build(BuildContext context) {
-    if (!widget.showExpandButton) {
-      return widget.child;
-    }
+    if (!showExpandButton) return child;
     return Stack(
       children: [
-        widget.child,
+        child,
         Positioned(
-          top: widget.expandButtonPadding.top,
-          right: widget.expandButtonPadding.right,
-          child: _ExpandButton(
-            onTap: _openFullScreen,
-          ),
+          top: expandButtonPadding.top,
+          right: expandButtonPadding.right,
+          child: _ExpandButton(onTap: () => _openFullScreen(context)),
         ),
       ],
     );
   }
 
-  void _openFullScreen() {
+  void _openFullScreen(BuildContext context) {
     Navigator.of(context).push(
       PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.black54,
         transitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return _FullScreenTablePage(
-            title: widget.title,
-            tableBuilder: widget.tableBuilder,
-            onClose: widget.onFullscreenClose,
-          );
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            ),
-            child: child,
-          );
-        },
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            _FullScreenTablePage(
+          title: title,
+          tableBuilder: tableBuilder,
+          onClose: onFullscreenClose,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, page) =>
+            FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          ),
+          child: page,
+        ),
       ),
     );
   }
 }
 
 class _ExpandButton extends StatelessWidget {
-  final VoidCallback onTap;
   const _ExpandButton({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -248,9 +165,8 @@ class _ExpandButton extends StatelessWidget {
                   .withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFCBD5E1),
+                color:
+                    isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
               ),
               boxShadow: const [
                 BoxShadow(
@@ -290,16 +206,18 @@ class _ExpandButton extends StatelessWidget {
   }
 }
 
+/// Full-screen expansion route. This remains a separate widget so its builder
+/// can own a distinct scroll controller from the inline table.
 class _FullScreenTablePage extends StatelessWidget {
-  final String? title;
-  final WidgetBuilder tableBuilder;
-  final VoidCallback? onClose;
-
   const _FullScreenTablePage({
     required this.title,
     required this.tableBuilder,
     this.onClose,
   });
+
+  final String? title;
+  final WidgetBuilder tableBuilder;
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -312,23 +230,16 @@ class _FullScreenTablePage extends StatelessWidget {
           title ?? 'Table — Full Screen',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        centerTitle: false,
         leading: IconButton(
           tooltip: 'Close',
           icon: const Icon(Icons.close),
-          onPressed: () {
-            if (onClose != null) onClose!();
-            Navigator.of(context).maybePop();
-          },
+          onPressed: () => _close(context),
         ),
         actions: [
           IconButton(
             tooltip: 'Close',
             icon: const Icon(Icons.fullscreen_exit),
-            onPressed: () {
-              if (onClose != null) onClose!();
-              Navigator.of(context).maybePop();
-            },
+            onPressed: () => _close(context),
           ),
         ],
       ),
@@ -340,25 +251,16 @@ class _FullScreenTablePage extends StatelessWidget {
               color: isDark ? const Color(0xFF0F172A) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0),
+                color:
+                    isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
               ),
             ),
             clipBehavior: Clip.antiAlias,
-            // Fill the body: the card spans the full screen with the table at
-            // the top-left, instead of hugging the table's intrinsic size.
             alignment: Alignment.topLeft,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // The table must span the full viewport width: DataTable lays
-                // out at its intrinsic column widths unless forced wider, so
-                // without this floor the expanded view bunched every column
-                // on the left and left dead space across the rest of the
-                // screen. Wider-than-viewport tables still scroll horizontally.
-                final minWidth = constraints.maxWidth.isFinite
-                    ? constraints.maxWidth
-                    : 0.0;
+                final minWidth =
+                    constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
                 return SingleChildScrollView(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -375,21 +277,15 @@ class _FullScreenTablePage extends StatelessWidget {
       ),
     );
   }
+
+  void _close(BuildContext context) {
+    onClose?.call();
+    Navigator.of(context).maybePop();
+  }
 }
 
-/// Convenience builder: wraps a [DataTable] (built via [buildNduDataTable])
-/// in a [FullScreenTableWrapper] and ensures the inner table can scroll
-/// both horizontally and vertically when expanded.
-///
-/// Pass the same [columns] / [rows] you would normally pass to
-/// [buildNduDataTable]. The wrapper renders the table inline and offers
-/// an "Expand" button. When expanded, the same [columns] / [rows] are
-/// re-rendered in a full-screen dialog with horizontal + vertical
-/// scroll.
-///
-/// Set [wrapCells] = true (default) to automatically wrap any
-/// [DataCell] whose child is a plain [Text] in a [WrappedText]. This is
-/// a no-op for cells that already use [WrappedText] or non-text children.
+/// Builds a responsive table with automatically wrapped text cells and an
+/// optional full-screen view.
 Widget buildWrappedDataTable({
   required BuildContext context,
   required List<DataColumn> columns,
@@ -407,19 +303,7 @@ Widget buildWrappedDataTable({
   bool showExpandButton = true,
   VoidCallback? onFullscreenClose,
 }) {
-  List<DataRow> wrappedRows = rows;
-  if (wrapCells) {
-    wrappedRows = rows
-        .map((row) => DataRow(
-              key: row.key,
-              selected: row.selected,
-              onSelectChanged: row.onSelectChanged,
-              onLongPress: row.onLongPress,
-              color: row.color,
-              cells: row.cells.map(_wrapCell).toList(growable: false),
-            ))
-        .toList(growable: false);
-  }
+  final wrappedRows = wrapCells ? _wrapRows(rows) : rows;
 
   final inlineTable = ResponsiveDataTableWrapper(
     minWidth: 0,
@@ -438,13 +322,11 @@ Widget buildWrappedDataTable({
     ),
   );
 
-  if (!showExpandButton) {
-    return inlineTable;
-  }
-
+  if (!showExpandButton) return inlineTable;
   return FullScreenTableWrapper(
     title: title,
     onFullscreenClose: onFullscreenClose,
+    child: inlineTable,
     tableBuilder: (fsContext) => buildNduDataTable(
       context: fsContext,
       columns: columns,
@@ -458,47 +340,35 @@ Widget buildWrappedDataTable({
       zebra: zebra,
       showCheckboxColumn: showCheckboxColumn,
     ),
-    child: inlineTable,
   );
 }
 
+List<DataRow> _wrapRows(List<DataRow> rows) => rows
+    .map((row) => DataRow(
+          key: row.key,
+          selected: row.selected,
+          onSelectChanged: row.onSelectChanged,
+          onLongPress: row.onLongPress,
+          color: row.color,
+          cells: row.cells.map(_wrapCell).toList(growable: false),
+        ))
+    .toList(growable: false);
+
 DataCell _wrapCell(DataCell cell) {
   final child = cell.child;
-  if (child is Text) {
-    // If the Text was created with Text.rich() (data is null but
-    // textSpan is not), fall back to a RichText so we don't lose the
-    // spans. Otherwise use WrappedText for guaranteed wrapping.
-    if (child.data == null && child.textSpan != null) {
-      return DataCell(
-        RichText(
-          text: child.textSpan!,
-          textAlign: child.textAlign ?? TextAlign.start,
-          textDirection: child.textDirection,
-          locale: child.locale,
-          softWrap: true,
-          overflow: TextOverflow.visible,
-          maxLines: child.maxLines,
-          strutStyle: child.strutStyle,
-        ),
-        placeholder: cell.placeholder,
-        showEditIcon: cell.showEditIcon,
-        onTap: cell.onTap,
-        onLongPress: cell.onLongPress,
-        onDoubleTap: cell.onDoubleTap,
-        onTapDown: cell.onTapDown,
-        onTapCancel: cell.onTapCancel,
-      );
-    }
+  if (child is! Text) return cell;
+
+  if (child.data == null && child.textSpan != null) {
     return DataCell(
-      WrappedText(
-        child.data ?? '',
-        style: child.style,
-        textAlign: child.textAlign,
+      RichText(
+        text: child.textSpan!,
+        textAlign: child.textAlign ?? TextAlign.start,
         textDirection: child.textDirection,
         locale: child.locale,
+        softWrap: true,
+        overflow: TextOverflow.visible,
         maxLines: child.maxLines,
         strutStyle: child.strutStyle,
-        overflow: child.overflow ?? TextOverflow.visible,
       ),
       placeholder: cell.placeholder,
       showEditIcon: cell.showEditIcon,
@@ -509,6 +379,24 @@ DataCell _wrapCell(DataCell cell) {
       onTapCancel: cell.onTapCancel,
     );
   }
-  // Already wrapped or non-text — leave alone.
-  return cell;
+
+  return DataCell(
+    WrappedText(
+      child.data ?? '',
+      style: child.style,
+      textAlign: child.textAlign,
+      textDirection: child.textDirection,
+      locale: child.locale,
+      maxLines: child.maxLines,
+      strutStyle: child.strutStyle,
+      overflow: child.overflow ?? TextOverflow.visible,
+    ),
+    placeholder: cell.placeholder,
+    showEditIcon: cell.showEditIcon,
+    onTap: cell.onTap,
+    onLongPress: cell.onLongPress,
+    onDoubleTap: cell.onDoubleTap,
+    onTapDown: cell.onTapDown,
+    onTapCancel: cell.onTapCancel,
+  );
 }

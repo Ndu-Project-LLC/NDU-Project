@@ -115,12 +115,14 @@ class _AdminSurveyResponsesScreenState
             Icon(Icons.assignment_outlined,
                 color: Color(0xFFFFC107), size: 28),
             SizedBox(width: 12),
-            Text(
-              'Survey Responses',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
+            Flexible(
+              child: Text(
+                'Survey Responses',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
               ),
             ),
           ],

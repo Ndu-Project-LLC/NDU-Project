@@ -509,6 +509,47 @@ class PlanningPhaseNavigation {
     return next == null ? 'Next' : 'Next: ${next.title}';
   }
 
+  /// Whether [goToPrevious] would actually open another screen.
+  ///
+  /// Shared with the page navigation footer so the Previous button can be
+  /// disabled on the first page of a flow instead of silently doing nothing.
+  static bool hasPrevious(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _previousSidebarItem(currentId,
+              deliveryModel: deliveryModelOf(context)) !=
+          null;
+    }
+    return previousPage(currentId) != null;
+  }
+
+  /// Whether [goToNext] would actually open another screen.
+  static bool hasNext(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _nextSidebarItem(context, currentId) != null;
+    }
+    return nextPage(currentId) != null;
+  }
+
+  /// The label of the screen [goToPrevious] would open, or null when this is
+  /// the first page of the flow. Used as the Previous button's tooltip.
+  static String? previousTitle(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _previousSidebarItem(currentId,
+              deliveryModel: deliveryModelOf(context))
+          ?.label;
+    }
+    return previousPage(currentId)?.title;
+  }
+
+  /// The label of the screen [goToNext] would open, or null when this is the
+  /// last page of the flow. Drives the `Continue to X` button label.
+  static String? nextTitle(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _nextSidebarItem(context, currentId)?.label;
+    }
+    return nextPage(currentId)?.title;
+  }
+
   /// The Agile Delivery screen flow, in sidebar-selector order.
   ///
   /// Shared by the on-page screen navigator so it always reflects the

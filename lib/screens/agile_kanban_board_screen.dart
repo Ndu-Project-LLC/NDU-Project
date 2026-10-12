@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/feature_model.dart';
@@ -488,11 +489,21 @@ class _KanbanBoardPanelState extends State<KanbanBoardPanel> {
 
   Widget _buildBoard(bool isMobile) {
     if (isMobile) {
+      // Every column gives its card list an `Expanded` so the list fills the
+      // column and scrolls inside it. Stacked, that needs a bounded height or
+      // the Column is a flex child of an unbounded one and the whole board
+      // throws ("non-zero flex but incoming height constraints are
+      // unbounded") — which is what a phone saw. The desktop row bounds the
+      // columns with [boardHeight]; the stacked layout does the same per
+      // column.
       return Column(
         children: _columns
             .map((c) => Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildColumn(c),
+                  child: SizedBox(
+                    height: widget.boardHeight,
+                    child: _buildColumn(c),
+                  ),
                 ))
             .toList(),
       );
@@ -961,7 +972,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                   const Positioned(
                     right: 24,
                     bottom: 24,
-                    child: KazAiChatBubble(),
+                    child: KazAiChatBubble(positioned: false),
                   ),
                 ],
               ),
@@ -969,6 +980,17 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
           ],
         ),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'agile_kanban_board',
+          pageTitle: 'KanbanBoardPanel',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

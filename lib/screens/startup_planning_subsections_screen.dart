@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -2883,9 +2884,12 @@ class _ChecklistTableCard extends StatelessWidget {
     _ChecklistEntry? entry,
     int? index,
   }) async {
-    final titleController = SpellCheckTextEditingController(text: entry?.title ?? '');
-    final ownerController = SpellCheckTextEditingController(text: entry?.owner ?? '');
-    final notesController = SpellCheckTextEditingController(text: entry?.notes ?? '');
+    final titleController =
+        SpellCheckTextEditingController(text: entry?.title ?? '');
+    final ownerController =
+        SpellCheckTextEditingController(text: entry?.owner ?? '');
+    final notesController =
+        SpellCheckTextEditingController(text: entry?.notes ?? '');
     final formKey = GlobalKey<FormState>();
     var isComplete = entry?.done ?? false;
     final registerName = title
@@ -3116,7 +3120,7 @@ class _ChecklistTableCard extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                  child: DataTable(
+                  child: NduResponsiveDataTable(
                     headingRowColor:
                         const WidgetStatePropertyAll(Color(0xFFF9FAFB)),
                     headingRowHeight: 48,
@@ -4290,7 +4294,9 @@ Future<Map<int, String>?> _showRowEditDialog(
 }) async {
   final controllers = <TextEditingController?>[
     for (final f in fields)
-      f.options == null ? SpellCheckTextEditingController(text: f.initialValue) : null,
+      f.options == null
+          ? SpellCheckTextEditingController(text: f.initialValue)
+          : null,
   ];
   // Seed dropdown fields: empty values fall back to the first option so a
   // fresh row gets a sensible default; custom stored values are preserved.

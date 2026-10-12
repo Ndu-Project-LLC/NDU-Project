@@ -533,8 +533,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                 message: 'Add a new Level 1 ${fm.level1Label}',
                 child: FilledButton.icon(
                   onPressed: () {
-                    if (wbs.level0.children.length >= 3) {
-                      _showLevel1CapMessage(context);
+                    if (wbs.level0.children.length >= level1Limit(wbs.methodology)) {
+                      _showLevel1CapMessage(context, methodology: wbs.methodology);
                       return;
                     }
                     _showAddNodeDialog(context, provider, 1, fm.level1Label,
@@ -1093,8 +1093,9 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
             children: [
               FilledButton(
                 onPressed: () {
-                  if (provider.wbs!.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
+                  if (provider.wbs!.level0.children.length >= level1Limit(provider.wbs!.methodology)) {
+                    _showLevel1CapMessage(context,
+                        methodology: provider.wbs!.methodology);
                     return;
                   }
                   _showAddNodeDialog(context, provider, 1, fm.level1Label,
@@ -1253,7 +1254,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
             children: [
               // Node row with optional expand toggle
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Expand/collapse toggle (always visible)
                   SizedBox(
@@ -1286,10 +1287,15 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                     ),
                   ),
                   const SizedBox(width: 4),
-                  // Tree branch connector
-                  _TreeBranch(
-                      isLast: isLast,
-                      color: levelColor(depth, LightModeColors.accent)),
+                  // Tree branch connector — stretches to match the node card
+                  // height so the horizontal branch line lands on the card's
+                  // vertical centre.
+                  SizedBox(
+                    width: 14,
+                    child: _TreeBranch(
+                        isLast: isLast,
+                        color: levelColor(depth, LightModeColors.accent)),
+                  ),
                   const SizedBox(width: 8),
                   // Node card
                   Expanded(
@@ -1371,7 +1377,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
               width: 24,
@@ -1402,10 +1408,14 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
               ),
             ),
             const SizedBox(width: 4),
-            // Tree branch connector
-            _TreeBranch(
-                isLast: isLast,
-                color: levelColor(depth, LightModeColors.accent)),
+            // Tree branch connector — stretches to match the node card height
+            // so the horizontal branch line lands on the card's vertical centre.
+            SizedBox(
+              width: 14,
+              child: _TreeBranch(
+                  isLast: isLast,
+                  color: levelColor(depth, LightModeColors.accent)),
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildNodeCard(
@@ -1872,8 +1882,9 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
             children: [
               FilledButton(
                 onPressed: () {
-                  if (provider.wbs!.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
+                  if (provider.wbs!.level0.children.length >= level1Limit(provider.wbs!.methodology)) {
+                    _showLevel1CapMessage(context,
+                        methodology: provider.wbs!.methodology);
                     return;
                   }
                   _showAddNodeDialog(context, provider, 1, fm.level1Label,
@@ -1913,8 +1924,9 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
   }) {
     if (level == 1 &&
         provider.wbs != null &&
-        provider.wbs!.level0.children.length >= 3) {
-      _showLevel1CapMessage(context);
+        provider.wbs!.level0.children.length >= level1Limit(provider.wbs!.methodology)) {
+      _showLevel1CapMessage(context,
+          methodology: provider.wbs!.methodology);
       return;
     }
     // Resolve the parent node (if any) so we can show its name in the hero.
@@ -2021,9 +2033,10 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
                       FilledButton(
                         onPressed: () {
                           final wbs = provider.wbs;
-                          if (wbs != null && wbs.level0.children.length >= 3) {
+                          if (wbs != null && wbs.level0.children.length >= level1Limit(wbs.methodology)) {
                             Navigator.pop(ctx);
-                            _showLevel1CapMessage(context);
+                            _showLevel1CapMessage(context,
+                                methodology: wbs.methodology);
                             return;
                           }
                           provider.addNodesFromTemplate(parentId, [t]);
@@ -2057,12 +2070,28 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen>
 
   // ─── Level 1 cap ────────────────────────────────────────────────────
 
-  void _showLevel1CapMessage(BuildContext context) {
+  /// How many Level-1 nodes this project's methodology allows.
+  ///
+  /// Waterfall calls them goals and the owner caps them at three ("Maximum 3
+  /// top-level WBS items — these become the 3 goals"); Agile calls them epics
+  /// and allows five to seven ("If the Agile project, it should be able to
+  /// select up to … five to seven epics.").
+  static int level1Limit(ProjectMethodology methodology) =>
+      methodology == ProjectMethodology.agile ? 7 : 3;
+
+  void _showLevel1CapMessage(
+    BuildContext context, {
+    required ProjectMethodology methodology,
+  }) {
+    final agile = methodology == ProjectMethodology.agile;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-            'Maximum 3 top-level WBS items — these become the 3 goals. Remove one to add another.'),
-        backgroundColor: Color(0xFFEF4444),
+          agile
+              ? 'Maximum 7 epics — an Agile project can identify up to seven. Remove one to add another.'
+              : 'Maximum 3 top-level WBS items — these become the 3 goals. Remove one to add another.',
+        ),
+        backgroundColor: const Color(0xFFEF4444),
       ),
     );
   }
@@ -2289,6 +2318,8 @@ Guidelines:
 }
 
 /// Draws a tree-branch connector: ├ for middle children, └ for last child.
+/// The connector stretches to match the height of the adjacent node card so
+/// the horizontal branch line always lands on the card's vertical centre.
 class _TreeBranch extends StatelessWidget {
   const _TreeBranch({required this.isLast, required this.color});
   final bool isLast;
@@ -2296,20 +2327,26 @@ class _TreeBranch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 14,
-      height: 40,
-      child: CustomPaint(
-        painter: _TreeBranchPainter(isLast: isLast, color: color),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use the incoming height constraint so the painter can draw at the
+        // true vertical centre of the sibling card. Fall back to 40px when
+        // there is no bounded height (e.g. unbounded parent).
+        final h = constraints.maxHeight > 0 ? constraints.maxHeight.toDouble() : 40.0;
+        return CustomPaint(
+          size: Size(14, h),
+          painter: _TreeBranchPainter(isLast: isLast, color: color, height: h),
+        );
+      },
     );
   }
 }
 
 class _TreeBranchPainter extends CustomPainter {
-  _TreeBranchPainter({required this.isLast, required this.color});
+  _TreeBranchPainter({required this.isLast, required this.color, required this.height});
   final bool isLast;
   final Color color;
+  final double height;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2318,9 +2355,8 @@ class _TreeBranchPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    final h = size.height;
     final w = size.width;
-    final midY = h / 2;
+    final midY = height / 2;
 
     // Horizontal line from left to right (branch to card)
     canvas.drawLine(Offset(0, midY), Offset(w, midY), paint);
@@ -2331,13 +2367,13 @@ class _TreeBranchPainter extends CustomPainter {
       canvas.drawLine(const Offset(0, 0), Offset(0, midY), paint);
     } else {
       // Middle child: line continues below the branch
-      canvas.drawLine(const Offset(0, 0), Offset(0, h), paint);
+      canvas.drawLine(const Offset(0, 0), Offset(0, height), paint);
     }
   }
 
   @override
   bool shouldRepaint(_TreeBranchPainter old) =>
-      old.isLast != isLast || old.color != color;
+      old.isLast != isLast || old.color != color || old.height != height;
 }
 
 /// Local hover-state helper (MouseRegion) used by the advanced-view node

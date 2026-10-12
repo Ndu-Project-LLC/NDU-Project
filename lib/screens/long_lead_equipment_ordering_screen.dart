@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:flutter/services.dart';
 import 'package:ndu_project/utils/unique_id.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -18,6 +19,8 @@ import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
+import 'package:ndu_project/widgets/editable_table.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
  const LongLeadEquipmentOrderingScreen({super.key});
 
@@ -299,11 +302,22 @@ class _LongLeadEquipmentOrderingScreenState
  // Three Cards - stacked layout
  Column(
  children: [
- _buildCategoriesCard(),
- const SizedBox(height: 16),
- _buildEquipmentTrackingCard(),
- const SizedBox(height: 16),
- _buildProcurementActionsCard(),
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Categories',
+       builder: (_) => _buildCategoriesCard(),
+     ),
+     SectionTab(
+       label: 'Equipment tracking',
+       builder: (_) => _buildEquipmentTrackingCard(),
+     ),
+     SectionTab(
+       label: 'Procurement actions',
+       builder: (_) => _buildProcurementActionsCard(),
+     ),
+   ],
+ ),
  ],
  ),
  const SizedBox(height: 32),
@@ -315,6 +329,17 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  ),
  ],
+ ),
+ bottomBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'long_lead_equipment_ordering',
+       pageTitle: 'Long Lead Equipment Ordering',
+       showBorders: false,
+     ),
+   ),
  ),
  );
  }  Widget _buildCategoriesCard() {
@@ -1159,12 +1184,12 @@ class _LongLeadEquipmentOrderingScreenState
 
  Widget _buildCategoriesTable() {
  final columns = [
- const _TableColumnDef('Category', 200),
- const _TableColumnDef('Description', 260),
- const _TableColumnDef('Criticality', 140),
- const _TableColumnDef('Lead time threshold', 180),
- const _TableColumnDef('Owner', 160),
- const _TableColumnDef('', 60),
+ const EditableTableColumn('Category', 200),
+ const EditableTableColumn('Description', 260),
+ const EditableTableColumn('Criticality', 140),
+ const EditableTableColumn('Lead time threshold', 180),
+ const EditableTableColumn('Owner', 160),
+ const EditableTableColumn('', 60),
  ];
 
  if (_categories.isEmpty) {
@@ -1176,11 +1201,11 @@ class _LongLeadEquipmentOrderingScreenState
 
  return FullScreenTableWrapper(
  title: 'Equipment Categories',
- child: _EditableTable(
+ child: EditableTable(
  columns: columns,
  rows: [
  for (final entry in _categories)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -1227,11 +1252,11 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  ],
  ),
- tableBuilder: (fsContext) => _EditableTable(
+ tableBuilder: (fsContext) => EditableTable(
  columns: columns,
  rows: [
  for (final entry in _categories)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -1283,14 +1308,14 @@ class _LongLeadEquipmentOrderingScreenState
 
  Widget _buildEquipmentTable() {
  final columns = [
- const _TableColumnDef('Item', 220),
- const _TableColumnDef('Category', 180),
- const _TableColumnDef('Vendor', 180),
- const _TableColumnDef('Lead time', 140),
- const _TableColumnDef('Expected delivery', 160),
- const _TableColumnDef('Status', 160),
- const _TableColumnDef('Owner', 160),
- const _TableColumnDef('', 60),
+ const EditableTableColumn('Item', 220),
+ const EditableTableColumn('Category', 180),
+ const EditableTableColumn('Vendor', 180),
+ const EditableTableColumn('Lead time', 140),
+ const EditableTableColumn('Expected delivery', 160),
+ const EditableTableColumn('Status', 160),
+ const EditableTableColumn('Owner', 160),
+ const EditableTableColumn('', 60),
  ];
 
  if (_equipmentItems.isEmpty) {
@@ -1302,11 +1327,11 @@ class _LongLeadEquipmentOrderingScreenState
 
  return FullScreenTableWrapper(
  title: 'Long-Lead Equipment',
- child: _EditableTable(
+ child: EditableTable(
  columns: columns,
  rows: [
  for (final entry in _equipmentItems)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -1366,11 +1391,11 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  ],
  ),
- tableBuilder: (fsContext) => _EditableTable(
+ tableBuilder: (fsContext) => EditableTable(
  columns: columns,
  rows: [
  for (final entry in _equipmentItems)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -1435,12 +1460,12 @@ class _LongLeadEquipmentOrderingScreenState
 
  Widget _buildActionsTable() {
  final columns = [
- const _TableColumnDef('Action', 240),
- const _TableColumnDef('Owner', 180),
- const _TableColumnDef('Due date', 140),
- const _TableColumnDef('Status', 160),
- const _TableColumnDef('Notes', 240),
- const _TableColumnDef('', 60),
+ const EditableTableColumn('Action', 240),
+ const EditableTableColumn('Owner', 180),
+ const EditableTableColumn('Due date', 140),
+ const EditableTableColumn('Status', 160),
+ const EditableTableColumn('Notes', 240),
+ const EditableTableColumn('', 60),
  ];
 
  if (_actions.isEmpty) {
@@ -1452,11 +1477,11 @@ class _LongLeadEquipmentOrderingScreenState
 
  return FullScreenTableWrapper(
  title: 'Procurement Actions',
- child: _EditableTable(
+ child: EditableTable(
  columns: columns,
  rows: [
  for (final entry in _actions)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -1501,11 +1526,11 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  ],
  ),
- tableBuilder: (fsContext) => _EditableTable(
+ tableBuilder: (fsContext) => EditableTable(
  columns: columns,
  rows: [
  for (final entry in _actions)
- _EditableRow(
+ EditableTableRow(
  key: ValueKey(entry.id),
  columns: columns,
  cells: [
@@ -1633,90 +1658,6 @@ class _SectionCard extends StatelessWidget {
  ),
  );
  }
-}
-
-class _EditableTable extends StatelessWidget {
- const _EditableTable({required this.columns, required this.rows});
-
- final List<_TableColumnDef> columns;
- final List<_EditableRow> rows;
-
- @override
- Widget build(BuildContext context) {
- final header = Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: const Color(0xFFF3F4F6),
- borderRadius: BorderRadius.circular(10),
- ),
- child: Row(
- children: columns
- .map((column) => SizedBox(
- width: column.width,
- child: Text(
- column.label.toUpperCase(),
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- letterSpacing: 0.7,
- color: Color(0xFF6B7280)),
- ),
- ))
- .toList(),
- ),
- );
-
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: BoxConstraints(
- minWidth:
- columns.fold<double>(0, (total, col) => total + col.width)),
- child: Column(
- children: [
- header,
- const SizedBox(height: 8),
- for (int i = 0; i < rows.length; i++)
- Container(
- margin: const EdgeInsets.only(bottom: 10),
- padding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: i.isEven ? Colors.white : const Color(0xFFF9FAFB),
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: rows[i],
- ),
- ],
- ),
- ),
- );
- }
-}
-
-class _EditableRow extends StatelessWidget {
- const _EditableRow({super.key, required this.columns, required this.cells});
-
- final List<_TableColumnDef> columns;
- final List<Widget> cells;
-
- @override
- Widget build(BuildContext context) {
- return Row(
- children: List.generate(
- cells.length,
- (index) => SizedBox(width: columns[index].width, child: cells[index]),
- ),
- );
- }
-}
-
-class _TableColumnDef {
- const _TableColumnDef(this.label, this.width);
-
- final String label;
- final double width;
 }
 
 /// Inline lead-time cell: a digits-only amount paired with a unit selector.

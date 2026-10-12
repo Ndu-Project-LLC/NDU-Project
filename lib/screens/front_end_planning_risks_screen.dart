@@ -14,6 +14,7 @@ import 'package:ndu_project/models/risk_log.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
@@ -1504,6 +1505,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ),
  ),
+ const SizedBox(height: 12),
+ // Lusaka 29: every page carries the same forward/back footer so the
+ // Next button always names the screen it opens.
+ PageNavigationFooter(
+ checkpoint: 'fep_risks',
+ pageTitle: 'Project Risks',
+ onNext: _saveAndContinue,
+ ),
  ],
  ),
  const MobileSidebarHamburger(
@@ -1512,9 +1521,6 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ),
  const KazAiChatBubble(),
- _BottomOverlays(
- onNext: _saveAndContinue,
- ),
  ],
  ),
  ),
@@ -1651,7 +1657,11 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  top: false,
  child: Padding(
  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
- child: Row(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.stretch,
+ children: [
+ Row(
  children: [
  Expanded(
  child: OutlinedButton.icon(
@@ -1677,23 +1687,15 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ),
  ),
- const SizedBox(width: 10),
- Expanded(
- child: ElevatedButton(
- onPressed: _saveAndContinue,
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFF4B400),
- foregroundColor: Colors.black,
- elevation: 0,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- padding: const EdgeInsets.symmetric(vertical: 13),
+ ],
  ),
- child: const Text(
- 'Next',
- style: TextStyle(fontWeight: FontWeight.w800),
- ),
- ),
+ // Lusaka 29: the same footer every page carries, so next/previous
+ // always name the screen they open.
+ PageNavigationFooter(
+ checkpoint: 'fep_risks',
+ pageTitle: 'Project Risks',
+ showBorders: false,
+ onNext: _saveAndContinue,
  ),
  ],
  ),
@@ -2540,83 +2542,6 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
  ],
  );
  },
- );
- }
-}
-
-class _BottomOverlays extends StatelessWidget {
- const _BottomOverlays({required this.onNext});
- final VoidCallback onNext;
-
- @override
- Widget build(BuildContext context) {
- return Positioned.fill(
- child: IgnorePointer(
- ignoring: false,
- child: Stack(
- children: [
- Positioned(
- left: 24,
- bottom: 24,
- child: Container(
- width: 48,
- height: 48,
- decoration: const BoxDecoration(
- color: Color(0xFFB3D9FF), shape: BoxShape.circle),
- child: const Icon(Icons.info_outline, color: Colors.white),
- ),
- ),
- Positioned(
- right: 24,
- bottom: 24,
- child: Row(
- children: [
- _aiHint(),
- const SizedBox(width: 16),
- ElevatedButton(
- onPressed: onNext,
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFD700),
- foregroundColor: Colors.black,
- padding: const EdgeInsets.symmetric(
- horizontal: 28, vertical: 14),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(22)),
- elevation: 0,
- ),
- child: const Text('Next',
- style: TextStyle(
- fontSize: 16, fontWeight: FontWeight.w600)),
- ),
- ],
- ),
- ),
- ],
- ),
- ),
- );
- }
-
- Widget _aiHint() {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
- decoration: BoxDecoration(
- color: const Color(0xFFE6F1FF),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFD7E5FF)),
- ),
- child: const Row(
- children: [
- Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
- SizedBox(width: 8),
- Text('Hint',
- style: TextStyle(
- fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
- SizedBox(width: 10),
- Text('Focus on major risks associated with each potential solution.',
- style: TextStyle(color: Color(0xFF1F2937))),
- ],
- ),
  );
  }
 }

@@ -29,6 +29,15 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/utils/dashboard_palette.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
+/// Width below which the hero band's action row drops the labels off its pills
+/// (Activity, KAZ AI) and lets the breadcrumb chip shrink.
+///
+/// The row's fixed content — back button, crumb, both pills and the account
+/// chip — needs roughly 560px to render as written, so on a phone the labels
+/// are the cheapest thing to give up. The crumb is the elastic part, and the
+/// actions themselves stay reachable.
+const double _compactBandWidth = 560;
+
 /// World-class gradient header band shared by the Project and Regular Project
 /// dashboards. Renders the full hero command band: navigation row, greeting +
 /// plan badge, mode title + email, and the four primary CTAs (Create Project,
@@ -230,53 +239,73 @@ class _DashboardHeaderState extends State<DashboardHeader> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _HeaderBandAction(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go('/');
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _crumb(crumbText),
-                    const Spacer(),
-                    _HeaderBandAction(
-                      icon: Icons.fact_check_outlined,
-                      label: 'Activity',
-                      onTap: () => ProjectActivitiesLogScreen.open(context),
-                    ),
-                    const SizedBox(width: 8),
-                    _kazAiBandPill(),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: _handleLogout,
-                      borderRadius: BorderRadius.circular(40),
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
-                        decoration: BoxDecoration(
-                          color: palette.ink.withValues(alpha: 0.08),
+                // The navigation row carries five fixed-width affordances
+                // (back, crumb, Activity, KAZ AI, account). On a phone they
+                // cannot coexist as labelled pills — the crumb alone owns
+                // ~150px — so below [_compactBandWidth] the labels drop away
+                // and the crumb is allowed to shrink. Every action stays
+                // reachable, and nothing is clipped behind Flutter's overflow
+                // stripe.
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < _compactBandWidth;
+                    return Row(
+                      children: [
+                        _HeaderBandAction(
+                          icon: Icons.arrow_back_rounded,
+                          onTap: () {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/');
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        // The crumb is the elastic part of the row: it takes
+                        // what it needs and ellipsizes when the actions next to
+                        // it have eaten the width (they used to be pushed past
+                        // the band edge instead).
+                        Flexible(flex: 3, child: _crumb(crumbText)),
+                        if (!compact) const Spacer(),
+                        _HeaderBandAction(
+                          icon: Icons.fact_check_outlined,
+                          label: compact ? null : 'Activity',
+                          onTap: () => ProjectActivitiesLogScreen.open(context),
+                        ),
+                        const SizedBox(width: 8),
+                        _kazAiBandPill(compact: compact),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: _handleLogout,
                           borderRadius: BorderRadius.circular(40),
-                          border: Border.all(
-                              color: palette.ink.withValues(alpha: 0.18)),
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(
+                                6, 6, compact ? 6 : 10, 6),
+                            decoration: BoxDecoration(
+                              color: palette.ink.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(40),
+                              border: Border.all(
+                                  color: palette.ink.withValues(alpha: 0.18)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _avatar(initials, photoUrl),
+                                if (!compact) ...[
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.logout_rounded,
+                                      size: 14,
+                                      color:
+                                          palette.ink.withValues(alpha: 0.7)),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _avatar(initials, photoUrl),
-                            const SizedBox(width: 8),
-                            Icon(Icons.logout_rounded,
-                                size: 14,
-                                color: palette.ink.withValues(alpha: 0.7)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 22),
                 LayoutBuilder(
@@ -285,20 +314,25 @@ class _DashboardHeaderState extends State<DashboardHeader> {
                     final greetingBlock = Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
+                        // A Wrap rather than a Row: "Good morning, <name>" plus
+                        // the plan badge no longer fit side by side on a phone,
+                        // and the badge is what got clipped. Wrapped, it drops
+                        // to its own line instead of overflowing.
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               '$greeting, $firstName',
                               style: TextStyle(
-                                fontSize: 26,
+                                fontSize: compactHeader ? 22 : 26,
                                 fontWeight: FontWeight.w800,
                                 color: palette.ink,
                                 letterSpacing: -0.5,
                                 height: 1.1,
                               ),
                             ),
-                            const SizedBox(width: 12),
                             _planBadge(palette),
                           ],
                         ),
@@ -327,7 +361,11 @@ class _DashboardHeaderState extends State<DashboardHeader> {
                     final ctaRow = Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      alignment: WrapAlignment.end,
+                      // Right-aligned reads as a deliberate cluster beside the
+                      // greeting on wide bands; stacked on a phone it just
+                      // looks ragged, so the buttons start at the left.
+                      alignment:
+                          compactHeader ? WrapAlignment.start : WrapAlignment.end,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         ElevatedButton(
@@ -349,9 +387,15 @@ class _DashboardHeaderState extends State<DashboardHeader> {
                               Icon(Icons.add_rounded,
                                   size: 18, color: palette.primary),
                               const SizedBox(width: 6),
-                              Text(widget.isBasicPlan
-                                  ? 'Create Regular Project'
-                                  : 'Create Project'),
+                              Flexible(
+                                child: Text(
+                                  widget.isBasicPlan
+                                      ? 'Create Regular Project'
+                                      : 'Create Project',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -419,12 +463,16 @@ class _DashboardHeaderState extends State<DashboardHeader> {
           Icon(Icons.view_quilt_outlined,
               size: 14, color: palette.ink.withValues(alpha: 0.75)),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: palette.ink,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
             ),
           ),
         ],
@@ -433,54 +481,62 @@ class _DashboardHeaderState extends State<DashboardHeader> {
   }
 
   /// KAZ AI brand pill on the header band — opens the KAZ AI copilot chat.
-  Widget _kazAiBandPill() {
+  ///
+  /// [compact] keeps the mark but drops the wordmark, which is what makes it
+  /// fit alongside the other header actions on a phone.
+  Widget _kazAiBandPill({bool compact = false}) {
     final palette = DashboardPaletteScope.of(context);
-    return InkWell(
-      onTap: () => KazAiChatBubble.openChat(context),
-      borderRadius: BorderRadius.circular(40),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(6, 5, 12, 5),
-        decoration: BoxDecoration(
-          color: palette.ink,
-          borderRadius: BorderRadius.circular(40),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-          boxShadow: [
-            BoxShadow(
-              color: palette.ink.withValues(alpha: 0.25),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+    return Tooltip(
+      message: 'KAZ AI',
+      child: InkWell(
+        onTap: () => KazAiChatBubble.openChat(context),
+        borderRadius: BorderRadius.circular(40),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(6, 5, compact ? 6 : 12, 5),
+          decoration: BoxDecoration(
+            color: palette.ink,
+            borderRadius: BorderRadius.circular(40),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+            boxShadow: [
+              BoxShadow(
+                color: palette.ink.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                borderRadius: BorderRadius.circular(10),
+                alignment: Alignment.center,
+                child: const Icon(Icons.auto_awesome_rounded,
+                    size: 12, color: Color(0xFF1C1C1C)),
               ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.auto_awesome_rounded,
-                  size: 12, color: Color(0xFF1C1C1C)),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'KAZ AI',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.4,
-                color: palette.primary,
-              ),
-            ),
-          ],
+              if (!compact) ...[
+                const SizedBox(width: 6),
+                Text(
+                  'KAZ AI',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                    color: palette.primary,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -581,7 +637,13 @@ class _DashboardHeaderState extends State<DashboardHeader> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
           const SizedBox(width: 6),
           Icon(icon ?? Icons.keyboard_arrow_right_rounded, size: 18),
         ],

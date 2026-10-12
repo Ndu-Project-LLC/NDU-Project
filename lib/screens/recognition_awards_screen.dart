@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -445,6 +446,17 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('New Recognition'),
       ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'recognition_awards',
+          pageTitle: 'Recognition Awards',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 

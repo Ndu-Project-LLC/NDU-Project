@@ -53,3 +53,11 @@ web/env-config.js
 
 # Misc generated
 *.pyc
+
+# Play Store upload bundle — an 80 MB build output that is delivered through
+# the Play Console, not through git (the app is rebuilt from this tree).
+# The listing images under store/play/screenshots/ ARE tracked.
+store/play/*.aab
+
+# Stray macOS duplicate screenshots dropped at the repo root
+/image copy*.png

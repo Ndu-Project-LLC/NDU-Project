@@ -4,6 +4,10 @@
 Run inside a GitHub Actions checkout with full history fetched. Prints an
 HTML email body to stdout. Exit code 1 means the report could not be built
 and the caller should abort rather than send a broken email.
+
+The report is written for readers with no engineering background: changes
+are grouped by topic, every technical word is explained, and the raw commit
+list is kept at the bottom for anyone who wants the detail.
 """
 
 import html
@@ -24,36 +28,57 @@ RECIPIENTS = [
 
 REPO_URL = os.environ.get("REPO_URL", "")
 
-# Commit subjects are written by engineers, so map them onto language a
-# non-engineer would use. Order matters: the first match wins.
+# Commit subjects are written by engineers, so map them onto plain verbs.
+# Order matters: the first match wins.
 PLAIN_RULES = [
-    (r"\b(fix|fixed|fixes|fixing|bugfix|hotfix|revert|reverted)\b", "Fixed something that wasn't working"),
-    (r"\b(add|added|adds|implements?|implement)\b", "Added a new capability"),
-    (r"\b(remove|removes|removed|delete|deleted|cleanup|clean up)\b", "Removed or tidied up old code"),
-    (r"\b(enable|enables|enabled|disable|disable[ds]?|support|supports)\b", "Turned a feature on or made it work for people"),
-    (r"\b(update[ds]?|upgrade[ds]?|bump)\b", "Updated something that needed refreshing"),
-    (r"\b(refactor|refactored|cleanup|simplif|extract)\b", "Tidied up the code so it's easier to work with"),
-    (r"\b(perf|performance|optimi[sz])\b", "Made something run faster"),
-    (r"\b(security|vulnerab|auth|permission)\b", "Tightened up security"),
-    (r"\b(test|tests|coverage)\b", "Added or improved tests"),
-    (r"\b(docs?|documentation|readme)\b", "Wrote or updated documentation"),
+    (r"\b(fix|fixes|fixed|fixing|bugfix|hotfix)\b", "Fixed"),
+    (r"\b(revert|reverted)\b", "Undid an earlier change to"),
+    (r"\b(add|adds|added|implements?|implemented)\b", "Added"),
+    (r"\b(remove|removes|removed|delete|deletes|deleted|cleanup|clean up)\b", "Removed"),
+    (r"\b(enable|enables|enabled)\b", "Turned on"),
+    (r"\b(disable|disables|disabled)\b", "Turned off"),
+    (r"\b(support|supports|supported)\b", "Added support for"),
+    (r"\b(update|updates|updated|upgrade|upgrades|upgraded|bump|bumped)\b", "Updated"),
+    (r"\b(refactor|refactored|simplif\w*|extract|extracted)\b", "Tidied up"),
+    (r"\b(perf|performance|optimi[sz]\w*)\b", "Made faster:"),
+    (r"\b(security|vulnerab\w*|auth|permission)\b", "Improved security:"),
+    (r"\b(tests?|coverage)\b", "Added tests for"),
+    (r"\b(docs?|documentation|readme)\b", "Wrote documentation for"),
 ]
 
 # Order matters: the first match wins, so put specific areas first and the
 # broad ones last. Every alternative is word-bounded -- an unbounded `auth`
 # would match "auto" and mislabel half the report.
-AREA_RULES = [
-    (r"\b(login|auth|sign[- ]?in|signup|log[- ]?in|password|session|account)\b", "sign-in and accounts"),
-    (r"\b(admin|moderation|back[- ]?office)\b", "the admin area"),
-    (r"\b(deploy|deploys|deployment|staging|production|hosting|firebase|vercel|ci|cd|pipeline|analyzer|preflight|analyze)\b", "deployment and build checks"),
-    (r"\b(payment|payments|billing|stripe|subscription|invoice|pricing)\b", "payments"),
-    (r"\b(video|videos|render|rendering|timeline|media|transcode|audio|music)\b", "video and media"),
-    (r"\b(api|apis|endpoint|endpoints|server|backend|llm|ai|agent|prompt)\b", "the backend and AI features"),
-    (r"\b(db|database|databases|firestore|migration|schema|index|query)\b", "the database"),
-    (r"\b(mobile|ios|android|flutter|app store)\b", "the mobile app"),
-    (r"\b(pdf|export|exports|spreadsheet|csv|excel|import|imports|download|template)\b", "imports, exports and reports"),
-    (r"\b(web|website|landing|page|pages|frontend|ui|ux|design|layout|css|style)\b", "the website and how it looks"),
+TOPIC_RULES = [
+    (r"\b(login|auth|sign[- ]?in|signup|log[- ]?in|password|session|account)\b", "Sign-in and accounts"),
+    (r"\b(admin|moderation|back[- ]?office)\b", "The admin area"),
+    (r"\b(deploy|deploys|deployment|staging|production|hosting|firebase|vercel|ci|cd|pipeline|analyzer|preflight|analyze)\b", "Website releases and quality checks"),
+    (r"\b(payment|payments|billing|stripe|subscription|invoice|pricing)\b", "Payments"),
+    (r"\b(video|videos|render|rendering|timeline|media|transcode|audio|music)\b", "Video and media"),
+    (r"\b(api|apis|endpoint|endpoints|server|backend|llm|ai|agent|prompt)\b", "Backend and AI features"),
+    (r"\b(db|database|databases|firestore|migration|schema|index|query)\b", "The database"),
+    (r"\b(mobile|ios|android|flutter|app store)\b", "The mobile app"),
+    (r"\b(pdf|export|exports|spreadsheet|csv|excel|import|imports|download|template)\b", "Imports, exports and reports"),
+    (r"\b(web|website|landing|page|pages|frontend|ui|ux|design|layout|css|style)\b", "The website and how it looks"),
 ]
+GENERAL_TOPIC = "Other project work"
+
+GLOSSARY = [
+    ("Change", "one saved update to the project. A single change can touch many files."),
+    ("Lines added / removed", "how much code was written or taken out. More lines is not automatically better."),
+    ("Staging", "the test copy of the website (staging.nduproject.com). Work is checked there before it goes live."),
+    ("Deployment", "copying the latest work onto a website so people can see it."),
+]
+
+ESC = html.escape
+
+# Shared inline styles. Email clients ignore <style> blocks, so everything is inline.
+FONT = "-apple-system,Segoe UI,Helvetica,Arial,sans-serif"
+H2 = f"font:600 17px/1.4 {FONT};color:#111827;margin:28px 0 10px 0;"
+H3 = f"font:600 15px/1.4 {FONT};color:#111827;margin:18px 0 6px 0;"
+P = f"font:400 15px/1.6 {FONT};color:#374151;margin:0 0 12px 0;"
+LI = f"margin:0 0 8px 0;"
+SMALL = f"font:400 13px/1.6 {FONT};color:#6b7280;"
 
 
 def git(*args, since=None):
@@ -66,40 +91,44 @@ def git(*args, since=None):
     return res.stdout.strip()
 
 
-def describe_commit(subject, body):
-    """Turn one commit into a short plain-English bullet."""
+def classify(subject, body):
+    """Split one commit into (topic, plain-English sentence)."""
     subject = re.sub(r"^(feat|fix|chore|docs|refactor|style|test|perf|build|ci)(\([^)]*\))?!?:\s*", "", subject).strip()
-    subject = subject[0].upper() + subject[1:] if subject else subject
 
-    kind = None
-    for pattern, label in PLAIN_RULES:
-        if re.search(pattern, subject, re.I):
-            kind = label
-            break
-    if kind is None:
-        kind = "Worked on the project"
-
-    area = None
+    topic = GENERAL_TOPIC
     haystack = subject + " " + body
-    for pattern, label in AREA_RULES:
+    for pattern, label in TOPIC_RULES:
         if re.search(pattern, haystack, re.I):
-            area = label
+            topic = label
             break
 
-    # Drop a leading pronoun so the bullet reads as a plain statement.
-    detail = re.sub(r"^(this|that|it|they)\s+", "", subject, flags=re.I)
-    detail = detail[0].lower() + detail[1:] if detail else detail
-    detail = detail.rstrip(".")
+    # Turn "Fix the login redirect" into "Fixed the login redirect". If the
+    # verb is not at the start of the subject, keep the subject as written,
+    # since it already reads as a plain sentence.
+    for pattern, verb in PLAIN_RULES:
+        m = re.match(r"\s*" + pattern, subject, re.I)
+        if m:
+            detail = subject[m.end():].strip(" :-—")
+            if detail:
+                detail = detail[0].lower() + detail[1:]
+                sentence = f"{verb} {detail}"
+            else:
+                sentence = verb
+            break
+    else:
+        # No verb we recognise: the subject already reads as a plain sentence.
+        sentence = subject or "Worked on the project"
 
-    if area:
-        return f"{kind} in {area}: {detail}"
-    return f"{kind}: {detail}"
+    sentence = sentence.rstrip(".")
+    sentence = sentence[0].upper() + sentence[1:] if sentence else sentence
+    return topic, sentence
 
 
 def main():
     hours = int(os.environ.get("REPORT_WINDOW_HOURS", "24"))
+    now = datetime.now(timezone.utc)
+    since_dt = now - timedelta(hours=hours)
     since = f"{hours} hours ago"
-    since_dt = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     try:
         raw = git(
@@ -121,20 +150,15 @@ def main():
         if len(parts) < 3:
             continue
         sha, subject, author, body = parts[0], parts[1], parts[2], parts[3] if len(parts) > 3 else ""
-        commits.append({"sha": sha, "subject": subject, "author": author, "body": body})
+        topic, sentence = classify(subject, body)
+        commits.append({
+            "sha": sha,
+            "subject": subject,
+            "author": author,
+            "topic": topic,
+            "sentence": sentence,
+        })
 
-    try:
-        pr_numbers = git("log", f"--since={since}", "--pretty=format:%s", "--merges", "--grep=Merge pull request")
-    except RuntimeError:
-        pr_numbers = ""
-
-    bullets = [describe_commit(c["subject"], c["body"]) for c in commits]
-
-    grouped = defaultdict(list)
-    for c, bullet in zip(commits, bullets):
-        grouped[c["author"]].append((c, bullet))
-
-    authors = ", ".join(sorted({c["author"] for c in commits}))
     total_add, total_del = 0, 0
     try:
         diffstat = git("log", f"--since={since}", "--no-merges", "--pretty=tformat:", "--shortstat")
@@ -148,74 +172,129 @@ def main():
     except RuntimeError:
         pass
 
-    date_label = since_dt.strftime("%B %-d, %Y")
-    time_label = since_dt.strftime("%-I:%M %p UTC")
-    subject_line = f"Work Report — {date_label}"
+    period_start = since_dt.strftime("%B %-d, %Y at %-I:%M %p UTC")
+    period_end = now.strftime("%B %-d, %Y at %-I:%M %p UTC")
+    title = "What the team did in the last " + (f"{hours} hours" if hours != 24 else "24 hours")
+    subject_line = f"Work Report — {now.strftime('%B %-d, %Y')}"
 
-    esc = html.escape
+    by_topic = defaultdict(list)
+    for c in commits:
+        by_topic[c["topic"]].append(c)
+    # Biggest topics first; the catch-all "Other project work" always goes last.
+    topic_order = sorted(
+        by_topic,
+        key=lambda t: (t == GENERAL_TOPIC, -len(by_topic[t]), t),
+    )
+    author_counts = Counter(c["author"] for c in commits)
+    people_count = len(author_counts)
 
-    def render_list(items):
-        return "\n".join(f"      <li style='margin:0 0 8px 0;'>{esc(i)}</li>" for i in items)
-
-    summary_lines = []
+    # ── Short summary, written as plain sentences ──
     if commits:
-        summary_lines.append(
-            f"In the last {hours} hours, {len(commits)} "
-            f"{'change was' if len(commits) == 1 else 'changes were'} made by {authors}. "
-            f"That's roughly {total_add:,} lines added and {total_del:,} lines removed."
+        n = len(commits)
+        people_phrase = (
+            f"{people_count} person" if people_count == 1 else f"{people_count} people"
+        )
+        short_summary = (
+            f"{n} {'change was' if n == 1 else 'changes were'} saved to the project "
+            f"by {people_phrase}. Together they added about {total_add:,} lines of code "
+            f"and removed about {total_del:,}. The work is listed below, grouped by topic, "
+            f"so you can see at a glance which parts of the project moved forward."
         )
     else:
-        summary_lines.append(
-            f"Nothing new landed in the last {hours} hours — no code changes were pushed to the main branch."
+        short_summary = (
+            f"Nothing new was saved to the project in the last {hours} {'hour' if hours == 1 else 'hours'}, "
+            f"so there is no new work to report for this period."
         )
 
-    sections = []
-    for author in sorted(grouped):
-        items = [b for _, b in grouped[author]]
-        sections.append(
-            f"    <h2 style=\"font:600 16px/1.4 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#111827;margin:24px 0 10px 0;\">"
-            f"Work from {esc(author)}</h2>\n    <ul style=\"margin:0;padding-left:20px;font:400 14px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#374151;\">\n"
-            f"{render_list(items)}\n    </ul>"
+    def stat_card(number, label):
+        return (
+            f"<td style=\"background:#f9fafb;border-radius:8px;padding:12px;text-align:center;\">"
+            f"<div style=\"font:700 22px/1.2 {FONT};color:#111827;\">{number}</div>"
+            f"<div style=\"{SMALL}\">{ESC(label)}</div></td>"
         )
 
-    commit_rows = []
-    for c in commits:
-        commit_rows.append(
-            f"      <tr><td style=\"padding:4px 8px;font:400 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#6b7280;\">"
-            f"{esc(c['sha'][:7])}</td>"
-            f"<td style=\"padding:4px 8px;font:400 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#6b7280;\">"
-            f"{esc(c['subject'])}</td></tr>"
+    stats_html = ""
+    if commits:
+        stats_html = (
+            "<table role=\"presentation\" style=\"border-collapse:separate;border-spacing:8px 0;margin:0 -8px 8px -8px;width:calc(100% + 16px);\"><tr>"
+            + stat_card(f"{len(commits):,}", "changes saved")
+            + stat_card(f"{people_count:,}", "people involved")
+            + stat_card(f"+{total_add:,}", "lines added")
+            + stat_card(f"−{total_del:,}", "lines removed")
+            + "</tr></table>"
         )
 
-    commit_table = ""
-    if commit_rows:
-        commit_table = (
-            "    <h2 style=\"font:600 16px/1.4 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#111827;margin:24px 0 10px 0;\">"
-            "For the record — the exact changes</h2>\n"
-            "    <table style=\"border-collapse:collapse;width:100%;\">\n      "
-            + "\n      ".join(commit_rows)
-            + "\n    </table>"
+    topic_sections = []
+    for topic in topic_order:
+        items = by_topic[topic]
+        bullets = "\n".join(
+            f"      <li style=\"{LI}\">{ESC(c['sentence'])}.</li>" for c in items
+        )
+        topic_sections.append(
+            f"    <h3 style=\"{H3}\">{ESC(topic)} <span style=\"font-weight:400;color:#6b7280;\">({len(items)})</span></h3>\n"
+            f"    <ul style=\"margin:0;padding-left:20px;font:400 15px/1.6 {FONT};color:#374151;\">\n"
+            f"{bullets}\n    </ul>"
         )
 
-    look_and_feel = (
-        "\n".join(summary_lines)
-        + "\n\nNothing here is breaking or risky — it's steady progress."
-        if commits
-        else "\n".join(summary_lines)
+    who_html = ""
+    if author_counts:
+        who_items = "\n".join(
+            f"      <li style=\"{LI}\">{ESC(name)}: {count} {'change' if count == 1 else 'changes'}</li>"
+            for name, count in author_counts.most_common()
+        )
+        who_html = (
+            f"    <h2 style=\"{H2}\">Who did the work</h2>\n"
+            f"    <ul style=\"margin:0;padding-left:20px;font:400 15px/1.6 {FONT};color:#374151;\">\n"
+            f"{who_items}\n    </ul>"
+        )
+
+    glossary_items = "\n".join(
+        f"      <li style=\"{LI}\"><strong>{ESC(term)}</strong>: {ESC(meaning)}</li>"
+        for term, meaning in GLOSSARY
     )
+    glossary_html = (
+        f"    <h2 style=\"{H2}\">New to these reports? Key words</h2>\n"
+        f"    <ul style=\"margin:0;padding-left:20px;font:400 14px/1.6 {FONT};color:#374151;\">\n"
+        f"{glossary_items}\n    </ul>"
+    )
+
+    technical_html = ""
+    if commits:
+        rows = "\n".join(
+            f"      <tr><td style=\"padding:4px 8px 4px 0;{SMALL}white-space:nowrap;\">{ESC(c['sha'][:7])}</td>"
+            f"<td style=\"padding:4px 0;{SMALL}\">{ESC(c['subject'])}</td></tr>"
+            for c in commits
+        )
+        technical_html = (
+            f"    <h2 style=\"{H2}\">Technical log (optional)</h2>\n"
+            f"    <p style=\"{SMALL}margin:0 0 8px 0;\">Each row is one saved change: a short ID, then the developer's original note. "
+            f"You can skip this section if you only want the summary.</p>\n"
+            f"    <table style=\"border-collapse:collapse;width:100%;\">\n{rows}\n    </table>"
+        )
 
     body_html = f"""<!doctype html>
 <html>
-<body style="margin:0;padding:24px;background:#f3f4f6;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">
+<body style="margin:0;padding:24px;background:#f3f4f6;font-family:{FONT};">
   <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;">
-    <p style="margin:0 0 4px 0;font:400 13px/1.4 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#6b7280;">Hi there,</p>
-    <h1 style="font:700 22px/1.3 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#111827;margin:0 0 16px 0;">{esc(subject_line)}</h1>
-    <p style="margin:0 0 16px 0;font:400 15px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#374151;white-space:pre-line;">{esc(look_and_feel)}</p>
-{chr(10).join(sections) if sections else ''}
-{commit_table}
-    <p style="margin:28px 0 0 0;font:400 13px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#9ca3af;">
-      Sent automatically on {esc(date_label)} at {esc(time_label)}.
-      {('View the project on GitHub: <a href="' + esc(REPO_URL) + '" style="color:#2563eb;">' + esc(REPO_URL) + '</a>') if REPO_URL else ''}
+    <p style="margin:0 0 4px 0;{SMALL}">Work report · {ESC(subject_line)}</p>
+    <h1 style="font:700 24px/1.3 {FONT};color:#111827;margin:0 0 6px 0;">{ESC(title)}</h1>
+    <p style="margin:0 0 20px 0;{SMALL}">Covers {ESC(period_start)} to {ESC(period_end)}.</p>
+
+    <h2 style="{H2}margin-top:0;">The short version</h2>
+    <p style="{P}">{ESC(short_summary)}</p>
+{stats_html}
+    <h2 style="{H2}">What got done, by topic</h2>
+{chr(10).join(topic_sections) if topic_sections else f'    <p style="{P}">No changes to list.</p>'}
+
+{who_html}
+
+{glossary_html}
+
+{technical_html}
+
+    <p style="margin:28px 0 0 0;{SMALL}">
+      Sent automatically. You are receiving this because you are on the project's update list.
+      {('View the project on GitHub: <a href="' + ESC(REPO_URL) + '" style="color:#2563eb;">' + ESC(REPO_URL) + '</a>') if REPO_URL else ''}
     </p>
   </div>
 </body>

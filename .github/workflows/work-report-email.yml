@@ -5,10 +5,11 @@ name: Work Report Email
 # send step refuses to run against any address not on that list, so no other
 # email can ever be notified by this workflow.
 on:
-  schedule:
-    # Daily at 07:00 UTC. GitHub queues scheduled runs on shared runners, so
-    # this can drift by a few minutes during busy periods.
-    - cron: "0 7 * * *"
+  # Staging-only trigger. There is deliberately no schedule: this workflow lives
+  # on staging alone and only sends when a staging commit message contains
+  # [send-report]. Ordinary staging pushes stay silent.
+  push:
+    branches: [staging]
   workflow_dispatch:
     inputs:
       hours:
@@ -27,6 +28,7 @@ concurrency:
 jobs:
   send_work_report:
     name: Build and send work report
+    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[send-report]')
     runs-on: ubuntu-latest
     env:
       REPORT_WINDOW_HOURS: ${{ github.event.inputs.hours || '24' }}

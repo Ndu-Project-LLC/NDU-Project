@@ -134,6 +134,7 @@ class EditableTable extends StatelessWidget {
                   width: column.width,
                   child: Text(
                     column.label.toUpperCase(),
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,

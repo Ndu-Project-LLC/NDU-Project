@@ -1290,11 +1290,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: const Row(
  children: [
- Expanded(flex: 2, child: Text('SIGNAL', style: _tableHeaderStyle)),
- Expanded(flex: 1, child: Text('SEVERITY', style: _tableHeaderStyle)),
- Expanded(flex: 3, child: Text('DESCRIPTION', style: _tableHeaderStyle)),
- Expanded(flex: 1, child: Text('SOURCE', style: _tableHeaderStyle)),
- Expanded(flex: 1, child: Text('', style: _tableHeaderStyle)),
+ Expanded(flex: 2, child: Text('SIGNAL', style: _tableHeaderStyle, textAlign: TextAlign.center)),
+ Expanded(flex: 1, child: Text('SEVERITY', style: _tableHeaderStyle, textAlign: TextAlign.center)),
+ Expanded(flex: 3, child: Text('DESCRIPTION', style: _tableHeaderStyle, textAlign: TextAlign.center)),
+ Expanded(flex: 1, child: Text('SOURCE', style: _tableHeaderStyle, textAlign: TextAlign.center)),
+ Expanded(flex: 1, child: Text('', style: _tableHeaderStyle, textAlign: TextAlign.center)),
  ],
  ),
  ),
@@ -1589,7 +1589,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: columns
  .map((col) => Expanded(
  flex: col.$2,
- child: Text(col.$1, style: _tableHeaderStyle),
+ child: Text(col.$1, style: _tableHeaderStyle, textAlign: TextAlign.center),
  ))
  .toList(),
  ),

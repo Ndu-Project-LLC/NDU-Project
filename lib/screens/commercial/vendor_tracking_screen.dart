@@ -435,23 +435,23 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                     children: [
                       Expanded(
                           flex: 3,
-                          child: Text('KPI Metric', style: _perfHeaderStyle)),
+                          child: Text('KPI Metric', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 1,
-                          child: Text('Actual', style: _perfHeaderStyle)),
+                          child: Text('Actual', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 1,
-                          child: Text('Target', style: _perfHeaderStyle)),
+                          child: Text('Target', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
-                          flex: 1, child: Text('Gap', style: _perfHeaderStyle)),
-                      Expanded(
-                          flex: 2,
-                          child: Text('Trend', style: _perfHeaderStyle)),
+                          flex: 1, child: Text('Gap', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 2,
-                          child: Text('Owner', style: _perfHeaderStyle)),
+                          child: Text('Trend', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
-                          flex: 1, child: Text('', style: _perfHeaderStyle)),
+                          flex: 2,
+                          child: Text('Owner', style: _perfHeaderStyle, textAlign: TextAlign.center)),
+                      Expanded(
+                          flex: 1, child: Text('', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                     ],
                   ),
                 ),
@@ -877,21 +877,21 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                     children: [
                       Expanded(
                           flex: 3,
-                          child: Text('Signal', style: _perfHeaderStyle)),
+                          child: Text('Signal', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 1,
-                          child: Text('Severity', style: _perfHeaderStyle)),
+                          child: Text('Severity', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 2,
-                          child: Text('Category', style: _perfHeaderStyle)),
+                          child: Text('Category', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 2,
-                          child: Text('Owner', style: _perfHeaderStyle)),
+                          child: Text('Owner', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 1,
-                          child: Text('Status', style: _perfHeaderStyle)),
+                          child: Text('Status', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
-                          flex: 1, child: Text('', style: _perfHeaderStyle)),
+                          flex: 1, child: Text('', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                     ],
                   ),
                 ),
@@ -1275,21 +1275,21 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                     children: [
                       Expanded(
                           flex: 3,
-                          child: Text('Action Item', style: _perfHeaderStyle)),
+                          child: Text('Action Item', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 1,
-                          child: Text('Priority', style: _perfHeaderStyle)),
+                          child: Text('Priority', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 2,
-                          child: Text('Due Date', style: _perfHeaderStyle)),
+                          child: Text('Due Date', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 2,
-                          child: Text('Owner', style: _perfHeaderStyle)),
+                          child: Text('Owner', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
                           flex: 2,
-                          child: Text('Status', style: _perfHeaderStyle)),
+                          child: Text('Status', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                       Expanded(
-                          flex: 1, child: Text('', style: _perfHeaderStyle)),
+                          flex: 1, child: Text('', style: _perfHeaderStyle, textAlign: TextAlign.center)),
                     ],
                   ),
                 ),

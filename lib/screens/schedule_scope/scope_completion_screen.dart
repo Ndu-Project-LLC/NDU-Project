@@ -823,15 +823,15 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             ),
             child: const Row(
               children: [
-                Expanded(flex: 1, child: Text('Ref', style: _headerStyle)),
+                Expanded(flex: 1, child: Text('Ref', style: _headerStyle, textAlign: TextAlign.center)),
                 Expanded(
-                    flex: 3, child: Text('Checkpoint', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Approver', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Due Date', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Sign-off', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Status', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Evidence', style: _headerStyle)),
-                Expanded(flex: 1, child: Text('', style: _headerStyle)),
+                    flex: 3, child: Text('Checkpoint', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Approver', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Due Date', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Sign-off', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Status', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Evidence', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 1, child: Text('', style: _headerStyle, textAlign: TextAlign.center)),
               ],
             ),
           ),
@@ -1283,13 +1283,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             ),
             child: const Row(
               children: [
-                Expanded(flex: 3, child: Text('Signal', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Category', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Status', style: _headerStyle)),
+                Expanded(flex: 3, child: Text('Signal', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Category', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Status', style: _headerStyle, textAlign: TextAlign.center)),
                 Expanded(
-                    flex: 2, child: Text('Verified By', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Date', style: _headerStyle)),
-                Expanded(flex: 1, child: Text('', style: _headerStyle)),
+                    flex: 2, child: Text('Verified By', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Date', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 1, child: Text('', style: _headerStyle, textAlign: TextAlign.center)),
               ],
             ),
           ),
@@ -1717,18 +1717,18 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             ),
             child: const Row(
               children: [
-                Expanded(flex: 1, child: Text('CR ID', style: _headerStyle)),
+                Expanded(flex: 1, child: Text('CR ID', style: _headerStyle, textAlign: TextAlign.center)),
                 Expanded(
                     flex: 3,
-                    child: Text('Change Description', style: _headerStyle)),
-                Expanded(flex: 1, child: Text('Type', style: _headerStyle)),
-                Expanded(flex: 1, child: Text('Impact', style: _headerStyle)),
+                    child: Text('Change Description', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 1, child: Text('Type', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 1, child: Text('Impact', style: _headerStyle, textAlign: TextAlign.center)),
                 Expanded(
-                    flex: 2, child: Text('Requested By', style: _headerStyle)),
+                    flex: 2, child: Text('Requested By', style: _headerStyle, textAlign: TextAlign.center)),
                 Expanded(
-                    flex: 2, child: Text('Date Raised', style: _headerStyle)),
-                Expanded(flex: 2, child: Text('Status', style: _headerStyle)),
-                Expanded(flex: 1, child: Text('', style: _headerStyle)),
+                    flex: 2, child: Text('Date Raised', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text('Status', style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 1, child: Text('', style: _headerStyle, textAlign: TextAlign.center)),
               ],
             ),
           ),

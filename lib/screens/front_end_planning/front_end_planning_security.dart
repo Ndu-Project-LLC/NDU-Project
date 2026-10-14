@@ -801,6 +801,7 @@ Security Training:
  flex: columnFlex[i].toInt(),
  child: Text(
  columnLabels[i],
+ textAlign: TextAlign.center,
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,

@@ -43,6 +43,8 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/project_controls/widgets/change_request_scope_picker.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_scope_labels.dart';
+import 'package:ndu_project/widgets/page_walkthrough.dart';
+import 'package:ndu_project/widgets/page_tours/page_tour_index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
@@ -70,6 +72,42 @@ class _ChangeManagementModuleScreenState
   // Per Task 21: Change Management Navigation header (tab strip + page route
   // stepper) is collapsible to free up vertical space for tab content.
   bool _navCollapsed = false;
+
+  /// Live scope of the tab content, used by the walkthrough to find the
+  /// sections it spotlights (kept out of the sidebar / header chrome).
+  final GlobalKey _tabsKey = GlobalKey();
+
+  /// CM tab labels in [TabController] order — used by the walkthrough to
+  /// badge each stop with the tab it belongs to.
+  static const List<String> _cmTabLabels = [
+    'Dashboard',
+    'Change Register',
+    'Impact & Approval Summary',
+    'Audit Trail',
+    'Create CR',
+    'Impact Detail',
+    'Workflow',
+    'Implementation',
+  ];
+
+  /// Authored, tab-aware walkthrough: switches to each tab and spotlights
+  /// its authored section. Built fresh on every tap so [initialTab] tracks
+  /// wherever the user actually is.
+  ModuleTourSpec get _changeManagementWalkthrough => ModuleTourSpec(
+        tabs: [
+          for (var i = 0; i < _cmTabLabels.length; i++)
+            ModuleTourTab(
+              label: _cmTabLabels[i],
+              activate: () async {
+                _tabController.index = i;
+                if (mounted) setState(() {});
+              },
+            ),
+        ],
+        initialTab: _tabController.index,
+        stops: changeManagementModuleTourStops,
+        tabContentScope: () => _tabsKey.currentContext,
+      );
 
   @override
   void initState() {
@@ -189,6 +227,7 @@ class _ChangeManagementModuleScreenState
                 breadcrumbPhase: 'Execution Phase',
                 breadcrumbTitle: 'Change Management',
                 showExportPdf: false,
+                showWalkthrough: false,
               ),
               const SizedBox(height: 12),
               // ── World-class Section Navigator ─────────────────────────
@@ -199,6 +238,11 @@ class _ChangeManagementModuleScreenState
                   children: [
                     Row(
                       children: [
+                        PageWalkthroughButton(
+                          pageId: 'change-management-module',
+                          pageTitle: 'Change Management',
+                          moduleTour: _changeManagementWalkthrough,
+                        ),
                         const Spacer(),
                         TextButton.icon(
                           onPressed: () =>
@@ -257,6 +301,7 @@ class _ChangeManagementModuleScreenState
               ),
               Expanded(
                 child: TabBarView(
+                  key: _tabsKey,
                   controller: _tabController,
                   children: [
                     _DashboardTab(provider: provider),

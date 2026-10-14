@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/planning/planning_requirements_screen.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 
 Future<void> _pumpScreen(WidgetTester tester) async {
   // The default 800x600 test surface is narrower than the table's fixed column
@@ -44,7 +45,15 @@ Future<void> _pumpScreen(WidgetTester tester) async {
       provider: provider,
       child: ChangeNotifierProvider<ProjectDataProvider>.value(
         value: provider,
-        child: const MaterialApp(home: PlanningRequirementsScreen()),
+        // The app root provides WBSProvider globally (main.dart), and the
+        // requirements table's WBS Goal column watches it. Mirror that here:
+        // without it, the first frame that renders the table rows throws a
+        // ProviderNotFoundException inside WbsGoalDropdown — previously hidden
+        // only by load timing, which made this test flaky on CI.
+        child: ChangeNotifierProvider<WBSProvider>(
+          create: (_) => WBSProvider(),
+          child: const MaterialApp(home: PlanningRequirementsScreen()),
+        ),
       ),
     ),
   );

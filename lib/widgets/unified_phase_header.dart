@@ -40,6 +40,7 @@ class UnifiedPhaseHeader extends StatelessWidget {
     this.onOpenActivityLog,
     this.backgroundColor = Colors.white,
     this.showDrawerButton = true,
+    this.showWalkthrough = true,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
     this.walkthroughId,
@@ -58,6 +59,12 @@ class UnifiedPhaseHeader extends StatelessWidget {
   final VoidCallback? onOpenActivityLog;
   final Color backgroundColor;
   final bool showDrawerButton;
+
+  /// Whether the header shows the generic Walkthrough chip. Tabbed module
+  /// screens turn this off — they host the authored, tab-aware module tour
+  /// chip in their section navigator instead, so the page never offers two
+  /// different tours.
+  final bool showWalkthrough;
 
   /// Optional phase label for the breadcrumb bar (e.g. "Planning Phase").
   /// Falls back to "Phase" if not provided.
@@ -166,11 +173,12 @@ class UnifiedPhaseHeader extends StatelessWidget {
                   compact: true,
                 ),
                 const SizedBox(width: 6),
-                PageWalkthroughButton(
-                  pageId: walkthroughId ?? breadcrumbTitle ?? title,
-                  pageTitle: walkthroughId ?? breadcrumbTitle ?? title,
-                  compact: true,
-                ),
+                if (showWalkthrough)
+                  PageWalkthroughButton(
+                    pageId: walkthroughId ?? breadcrumbTitle ?? title,
+                    pageTitle: walkthroughId ?? breadcrumbTitle ?? title,
+                    compact: true,
+                  ),
                 if (ProjectDataInherited.maybeRead(context) != null)
                   const SizedBox(width: 4),
                 // Right: Yellow chat "C" button
@@ -341,20 +349,21 @@ class UnifiedPhaseHeader extends StatelessWidget {
           // Guided tour of this page, beside Tasks (Lusaka 28). The gap lives
           // inside the Flexible so it shrinks with the chip — a fixed gap in an
           // at-capacity Row is what tips it into an overflow.
-          Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(width: 8),
-                Flexible(
-                  child: _WalkthroughSlot(
-                    pageId: walkthroughId ?? breadcrumbTitle ?? title,
-                    pageTitle: walkthroughId ?? breadcrumbTitle ?? title,
+          if (showWalkthrough)
+            Flexible(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: _WalkthroughSlot(
+                      pageId: walkthroughId ?? breadcrumbTitle ?? title,
+                      pageTitle: walkthroughId ?? breadcrumbTitle ?? title,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           const SizedBox(width: 12),
           ...trailingActions,
           if (trailingActions.isNotEmpty) const SizedBox(width: 12),

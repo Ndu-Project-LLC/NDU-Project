@@ -49,6 +49,8 @@ import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
 import 'package:ndu_project/widgets/scrollable_section_header.dart';
+import 'package:ndu_project/widgets/page_walkthrough.dart';
+import 'package:ndu_project/widgets/page_tours/page_tour_index.dart';
 import 'package:ndu_project/wbs/utils/wbs_cost_coverage.dart';
 import 'package:go_router/go_router.dart';
 
@@ -93,6 +95,29 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
   /// Guards the build-time project sync so a project change triggers exactly
   /// one load pass (the next build sees a mismatched scope until it finishes).
   bool _projectSyncScheduled = false;
+
+  /// Live scope of the tab content, used by the walkthrough to find the
+  /// sections it spotlights (kept out of the sidebar / header chrome).
+  final GlobalKey _tabsKey = GlobalKey();
+
+  /// Authored, tab-aware walkthrough: switches to each of the ten tabs and
+  /// spotlights its authored section. Built fresh on every tap so
+  /// [initialTab] tracks wherever the user actually is.
+  ModuleTourSpec get _costEstimateWalkthrough => ModuleTourSpec(
+        tabs: [
+          for (var i = 0; i < _sectionTabs.length; i++)
+            ModuleTourTab(
+              label: _sectionTabs[i].label,
+              activate: () async {
+                _tabController.index = i;
+                if (mounted) setState(() {});
+              },
+            ),
+        ],
+        initialTab: _tabController.index,
+        stops: costEstimateModuleTourStops,
+        tabContentScope: () => _tabsKey.currentContext,
+      );
 
   @override
   void initState() {
@@ -266,8 +291,23 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                       breadcrumbPhase: 'Planning Phase',
                       breadcrumbTitle: 'Cost Estimate',
                       showExportPdf: false,
+                      showWalkthrough: false,
                     ),
                     const SizedBox(height: 12),
+                    // ── Guided walkthrough chip ───────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                      child: Row(
+                        children: [
+                          PageWalkthroughButton(
+                            pageId: 'cost-estimate-module',
+                            pageTitle: 'Cost Estimate',
+                            moduleTour: _costEstimateWalkthrough,
+                          ),
+                          const Spacer(),
+                        ],
+                      ),
+                    ),
                     // ── World-class Section Navigator ─────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -287,6 +327,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
             // Tab content: inherits the NestedScrollView inner controller,
             // so header and content scroll as one continuous surface.
             body: TabBarView(
+              key: _tabsKey,
               controller: _tabController,
               children: [
                     _CostDashboardTab(provider: provider),

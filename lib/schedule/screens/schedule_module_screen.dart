@@ -32,6 +32,8 @@ import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/widgets/scrollable_section_header.dart';
+import 'package:ndu_project/widgets/page_walkthrough.dart';
+import 'package:ndu_project/widgets/page_tours/page_tour_index.dart';
 import 'package:go_router/go_router.dart';
 
 class ScheduleModuleScreen extends StatefulWidget {
@@ -59,6 +61,29 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     vsync: this,
   );
   bool _syncedAll = false;
+
+  /// Live scope of the tab content, used by the walkthrough to find the
+  /// sections it spotlights (kept out of the sidebar / header chrome).
+  final GlobalKey _tabsKey = GlobalKey();
+
+  /// Authored, tab-aware walkthrough: switches to each tab and spotlights
+  /// its authored section. Built fresh on every tap so [initialTab] tracks
+  /// wherever the user actually is.
+  ModuleTourSpec get _scheduleWalkthrough => ModuleTourSpec(
+        tabs: [
+          for (var i = 0; i < _sectionTabs.length; i++)
+            ModuleTourTab(
+              label: _sectionTabs[i].label,
+              activate: () async {
+                _tabController.index = i;
+                if (mounted) setState(() {});
+              },
+            ),
+        ],
+        initialTab: _tabController.index,
+        stops: scheduleModuleTourStops,
+        tabContentScope: () => _tabsKey.currentContext,
+      );
 
   /// The module's sub-sections. Shared by the [SectionNavigator] tabs and by
   /// the collapsed section-header bar's summary.
@@ -460,8 +485,23 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                   breadcrumbPhase: 'Planning Phase',
                   breadcrumbTitle: 'Schedule',
                   showExportPdf: false,
+                  showWalkthrough: false,
                 ),
                 const SizedBox(height: 12),
+                // ── Guided walkthrough chip ─────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: Row(
+                    children: [
+                      PageWalkthroughButton(
+                        pageId: 'schedule-module',
+                        pageTitle: 'Schedule',
+                        moduleTour: _scheduleWalkthrough,
+                      ),
+                      const Spacer(),
+                    ],
+                  ),
+                ),
                 // ── World-class Section Navigator ──────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -623,6 +663,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             // so header and content scroll as one continuous surface.
             // Order matches _sectionTabs — List View first (default).
             body: TabBarView(
+              key: _tabsKey,
               controller: _tabController,
               children: const [
                 ListViewScreen(),

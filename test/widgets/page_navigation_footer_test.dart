@@ -93,9 +93,11 @@ void main() {
     await _pump(tester, checkpoint: midFlow, pageTitle: 'Requirements');
 
     expect(
-      find.textContaining('Requirements ('),
+      find.textContaining('Requirements · Step '),
       findsOneWidget,
-      reason: 'the step status names the page and its position',
+      reason: 'the step status names the page and its position in the flow '
+          '("Requirements · Step N of M" — the old "(N of M)" read like a '
+          'row count next to the page\'s tables)',
     );
   });
 

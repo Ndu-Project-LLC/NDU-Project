@@ -15,6 +15,7 @@ class PlanningPhaseHeader extends StatelessWidget {
     this.breadcrumbPhase,
     this.breadcrumbTitle,
     this.walkthroughId,
+    this.showWalkthrough = true,
     this.showExportPdf = true,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -30,6 +31,10 @@ class PlanningPhaseHeader extends StatelessWidget {
   final String? breadcrumbTitle;
   /// Walkthrough page id; see UnifiedPhaseHeader.walkthroughId.
   final String? walkthroughId;
+
+  /// Whether the generic header Walkthrough chip is shown; see
+  /// UnifiedPhaseHeader.showWalkthrough.
+  final bool showWalkthrough;
   final bool showExportPdf;
   final bool showAiAssist;
   final VoidCallback? onExportPdf;
@@ -47,6 +52,7 @@ class PlanningPhaseHeader extends StatelessWidget {
           breadcrumbPhase: breadcrumbPhase,
           breadcrumbTitle: breadcrumbTitle,
           walkthroughId: walkthroughId,
+          showWalkthrough: showWalkthrough,
           showDrawerButton: true,
           onBackPressed: showNavigationButtons
               ? onBack ?? () => Navigator.maybePop(context)

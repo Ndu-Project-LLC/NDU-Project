@@ -39,6 +39,8 @@ import 'package:ndu_project/utils/wbs_agile_level_summary.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/page_walkthrough.dart';
+import 'package:ndu_project/widgets/page_tours/page_tour_index.dart';
 import 'package:go_router/go_router.dart';
 
 class WBSModuleScreen extends StatefulWidget {
@@ -58,6 +60,29 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
     length: 5,
     vsync: this,
   );
+
+  /// Live scope of the tab content, used by the walkthrough to find the
+  /// sections it spotlights (kept out of the sidebar / header chrome).
+  final GlobalKey _tabsKey = GlobalKey();
+
+  /// Authored, tab-aware walkthrough: switches to each tab and spotlights
+  /// its authored section. Built fresh on every tap so [initialTab] tracks
+  /// wherever the user actually is.
+  ModuleTourSpec get _wbsWalkthrough => ModuleTourSpec(
+        tabs: [
+          for (var i = 0; i < _sectionTabs.length; i++)
+            ModuleTourTab(
+              label: _sectionTabs[i].label,
+              activate: () async {
+                _tabController.index = i;
+                if (mounted) setState(() {});
+              },
+            ),
+        ],
+        initialTab: _tabController.index,
+        stops: wbsModuleTourStops,
+        tabContentScope: () => _tabsKey.currentContext,
+      );
 
   /// The module's sub-sections. Shared by the [SectionNavigator] tabs and by
   /// the collapsed section-header bar's summary.
@@ -229,11 +254,16 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                         initiallyCollapsed: true,
                       ),
                     ),
-                    // ── Node count indicator ──────────────────────────────
+                    // ── Node count indicator + walkthrough chip ──────────
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
+                          PageWalkthroughButton(
+                            pageId: 'wbs-module',
+                            pageTitle: 'Work Breakdown Structure',
+                            moduleTour: _wbsWalkthrough,
+                          ),
                           const Spacer(),
                           Text(
                             'L0–L${fm.maxDepth} · $totalNodes nodes',
@@ -255,6 +285,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
             // Tab content: inherits the NestedScrollView inner controller,
             // so header and content scroll as one continuous surface.
             body: TabBarView(
+              key: _tabsKey,
               controller: _tabController,
               children: const [
                 WBSBuilderScreen(),

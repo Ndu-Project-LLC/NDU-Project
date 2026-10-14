@@ -101,6 +101,86 @@ class SpotlightStep {
   final String? badgeLabel;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Tabbed module walkthroughs (WBS, Schedule, Cost Estimate, Change Management)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// One tab of a tabbed module screen, for module walkthroughs.
+///
+/// [activate] switches the module's TabController to this tab. It must also
+/// trigger a rebuild (the module's own tab listener normally does); the tour
+/// waits a couple of frames after calling it before looking for headings.
+class ModuleTourTab {
+  const ModuleTourTab({required this.label, required this.activate});
+
+  /// Tab name as shown in the section navigator — also used as the badge on
+  /// the tour card so the user always knows which tab they are looking at.
+  final String label;
+
+  final Future<void> Function() activate;
+}
+
+/// One authored stop in a module walkthrough: card copy plus, optionally, the
+/// on-screen heading to spotlight.
+///
+/// [heading] / [headingAlt] match the EXACT on-screen text (case-insensitive).
+/// A heading may end with an ellipsis (…) to prefix-match dynamic headings
+/// such as "List View — Lusaka Water Project": author it as `List View — …`.
+/// When neither heading can be found (empty states, data still loading), the
+/// stop degrades gracefully to a dimmed page with the card floating on top —
+/// the copy carries the explanation either way.
+class ModuleTourStop {
+  const ModuleTourStop({
+    required this.tabIndex,
+    required this.title,
+    required this.description,
+    this.heading,
+    this.headingAlt,
+    this.bullets = const [],
+  });
+
+  /// Index into [ModuleTourSpec.tabs]. The tour switches to this tab before
+  /// spotlighting the stop.
+  final int tabIndex;
+
+  /// Primary on-screen heading to spotlight (best effort).
+  final String? heading;
+
+  /// Fallback anchor when [heading] is not on screen (e.g. an empty state
+  /// replaces the usual heading when the tab has no data yet).
+  final String? headingAlt;
+
+  final String title;
+  final String description;
+  final List<String> bullets;
+}
+
+/// Describes a walkthrough for a tabbed module screen: every tab, how to reach
+/// it, and the authored stop for each.
+///
+/// [tabContentScope] resolves the live element scope of the ACTIVE tab's
+/// content (usually the TabBarView's GlobalKey context). Heading lookups are
+/// scoped to it so sibling screens can never steal a spotlight; when it
+/// returns null (or is not mounted) the whole tree is searched instead.
+class ModuleTourSpec {
+  const ModuleTourSpec({
+    required this.tabs,
+    required this.initialTab,
+    required this.stops,
+    this.tabContentScope,
+  });
+
+  final List<ModuleTourTab> tabs;
+
+  /// Tab that was active when the tour opened; the tour starts here so the
+  /// first stop usually needs no tab switch.
+  final int initialTab;
+
+  final List<ModuleTourStop> stops;
+
+  final BuildContext? Function()? tabContentScope;
+}
+
 /// The header chip that launches the tour for the current page.
 class PageWalkthroughButton extends StatelessWidget {
   const PageWalkthroughButton({
@@ -110,6 +190,7 @@ class PageWalkthroughButton extends StatelessWidget {
     this.label = 'Walkthrough',
     this.compact = false,
     this.maxWidth,
+    this.moduleTour,
   });
 
   /// Identifies the page for registry lookups; falls back to the derived tour.
@@ -117,6 +198,11 @@ class PageWalkthroughButton extends StatelessWidget {
 
   /// Human-readable page name used as the tour's opening card.
   final String? pageTitle;
+
+  /// When set, the tour covers a TABBED MODULE screen: it switches to each
+  /// tab in turn and spotlights the authored section for it. Regular pages
+  /// leave this null and get the sweep-derived tour instead.
+  final ModuleTourSpec? moduleTour;
 
   final String label;
   final bool compact;
@@ -140,6 +226,7 @@ class PageWalkthroughButton extends StatelessWidget {
             context,
             pageId: pageId,
             pageTitle: pageTitle,
+            moduleTour: moduleTour,
           ),
           borderRadius: BorderRadius.circular(8),
           child: const SizedBox(
@@ -165,6 +252,7 @@ class PageWalkthroughButton extends StatelessWidget {
             context,
             pageId: pageId,
             pageTitle: pageTitle,
+            moduleTour: moduleTour,
           ),
           child: Container(
             padding: EdgeInsets.symmetric(
@@ -220,9 +308,29 @@ Future<void> showPageWalkthrough(
   BuildContext context, {
   required String pageId,
   String? pageTitle,
+  ModuleTourSpec? moduleTour,
 }) {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return Future<void>.value();
+
+  // Tabbed module screens ship a fully authored tour: the overlay walks the
+  // module's tabs, spotlighting the authored section for each. No sweep is
+  // needed, so the tour opens straight on its intro card.
+  if (moduleTour != null) {
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _PageTourOverlay.module(
+        pageId: pageId,
+        pageTitle: pageTitle,
+        moduleSpec: moduleTour,
+        onClose: () {
+          if (entry.mounted) entry.remove();
+        },
+      ),
+    );
+    overlay.insert(entry);
+    return Future<void>.value();
+  }
 
   // The Walkthrough chip sits INSIDE the page body's scrollable (the phase
   // header is part of the scrolling content), so the nearest vertical
@@ -740,7 +848,8 @@ class _PageTourOverlay extends StatefulWidget {
     this.bodyScrollable,
   })  : steps = null,
         stopForStep = null,
-        scrollTargetForStep = null;
+        scrollTargetForStep = null,
+        moduleSpec = null;
 
   const _PageTourOverlay.steps({
     required this.steps,
@@ -749,6 +858,20 @@ class _PageTourOverlay extends StatefulWidget {
     required this.onClose,
   })  : pageId = null,
         pageTitle = null,
+        bodyScrollable = null,
+        moduleSpec = null;
+
+  /// Authored, tab-aware tour for a tabbed module screen (WBS, Schedule,
+  /// Cost Estimate, Change Management). The overlay switches to each tab in
+  /// turn and spotlights the authored section for it.
+  const _PageTourOverlay.module({
+    required this.pageId,
+    required this.pageTitle,
+    required this.moduleSpec,
+    required this.onClose,
+  })  : steps = null,
+        stopForStep = null,
+        scrollTargetForStep = null,
         bodyScrollable = null;
 
   final String? pageId;
@@ -762,6 +885,10 @@ class _PageTourOverlay extends StatefulWidget {
   final List<SpotlightStep>? steps;
   final RenderBox? Function(int index)? stopForStep;
   final RenderBox? Function(int index)? scrollTargetForStep;
+
+  /// Module tour spec (null outside module mode).
+  final ModuleTourSpec? moduleSpec;
+
   final VoidCallback onClose;
 
   @override
@@ -787,6 +914,17 @@ class _PageTourOverlayState extends State<_PageTourOverlay>
   bool _closing = false;
   List<SpotlightStep> _steps = const [];
 
+  /// Module-mode state: the authored tab tour currently being presented.
+  ModuleTourSpec? get _module => widget.moduleSpec;
+  bool get _isModuleMode => _module != null;
+
+  /// Tab the module is showing right now (module mode only).
+  int _moduleActiveTab = 0;
+
+  /// Debounces tab switches so rapid Next presses cannot interleave two
+  /// transitions (each one switches tabs and waits for frames).
+  bool _moduleTransitioning = false;
+
   @override
   void initState() {
     super.initState();
@@ -795,10 +933,22 @@ class _PageTourOverlayState extends State<_PageTourOverlay>
     // (nothing may hold primary focus, and stealing it from page inputs is
     // rude). HardwareKeyboard sees every key before focus dispatch.
     HardwareKeyboard.instance.addHandler(_handleKeyEvent);
-    _steps = widget.steps ?? const [];
-    _scanning = widget.steps == null;
-    if (_scanning) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _prepare());
+    if (_isModuleMode) {
+      // Authored tour: no discovery pass, open straight on the intro card.
+      _moduleActiveTab = _module!.initialTab.clamp(0, _module!.tabs.length - 1);
+      _steps = _buildModuleSteps();
+      _scanning = false;
+      // Pre-resolve the first stop's spotlight while the intro card is up, so
+      // the hole is ready the moment the user advances.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _steps.length > 2) _resolveModuleStop(1);
+      });
+    } else {
+      _steps = widget.steps ?? const [];
+      _scanning = widget.steps == null;
+      if (_scanning) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _prepare());
+      }
     }
   }
 
@@ -880,7 +1030,240 @@ class _PageTourOverlayState extends State<_PageTourOverlay>
     });
   }
 
-  bool get _isPageMode => widget.stopForStep == null;
+  bool get _isPageMode => !_isModuleMode && widget.stopForStep == null;
+
+  // ── Module mode (tabbed screens) ────────────────────────────────────────
+
+  /// Builds the authored module tour: intro card, one card per authored stop
+  /// (badged with its tab name), outro card.
+  List<SpotlightStep> _buildModuleSteps() {
+    final spec = _module!;
+    final tour = pageTours[widget.pageId ?? ''];
+    final subject = (widget.pageTitle ?? widget.pageId ?? '').trim();
+    final tabCount = spec.tabs.length;
+    final stopCount = spec.stops.length;
+
+    final steps = <SpotlightStep>[
+      SpotlightStep(
+        icon: tour?.icon ?? Icons.explore_outlined,
+        badgeLabel: 'Guided tour',
+        title: tour?.title ??
+            (subject.isEmpty ? 'Tour of this module' : subject),
+        description: tour?.intro ??
+            'This module has $tabCount tabs and this tour walks you through '
+                'every one of them — $stopCount stops in total, switching '
+                'tabs for you as it goes.',
+        bullets: tour?.bullets ??
+            const [
+              'Use Next and Back to move between sections',
+              'The tour switches tabs for you as it moves along',
+              'Use the arrow keys; press Escape at any time to leave the tour',
+            ],
+      ),
+    ];
+
+    for (final stop in spec.stops) {
+      final tabLabel = (stop.tabIndex >= 0 && stop.tabIndex < tabCount)
+          ? spec.tabs[stop.tabIndex].label
+          : null;
+      steps.add(SpotlightStep(
+        icon: Icons.looks_one_outlined,
+        badgeLabel: tabLabel,
+        title: stop.title,
+        description: stop.description,
+        bullets: stop.bullets,
+      ));
+    }
+
+    steps.add(SpotlightStep(
+      icon: Icons.check_circle_outline,
+      badgeLabel: 'All set',
+      title: "That's the whole module",
+      description: tour?.outro ??
+          'You can revisit this tour at any time with the Walkthrough button. '
+              'Your work saves automatically as you go.',
+    ));
+    return steps;
+  }
+
+  /// Module mode: switch to the stop's tab (when needed), resolve its
+  /// spotlight box, and make sure the section is on screen.
+  Future<void> _resolveModuleStop(int index) async {
+    final spec = _module;
+    if (spec == null) return;
+    final stopIndex = index - 1; // stops start after the intro card
+    if (stopIndex < 0 || stopIndex >= spec.stops.length) return; // intro/closer
+    final stop = spec.stops[stopIndex];
+
+    // Bring the right tab forward first.
+    if (_moduleActiveTab != stop.tabIndex &&
+        stop.tabIndex >= 0 &&
+        stop.tabIndex < spec.tabs.length) {
+      try {
+        await spec.tabs[stop.tabIndex].activate();
+      } catch (_) {
+        return; // tab went away mid-tour
+      }
+      if (!mounted) return;
+      // TabBarView ANIMATES to the new page even for programmatic index
+      // changes (~300 ms). Resolving during the slide captures the heading
+      // at an intermediate x — the spotlight would land beside its section.
+      // Wait out the slide, then let the settled page build.
+      await Future<void>.delayed(const Duration(milliseconds: 380));
+      if (!mounted) return;
+      await _settleFrames(2);
+      if (!mounted) return;
+      _moduleActiveTab = stop.tabIndex;
+    }
+
+    var box = await _resolveModuleBox(stop);
+    if (box == null || !mounted) return;
+    setState(() => _resolvedBoxes[index] = box);
+
+    // Fine-tune: bring the section comfortably into view — but only when it
+    // is actually off-screen. Scrolling a visible section needlessly yanks
+    // the page (and can push the resolved box back out of the viewport).
+    final elementContext = _elementFor(box);
+    if (elementContext != null &&
+        elementContext.mounted &&
+        mounted &&
+        !_boxIntersectsViewport(box)) {
+      Scrollable.ensureVisible(
+        elementContext,
+        alignment: 0.25,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    // Cheap insurance: once everything has settled (post-scroll relayouts,
+    // late stream builds), re-resolve in case a better box is now live for
+    // the same heading. NOTE: identity is NOT enough to bail out — scrolling
+    // never changes a RenderBox's identity, only its position, and the live
+    // rect read in build() already tracks position. What this pass catches is
+    // a better INSTANCE (e.g. the real heading replacing a stand-in).
+    final stopSnapshot = stop;
+    Future<void>.delayed(const Duration(milliseconds: 520), () async {
+      if (!mounted || _closing || _index != index) return;
+      final fresh = _findModuleHeadingBox(stopSnapshot);
+      if (fresh == null) return;
+      if (identical(fresh, _resolvedBoxes[index])) return;
+      setState(() => _resolvedBoxes[index] = fresh);
+    });
+  }
+
+  /// Finds the live box for a module stop's heading. Tries the primary
+  /// heading, then the alternate; retries briefly because heavy tabs build
+  /// their content over a few frames after a tab switch.
+  Future<RenderBox?> _resolveModuleBox(ModuleTourStop stop) async {
+    RenderBox? box = _findModuleHeadingBox(stop);
+    for (var frame = 0; box == null && frame < 12; frame++) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return null;
+      box = _findModuleHeadingBox(stop);
+    }
+    return box;
+  }
+
+  /// Locates [stop]'s heading inside the active tab's content scope. Exact
+  /// (case-insensitive) text match; a trailing ellipsis (…) turns the authored
+  /// heading into a prefix match for dynamic titles like
+  /// `List View — <project name>`. Heading-styled matches win over any text
+  /// with the same label, and ON-SCREEN matches win over off-screen ones —
+  /// a heading scrolled out of view (or parked in an off-stage tab page that
+  /// TabBarView keeps mounted) must never push the spotlight and the card
+  /// off the viewport.
+  RenderBox? _findModuleHeadingBox(ModuleTourStop stop) {
+    final scope = _module!.tabContentScope?.call();
+    final Element? root =
+        (scope != null && scope.mounted) ? scope as Element : null;
+    final searchRoot = root ?? WidgetsBinding.instance.rootElement;
+    if (searchRoot == null || !searchRoot.mounted) return null;
+
+    /// Walks the scope once. When [onScreenOnly] is set, only boxes whose
+    /// global rect intersects the viewport qualify; otherwise the first
+    /// match of each style is kept as fallback.
+    RenderBox? run(String? pattern, bool onScreenOnly) {
+      if (pattern == null || pattern.trim().isEmpty) return null;
+      final wanted = pattern.trim().toLowerCase();
+      String? prefix;
+      if (wanted.endsWith('…')) {
+        prefix = wanted.substring(0, wanted.length - 1).trim();
+      } else if (wanted.endsWith('...')) {
+        prefix = wanted.substring(0, wanted.length - 3).trim();
+      }
+
+      RenderBox? styledHit;
+      RenderBox? plainHit;
+      RenderBox? styledAny;
+      RenderBox? plainAny;
+
+      void visit(Element element) {
+        final w = element.widget;
+        if (w is Text) {
+          final label = (w.data ?? w.textSpan?.toPlainText() ?? '').trim();
+          final matches = prefix != null
+              ? prefix.isNotEmpty &&
+                  label.toLowerCase().startsWith(prefix) &&
+                  label.length > prefix.length
+              : label.isNotEmpty && label.toLowerCase() == wanted;
+          if (matches) {
+            final box = element.renderObject;
+            if (box is RenderBox &&
+                box.attached &&
+                box.hasSize &&
+                box.size.width > 0 &&
+                box.size.height > 0) {
+              final onScreen = _boxIntersectsViewport(box);
+              if (_looksLikeHeading(w, label)) {
+                if (onScreen) {
+                  styledHit ??= box;
+                } else {
+                  styledAny ??= box;
+                }
+              } else {
+                if (onScreen) {
+                  plainHit ??= box;
+                } else {
+                  plainAny ??= box;
+                }
+              }
+            }
+          }
+        }
+        _visitLiveChildren(element, visit);
+      }
+
+      searchRoot.visitChildren(visit);
+      if (onScreenOnly) return styledHit ?? plainHit;
+      return styledHit ?? plainHit ?? styledAny ?? plainAny;
+    }
+
+    return run(stop.heading, true) ??
+        run(stop.headingAlt, true) ??
+        run(stop.heading, false) ??
+        run(stop.headingAlt, false);
+  }
+
+  /// Whether [box]'s global rect currently intersects the app viewport.
+  bool _boxIntersectsViewport(RenderBox box) {
+    final view = View.of(context);
+    final screen = view.physicalSize / view.devicePixelRatio;
+    if (screen.isEmpty) return true; // cannot tell — assume visible
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    return rect.right > 0 &&
+        rect.left < screen.width &&
+        rect.bottom > 0 &&
+        rect.top < screen.height;
+  }
+
+  /// Waits [frames] produced frames so a freshly-activated tab can build.
+  Future<void> _settleFrames(int frames) async {
+    for (var i = 0; i < frames; i++) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
+  }
 
   /// Card top for a spotlight [rect]: just below the hole when there is room
   /// for a ~300px card, otherwise just above it, otherwise pinned to the top
@@ -968,6 +1351,10 @@ class _PageTourOverlayState extends State<_PageTourOverlay>
   }
 
   RenderBox? _boxForStep(int index) {
+    if (_isModuleMode) {
+      if (_isIntroOrCloser) return null;
+      return _resolvedBoxes[index];
+    }
     if (!_isPageMode) return widget.stopForStep?.call(index);
     if (_isIntroOrCloser) return null;
     return _boxForStop(index);
@@ -975,23 +1362,54 @@ class _PageTourOverlayState extends State<_PageTourOverlay>
 
   /// Spotlight rect for the current step, inflated slightly so the hole reads
   /// as a section band rather than a tight text outline.
+  ///
+  /// A box that is currently OFF-viewport (scrolled away, or parked in an
+  /// off-stage tab page TabBarView keeps mounted) yields a rect that would
+  /// push BOTH the hole and the card outside the screen — the tour would show
+  /// a bare veil with no card at all. Degrade to the no-spotlight
+  /// presentation (uniform veil + card pinned to the top) instead; the copy
+  /// carries the explanation either way.
   Rect? _rectForStep(int index) {
     final box = _boxForStep(index);
     if (box == null || !box.attached || !box.hasSize) return null;
     final origin = box.localToGlobal(Offset.zero);
-    return Rect.fromLTRB(
+    final rect = Rect.fromLTRB(
       origin.dx - 14,
       origin.dy - 10,
       origin.dx + box.size.width + 14,
       origin.dy + box.size.height + 10,
     );
+    if (!_boxIntersectsViewportInflated(box, rect)) return null;
+    return rect;
+  }
+
+  /// Viewport check for the inflated spotlight rect (margin-aware version of
+  /// [_boxIntersectsViewport] for already-computed rects).
+  bool _boxIntersectsViewportInflated(RenderBox box, Rect rect) {
+    final view = View.of(context);
+    final screen = view.physicalSize / view.devicePixelRatio;
+    if (screen.isEmpty) return true; // cannot tell — assume visible
+    return rect.right > 0 &&
+        rect.left < screen.width &&
+        rect.bottom > 0 &&
+        rect.top < screen.height;
   }
 
   void _goTo(int next) {
     if (next < 0 || next >= _steps.length) return;
+    if (_isModuleMode && _moduleTransitioning) return;
     HapticFeedback.selectionClick();
     setState(() => _index = next);
     _resolvedBoxes.remove(next);
+
+    if (_isModuleMode) {
+      _moduleTransitioning = true;
+      _resolveModuleStop(next).whenComplete(() {
+        _moduleTransitioning = false;
+        if (mounted) setState(() {}); // re-read the rect after resolution
+      });
+      return;
+    }
 
     if (!_isPageMode) {
       // Steps mode: bring the caller-provided target into view.
@@ -1100,12 +1518,18 @@ class _PageTourOverlayState extends State<_PageTourOverlay>
     if (_scanning) return _buildScanning();
     if (_steps.isEmpty) return _buildScanning(); // keeps the pill while retrying
     final step = _steps[_index];
-    final rect = _rectForStep(_index);
 
     return AnimatedBuilder(
       animation: _pulse,
       builder: (context, _) {
         final pulse = Curves.easeInOut.transform(_pulse.value);
+        // Recompute the spotlight rect EVERY tick: the pulse animation already
+        // repaints the scrim at ~60fps, and the spotlighted box can move at
+        // any time (page scroll, tab slide, late stream build). A rect captured
+        // at the last setState goes stale the moment the page scrolls — the
+        // hole and the card would stay parked where the box USED to be, or
+        // off-viewport entirely.
+        final rect = _rectForStep(_index);
         return LayoutBuilder(
           builder: (context, constraints) {
             return Stack(

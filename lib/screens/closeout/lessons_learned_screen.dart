@@ -791,25 +791,25 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  child: const Row(
  children: [
- Expanded(flex: 6, child: Text('#', style: headerStyle)),
+ Expanded(flex: 6, child: Text('#', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
- flex: 26, child: Text('Lesson', style: headerStyle)),
+ flex: 26, child: Text('Lesson', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
- flex: 14, child: Text('Type', style: headerStyle)),
+ flex: 14, child: Text('Type', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
  flex: 14,
- child: Text('Category', style: headerStyle)),
+ child: Text('Category', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
- flex: 14, child: Text('Phase', style: headerStyle)),
+ flex: 14, child: Text('Phase', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
- flex: 12, child: Text('Impact', style: headerStyle)),
+ flex: 12, child: Text('Impact', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
- flex: 14, child: Text('Status', style: headerStyle)),
+ flex: 14, child: Text('Status', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
  flex: 20,
- child: Text('Submitted By', style: headerStyle)),
+ child: Text('Submitted By', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
- flex: 14, child: Text('Date', style: headerStyle)),
+ flex: 14, child: Text('Date', style: headerStyle, textAlign: TextAlign.center)),
  Expanded(
  flex: 28,
  child: Text('Actions',

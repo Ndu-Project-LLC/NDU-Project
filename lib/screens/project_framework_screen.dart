@@ -869,8 +869,10 @@ goal.nameController.removeListener(_onFieldChanged);
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // ── Desktop Header Bar ──
- PlanningPhaseHeader(
- title: 'Project Details', onExportPdf: _exportPdf),
+              PlanningPhaseHeader(
+                title: 'Project Details',
+                walkthroughId: 'Project Framework',
+                onExportPdf: _exportPdf),
  Expanded(
  child: ScrollIndicatorOverlay(
  controller: _mainContentScrollController,

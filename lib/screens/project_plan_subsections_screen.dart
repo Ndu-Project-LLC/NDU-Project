@@ -46,6 +46,7 @@ class _Level1ScheduleScreenState
  String _methodology = 'Waterfall';
  bool _hasBaseline = false;
  List<_L1Phase> _baselinePhases = [];
+ int _selectedSectionTab = 0;
  bool _autoPopulated = false;
  bool _isAutoPopulating = false;
 
@@ -356,11 +357,9 @@ class _Level1ScheduleScreenState
  const SizedBox(height: 24),
  _buildMetricsRow(),
  const SizedBox(height: 24),
- _buildGanttTimeline(),
- const SizedBox(height: 24),
- _buildPhaseSummaryTable(),
- const SizedBox(height: 24),
- _buildMilestonesSection(),
+ _buildSectionTabs(),
+ const SizedBox(height: 16),
+ _buildSelectedSection(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel(
@@ -811,6 +810,51 @@ class _Level1ScheduleScreenState
  },
  ),
  );
+ }
+
+ static const List<String> _sectionTabLabels = [
+ 'Phase Timeline',
+ 'Phase Summary',
+ 'Key Milestones',
+ ];
+
+ Widget _buildSectionTabs() {
+ return Wrap(
+ spacing: 10,
+ runSpacing: 10,
+ children: List<Widget>.generate(_sectionTabLabels.length, (index) {
+ final selected = index == _selectedSectionTab;
+ return ChoiceChip(
+ label: Text(_sectionTabLabels[index]),
+ selected: selected,
+ onSelected: (_) => setState(() => _selectedSectionTab = index),
+ showCheckmark: false,
+ selectedColor: const Color(0xFF111827),
+ labelStyle: TextStyle(
+ color: selected ? Colors.white : const Color(0xFF111827),
+ fontWeight: FontWeight.w600,
+ ),
+ backgroundColor: Colors.white,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12),
+ side: BorderSide(
+ color: selected ? const Color(0xFF111827) : const Color(0xFFE5E7EB),
+ ),
+ ),
+ );
+ }),
+ );
+ }
+
+ Widget _buildSelectedSection() {
+ switch (_selectedSectionTab) {
+ case 1:
+ return _buildPhaseSummaryTable();
+ case 2:
+ return _buildMilestonesSection();
+ default:
+ return _buildGanttTimeline();
+ }
  }
 
  Widget _buildMilestonesSection() {
@@ -1766,6 +1810,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  bool _showBaseline = true;
  bool _showDependencies = true;
  String? _selectedTaskId;
+  int _selectedDetailTab = 0;
  String? _hoveredTaskId;
  Timer? _saveDebounce;
  final ScrollController _horizontalScrollController = ScrollController();
@@ -2077,9 +2122,9 @@ if (!mounted) return;
  const SizedBox(height: 24),
  _buildMetricsRow(),
  const SizedBox(height: 24),
- _buildGanttSection(),
- const SizedBox(height: 24),
- _buildTaskListSection(),
+ _buildDetailTabs(),
+ const SizedBox(height: 16),
+ _buildSelectedDetailSection(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: PlanningPhaseNavigation.backLabel(
@@ -2290,7 +2335,46 @@ if (!mounted) return;
  return criticalTasks;
  }
 
- Widget _buildGanttSection() {
+ static const List<String> _detailTabLabels = [
+    'Gantt Timeline',
+    'Task Details',
+  ];
+
+  Widget _buildDetailTabs() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: List<Widget>.generate(_detailTabLabels.length, (index) {
+        final selected = index == _selectedDetailTab;
+        return ChoiceChip(
+          label: Text(_detailTabLabels[index]),
+          selected: selected,
+          onSelected: (_) => setState(() => _selectedDetailTab = index),
+          showCheckmark: false,
+          selectedColor: const Color(0xFF111827),
+          labelStyle: TextStyle(
+            color: selected ? Colors.white : const Color(0xFF111827),
+            fontWeight: FontWeight.w600,
+          ),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: selected ? const Color(0xFF111827) : const Color(0xFFE5E7EB),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildSelectedDetailSection() {
+    return _selectedDetailTab == 1
+        ? _buildTaskListSection()
+        : _buildGanttSection();
+  }
+
+  Widget _buildGanttSection() {
  if (_tasks.isEmpty) {
  return const _SectionEmptyState(
  title: 'No schedule tasks yet',
@@ -2334,8 +2418,7 @@ if (!mounted) return;
  ),
  const SizedBox(height: 16),
  SizedBox(
- height: 400,
- child: SingleChildScrollView(
+        child: SingleChildScrollView(
  controller: _horizontalScrollController,
  scrollDirection: Axis.horizontal,
  child: _DetailedGanttChart(
@@ -2436,231 +2519,120 @@ if (!mounted) return;
  }
 
  Widget _buildTaskTable() {
- const border = BorderSide(color: Color(0xFFE5E7EB));
- const headerStyle = TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF6B7280),
- );
+    return FullScreenTableWrapper(
+      title: 'Tasks',
+      child: _buildTaskTableGrid(),
+      tableBuilder: (fsContext) => _buildTaskTableGrid(),
+    );
+  }
 
- return FullScreenTableWrapper(
- title: 'Tasks',
- child: LayoutBuilder(
- builder: (context, constraints) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: SizedBox(
- width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
- child: Table(
- defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- columnWidths: const {
- 0: FixedColumnWidth(56),
- 1: FlexColumnWidth(3.6),
- 2: FixedColumnWidth(98),
- 3: FixedColumnWidth(98),
- 4: FixedColumnWidth(84),
- 5: FixedColumnWidth(112),
- 6: FixedColumnWidth(116),
- 7: FixedColumnWidth(96),
- 8: FixedColumnWidth(88),
- },
- border: const TableBorder(
- horizontalInside: border,
- verticalInside: border,
- ),
- children: [
- TableRow(
- decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
- children: [
- _headerCell('#', headerStyle),
- _headerCell('Task', headerStyle),
- _headerCell('Start', headerStyle),
- _headerCell('End', headerStyle),
- _headerCell('Days', headerStyle),
- _headerCell('Progress', headerStyle),
- _headerCell('Status', headerStyle),
- _headerCell('Priority', headerStyle),
- _headerCell('', headerStyle),
- ],
- ),
- ...List.generate(_tasks.length, (index) {
- final task = _tasks[index];
- final duration =
- task.dueDate.difference(task.startDate).inDays;
- final isSelected = _selectedTaskId == task.id;
+  /// Task grid. Columns flex to the available width and text wraps inside
+  /// each cell, so values are never pushed off-screen.
+  Widget _buildTaskTableGrid() {
+    const border = BorderSide(color: Color(0xFFE5E7EB));
+    const headerStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: Color(0xFF6B7280),
+    );
 
- return TableRow(
- decoration: BoxDecoration(
- color: isSelected
- ? const Color(0xFFE8F4FF)
- : (index.isEven
- ? Colors.white
- : const Color(0xFFFAFAFA)),
- ),
- children: [
- _dataCell(Center(
- child: Text('${index + 1}',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF4B5563))),
- )),
- _dataCell(_TaskNameCell(
- task: task,
- isSelected: isSelected,
- onTap: () => _selectTask(task.id),
- )),
- _dataCell(_DateCell(
- date: task.startDate,
- onDateSelected: (date) {
- _updateTask(task.copyWith(startDate: date));
- },
- )),
- _dataCell(_DateCell(
- date: task.dueDate,
- onDateSelected: (date) {
- _updateTask(task.copyWith(dueDate: date));
- },
- )),
- _dataCell(Center(
- child: Text(
- '${duration}d',
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151)),
- ),
- )),
- _dataCell(_ProgressCell(progress: task.progress)),
- _dataCell(_StatusCell(status: task.status)),
- _dataCell(_PriorityCell(priority: task.priority)),
- _dataCell(Center(
- child: IconButton(
- icon: const Icon(Icons.delete_outline, size: 16),
- color: const Color(0xFF6B7280),
- onPressed: () => _deleteTask(task.id),
- tooltip: 'Delete task',
- ),
- )),
- ],
- );
- }),
- ],
- ),
- ),
- );
- },
- ),
- tableBuilder: (fsContext) => LayoutBuilder(
- builder: (context, constraints) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: SizedBox(
- width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
- child: Table(
- defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- columnWidths: const {
- 0: FixedColumnWidth(56),
- 1: FlexColumnWidth(3.6),
- 2: FixedColumnWidth(98),
- 3: FixedColumnWidth(98),
- 4: FixedColumnWidth(84),
- 5: FixedColumnWidth(112),
- 6: FixedColumnWidth(116),
- 7: FixedColumnWidth(96),
- 8: FixedColumnWidth(88),
- },
- border: const TableBorder(
- horizontalInside: border,
- verticalInside: border,
- ),
- children: [
- TableRow(
- decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
- children: [
- _headerCell('#', headerStyle),
- _headerCell('Task', headerStyle),
- _headerCell('Start', headerStyle),
- _headerCell('End', headerStyle),
- _headerCell('Days', headerStyle),
- _headerCell('Progress', headerStyle),
- _headerCell('Status', headerStyle),
- _headerCell('Priority', headerStyle),
- _headerCell('', headerStyle),
- ],
- ),
- ...List.generate(_tasks.length, (index) {
- final task = _tasks[index];
- final duration =
- task.dueDate.difference(task.startDate).inDays;
- final isSelected = _selectedTaskId == task.id;
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: const {
+        0: FixedColumnWidth(44),
+        1: FlexColumnWidth(3.4),
+        2: FlexColumnWidth(1.3),
+        3: FlexColumnWidth(1.3),
+        4: FlexColumnWidth(0.9),
+        5: FlexColumnWidth(1.6),
+        6: FlexColumnWidth(1.4),
+        7: FlexColumnWidth(1.2),
+        8: FixedColumnWidth(48),
+      },
+      border: const TableBorder(
+        horizontalInside: border,
+        verticalInside: border,
+      ),
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+          children: [
+            _headerCell('#', headerStyle),
+            _headerCell('Task', headerStyle),
+            _headerCell('Start', headerStyle),
+            _headerCell('End', headerStyle),
+            _headerCell('Days', headerStyle),
+            _headerCell('Progress', headerStyle),
+            _headerCell('Status', headerStyle),
+            _headerCell('Priority', headerStyle),
+            _headerCell('', headerStyle),
+          ],
+        ),
+        ...List.generate(_tasks.length, (index) {
+          final task = _tasks[index];
+          final duration = task.dueDate.difference(task.startDate).inDays;
+          final isSelected = _selectedTaskId == task.id;
 
- return TableRow(
- decoration: BoxDecoration(
- color: isSelected
- ? const Color(0xFFE8F4FF)
- : (index.isEven
- ? Colors.white
- : const Color(0xFFFAFAFA)),
- ),
- children: [
- _dataCell(Center(
- child: Text('${index + 1}',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF4B5563))),
- )),
- _dataCell(_TaskNameCell(
- task: task,
- isSelected: isSelected,
- onTap: () => _selectTask(task.id),
- )),
- _dataCell(_DateCell(
- date: task.startDate,
- onDateSelected: (date) {
- _updateTask(task.copyWith(startDate: date));
- },
- )),
- _dataCell(_DateCell(
- date: task.dueDate,
- onDateSelected: (date) {
- _updateTask(task.copyWith(dueDate: date));
- },
- )),
- _dataCell(Center(
- child: Text(
- '${duration}d',
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151)),
- ),
- )),
- _dataCell(_ProgressCell(progress: task.progress)),
- _dataCell(_StatusCell(status: task.status)),
- _dataCell(_PriorityCell(priority: task.priority)),
- _dataCell(Center(
- child: IconButton(
- icon: const Icon(Icons.delete_outline, size: 16),
- color: const Color(0xFF6B7280),
- onPressed: () => _deleteTask(task.id),
- tooltip: 'Delete task',
- ),
- )),
- ],
- );
- }),
- ],
- ),
- ),
- );
- },
- ),
- );
- }
+          return TableRow(
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFFE8F4FF)
+                  : (index.isEven ? Colors.white : const Color(0xFFFAFAFA)),
+            ),
+            children: [
+              _dataCell(Center(
+                child: Text('${index + 1}',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF4B5563))),
+              )),
+              _dataCell(_TaskNameCell(
+                task: task,
+                isSelected: isSelected,
+                onTap: () => _selectTask(task.id),
+              )),
+              _dataCell(_DateCell(
+                date: task.startDate,
+                onDateSelected: (date) {
+                  _updateTask(task.copyWith(startDate: date));
+                },
+              )),
+              _dataCell(_DateCell(
+                date: task.dueDate,
+                onDateSelected: (date) {
+                  _updateTask(task.copyWith(dueDate: date));
+                },
+              )),
+              _dataCell(Center(
+                child: Text(
+                  '${duration}d',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151)),
+                ),
+              )),
+              _dataCell(_ProgressCell(progress: task.progress)),
+              _dataCell(_StatusCell(status: task.status)),
+              _dataCell(_PriorityCell(priority: task.priority)),
+              _dataCell(Center(
+                child: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 16),
+                  color: const Color(0xFF6B7280),
+                  onPressed: () => _deleteTask(task.id),
+                  tooltip: 'Delete task',
+                ),
+              )),
+            ],
+          );
+        }),
+      ],
+    );
+  }
 
- Widget _headerCell(String text, TextStyle style) {
+  Widget _headerCell(String text, TextStyle style) {
  return Padding(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  child: Text(text, style: style, textAlign: TextAlign.center),
@@ -2874,6 +2846,23 @@ class _DetailedGanttChart extends StatelessWidget {
  static const double _leftColumnWidth = 280;
  static const double _rowHeight = 44;
  static const double _headerHeight = 50;
+  static const double _barHeight = 28;
+  static const TextStyle _taskNameStyle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
+  /// Height needed to show [title] fully, wrapped inside the left column.
+  static double _rowHeightFor(String title) {
+    final painter = TextPainter(
+      text: TextSpan(text: title, style: _taskNameStyle),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: _leftColumnWidth - 24 - 20);
+    final needed = painter.height + 12;
+    painter.dispose();
+    return needed > _rowHeight ? needed : _rowHeight;
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -2906,7 +2895,16 @@ class _DetailedGanttChart extends StatelessWidget {
 
  final totalDays = chartEnd.difference(chartStart).inDays + 1;
  final timelineWidth = totalDays * pxPerDay;
- final chartHeight = tasks.length * _rowHeight + _headerHeight;
+ final rowHeights = [for (final task in tasks) _rowHeightFor(task.title)];
+    final rowTops = <double>[];
+    final rowBottoms = <double>[];
+    var rowCursor = _headerHeight;
+    for (final h in rowHeights) {
+      rowTops.add(rowCursor);
+      rowCursor += h;
+      rowBottoms.add(rowCursor);
+    }
+    final chartHeight = rowCursor;
 
  final segments = _generateTimeSegments(chartStart, chartEnd, zoomLevel);
  final taskIndexMap = {
@@ -2922,9 +2920,8 @@ class _DetailedGanttChart extends StatelessWidget {
  size: Size(_leftColumnWidth + timelineWidth, chartHeight),
  painter: _DetailedGanttPainter(
  leftColumnWidth: _leftColumnWidth,
- rowHeight: _rowHeight,
  headerHeight: _headerHeight,
- rowCount: tasks.length,
+        rowBottoms: rowBottoms,
  segments: segments,
  pxPerDay: pxPerDay,
  chartStart: chartStart,
@@ -2954,14 +2951,14 @@ class _DetailedGanttChart extends StatelessWidget {
  ),
  ...List.generate(tasks.length, (index) {
  final task = tasks[index];
- final top = _headerHeight + index * _rowHeight;
+ final top = rowTops[index];
  final isSelected = selectedTaskId == task.id;
 
  return Positioned(
  left: 0,
  top: top,
  width: _leftColumnWidth,
- height: _rowHeight,
+ height: rowHeights[index],
  child: GestureDetector(
  onTap: () => onTaskSelect(task.id),
  child: Container(
@@ -2977,20 +2974,17 @@ class _DetailedGanttChart extends StatelessWidget {
  ),
  ),
  ),
- padding: const EdgeInsets.symmetric(horizontal: 12),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  alignment: Alignment.centerLeft,
  child: Row(
  children: [
  Expanded(
  child: Text(
  task.title,
- style: TextStyle(
- fontSize: 12,
- fontWeight:
- isSelected ? FontWeight.w600 : FontWeight.w500,
+ style: _taskNameStyle.copyWith(
+ fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
  color: const Color(0xFF111827),
  ),
- overflow: TextOverflow.ellipsis,
  ),
  ),
  if (task.isMilestone)
@@ -3002,17 +2996,19 @@ class _DetailedGanttChart extends StatelessWidget {
  ),
  );
  }),
- ..._buildDependencyLines(chartStart, pxPerDay, taskIndexMap),
- ..._buildTaskBars(chartStart, pxPerDay),
+ ..._buildDependencyLines(
+            chartStart, pxPerDay, taskIndexMap, rowTops, rowHeights, chartHeight),
+ ..._buildTaskBars(chartStart, pxPerDay, rowTops, rowHeights),
  ],
  ),
  );
  }
 
- List<Widget> _buildTaskBars(DateTime chartStart, double pxPerDay) {
+ List<Widget> _buildTaskBars(DateTime chartStart, double pxPerDay,
+      List<double> rowTops, List<double> rowHeights) {
  return List.generate(tasks.length, (index) {
  final task = tasks[index];
- final top = _headerHeight + index * _rowHeight;
+ final top = rowTops[index] + (rowHeights[index] - _barHeight) / 2;
  final startOffset = task.startDate.difference(chartStart).inDays;
  final duration = task.dueDate.difference(task.startDate).inDays + 1;
  final left = _leftColumnWidth + startOffset * pxPerDay;
@@ -3039,12 +3035,12 @@ class _DetailedGanttChart extends StatelessWidget {
 
  return Positioned(
  left: left,
- top: top + 8,
+ top: top,
  child: GestureDetector(
  onTap: () => onTaskSelect(task.id),
  child: SizedBox(
  width: width,
- height: _rowHeight - 16,
+ height: _barHeight,
  child: Stack(
  children: [
  if (baselineTask != null) ...[
@@ -3058,7 +3054,7 @@ class _DetailedGanttChart extends StatelessWidget {
  1) *
  pxPerDay)
  .clamp(20.0, 2000.0),
- height: _rowHeight - 16,
+ height: _barHeight,
  decoration: BoxDecoration(
  color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(6),
@@ -3069,7 +3065,7 @@ class _DetailedGanttChart extends StatelessWidget {
  ],
  Container(
  width: width,
- height: _rowHeight - 16,
+ height: _barHeight,
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(6),
  color: barColor,
@@ -3113,7 +3109,12 @@ class _DetailedGanttChart extends StatelessWidget {
  }
 
  List<Widget> _buildDependencyLines(
- DateTime chartStart, double pxPerDay, Map<String, int> taskIndexMap) {
+      DateTime chartStart,
+      double pxPerDay,
+      Map<String, int> taskIndexMap,
+      List<double> rowTops,
+      List<double> rowHeights,
+      double chartHeight) {
  if (!showDependencies) return [];
 
  final lines = <Widget>[];
@@ -3134,13 +3135,12 @@ class _DetailedGanttChart extends StatelessWidget {
  final depTask = tasks[depIndex];
  final depLeft = _leftColumnWidth +
  depTask.dueDate.difference(chartStart).inDays * pxPerDay;
- final depTop = _headerHeight + depIndex * _rowHeight + _rowHeight / 2;
- final targetTop =
- _headerHeight + taskIndex * _rowHeight + _rowHeight / 2;
+ final depTop = rowTops[depIndex] + rowHeights[depIndex] / 2;
+ final targetTop = rowTops[taskIndex] + rowHeights[taskIndex] / 2;
 
  lines.add(
  CustomPaint(
- size: Size(_leftColumnWidth + (tasks.length * 50 + 200), 400),
+ size: Size(_leftColumnWidth + (tasks.length * 50 + 200), chartHeight),
  painter: _DependencyLinePainter(
  startX: depLeft + 8,
  startY: depTop,
@@ -3237,18 +3237,16 @@ class _TimeSegment {
 class _DetailedGanttPainter extends CustomPainter {
  const _DetailedGanttPainter({
  required this.leftColumnWidth,
- required this.rowHeight,
  required this.headerHeight,
- required this.rowCount,
+    required this.rowBottoms,
  required this.segments,
  required this.pxPerDay,
  required this.chartStart,
  });
 
  final double leftColumnWidth;
- final double rowHeight;
  final double headerHeight;
- final int rowCount;
+  final List<double> rowBottoms;
  final List<_TimeSegment> segments;
  final double pxPerDay;
  final DateTime chartStart;
@@ -3259,14 +3257,9 @@ class _DetailedGanttPainter extends CustomPainter {
  ..color = const Color(0xFFE5E7EB)
  ..strokeWidth = 0.5;
 
- for (int row = 0; row <= rowCount; row++) {
- final y = headerHeight + row * rowHeight;
- canvas.drawLine(
- Offset(0, y),
- Offset(size.width, y),
- rowPaint,
- );
- }
+ for (final y in [headerHeight, ...rowBottoms]) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), rowPaint);
+    }
 
  final dividerPaint = Paint()
  ..color = const Color(0xFFD1D5DB)
@@ -3523,10 +3516,8 @@ class _ProgressCell extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
  child: Row(
- mainAxisSize: MainAxisSize.min,
  children: [
- SizedBox(
- width: 50,
+ Expanded(
  child: ClipRRect(
  borderRadius: BorderRadius.circular(3),
  child: LinearProgressIndicator(

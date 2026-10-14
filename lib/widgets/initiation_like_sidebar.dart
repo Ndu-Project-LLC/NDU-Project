@@ -16,7 +16,6 @@ import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
 import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
 import 'package:ndu_project/screens/front_end_planning_risks_screen.dart';
 import 'package:ndu_project/screens/front_end_planning_opportunities_screen.dart';
@@ -226,11 +225,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Cost Estimate',
   };
 
-  static const Set<String> _projectServicesLabels = {
-    'Scope Tracking Plan',
-    'Project Controls',
-  };
-
   static const Set<String> _startUpPlanningLabels = {
     'Start-Up Planning',
     'Start-Up Planning - Operations Plan and Manual',
@@ -247,6 +241,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   static const Set<String> _agileWireframeLabels = {
     'Agile Delivery Model - Delivery Model',
     'Agile Delivery Model - Backlog Governance',
+    'Agile Delivery Model - Backlog Grooming',
     'Agile Delivery Model - Team Structure',
     'Agile Delivery Model - Kanban Configuration',
     'Agile Delivery Model - Epics & Features',
@@ -396,6 +391,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Project Closeout',
   };
 
+  /// Every label that belongs to the Planning Phase section, in rail order.
+  ///
+  /// Membership does two jobs: it lights the Phase header when one of these
+  /// pages is open, and it is what opens the section on arrival. A Planning
+  /// child left out of this set is therefore both unhighlighted and invisible
+  /// until the user expands the section by hand.
   static const Set<String> _planningPhaseLabels = {
     'Planning Phase',
     'Project Details',
@@ -416,7 +417,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Planning Procurement',
     'Schedule',
     ..._costEstimateLabels,
-    ..._projectServicesLabels,
+    'Project Controls',
     'Change Management',
     'Issue Management',
     'Lessons Learned',
@@ -456,7 +457,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   static bool? _sharedProjectTeamExpanded;
   static bool? _sharedAgileHubExpanded;
   static bool? _sharedCostEstimateExpanded;
-  static bool? _sharedProjectServicesExpanded;
   static bool? _sharedAgileWireframeExpanded;
   static bool? _sharedDesignPlanningExpanded;
   static double _sharedScrollOffset = 0;
@@ -486,7 +486,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   late bool _projectTeamExpanded = _sharedProjectTeamExpanded ?? false;
   late bool _agileHubExpanded = _sharedAgileHubExpanded ?? false;
   late bool _costEstimateExpanded = _sharedCostEstimateExpanded ?? false;
-  late bool _projectServicesExpanded = _sharedProjectServicesExpanded ?? false;
   late bool _agileWireframeExpanded = _sharedAgileWireframeExpanded ?? false;
   late bool _designPlanningExpanded = _sharedDesignPlanningExpanded ?? false;
   bool _kazAiExpanded = false;
@@ -594,10 +593,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     expandIf(_costEstimateLabels, _costEstimateExpanded, () {
       _costEstimateExpanded = true;
       _sharedCostEstimateExpanded = true;
-    });
-    expandIf(_projectServicesLabels, _projectServicesExpanded, () {
-      _projectServicesExpanded = true;
-      _sharedProjectServicesExpanded = true;
     });
     expandIf(_startUpPlanningLabels, _startUpPlanningExpanded, () {
       _startUpPlanningExpanded = true;
@@ -774,7 +769,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       'change_management',
       'issue_management',
       'cost_estimate',
-      'scope_tracking_plan',
       'contracts',
       'project_plan',
       'execution_plan',
@@ -1371,6 +1365,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'agile_backlog_governance', const AgileBacklogGovernanceScreen());
   }
 
+  void _openAgileBacklogGrooming() {
+    _navigateWithCheckpoint('agile_backlog_governance',
+        const AgileBacklogGovernanceScreen(focusGrooming: true));
+  }
+
   void _openAgileProjectBaseline() {
     _navigateWithCheckpoint(
         'agile_project_baseline', const AgileProjectBaselineScreen());
@@ -1447,11 +1446,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   void _openCostEstimate() {
     _navigateWithCheckpoint('cost_estimate', const CostEstimateModuleScreen());
-  }
-
-  void _openScopeTrackingPlan() {
-    _navigateWithCheckpoint(
-        'scope_tracking_plan', const ScopeTrackingPlanScreen());
   }
 
   void _openProjectControls() {
@@ -2803,6 +2797,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem('Backlog Governance',
               onTap: _openAgileBacklogGovernance,
               isActive: _isActiveLabel('Agile Delivery Model - Backlog Governance')),
+          _buildSubSubMenuItem('Backlog Grooming',
+              onTap: _openAgileBacklogGrooming,
+              isActive: _isActiveLabel('Agile Delivery Model - Backlog Grooming')),
           _buildSubSubMenuItem('Agile Team Structure',
               onTap: _openAgileTeamStructure,
               isActive: _isActiveLabel('Agile Delivery Model - Team Structure')),
@@ -2940,23 +2937,15 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         // build-the-schedule flow, it renders full width without a sidebar,
         // and it is reached from the dashboard stat card and the mobile shell
         // instead. Keeping a link here only duplicated a dead end.
-        _buildSubExpandableHeader(
-          'Project Services',
-          expanded: _projectServicesExpanded,
-          onTap: () => setState(() {
-            _projectServicesExpanded = !_projectServicesExpanded;
-            _sharedProjectServicesExpanded = _projectServicesExpanded;
-          }),
-          isActive: _activeIn(_projectServicesLabels),
-        ),
-        if (_projectServicesExpanded) ...[
-          _buildSubSubMenuItem('Scope Tracking Plan',
-              onTap: _openScopeTrackingPlan,
-              isActive: _isActiveLabel('Scope Tracking Plan')),
-          _buildSubSubMenuItem('Project Controls',
-              onTap: _openProjectControls,
-              isActive: _isActiveLabel('Project Controls')),
-        ],
+
+        // Project Controls used to sit inside a "Project Services" group.
+        // That group is gone: once the Scope Tracking Plan page was removed it
+        // held this one entry, and a header that only unfolds a drawer of one
+        // is a tap the user pays for nothing. Project Controls now sits
+        // directly in the Planning list, one tap closer.
+        _buildSubMenuItem('Project Controls',
+            onTap: _openProjectControls,
+            isActive: _isActiveLabel('Project Controls')),
         _buildSubMenuItem(
           'Change Management',
           onTap: lockChangeManagement ? null : _openChangeManagement,
@@ -3582,22 +3571,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openCostEstimate,
           isActive: _isActiveLabel('Cost Estimate')));
     }
-    if ('project services'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.track_changes_outlined, 'Scope Tracking Plan',
-          onTap: _openScopeTrackingPlan,
-          isActive: _isActiveLabel('Scope Tracking Plan')));
+    if ('project controls'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.track_changes_outlined, 'Project Controls',
           onTap: _openProjectControls,
           isActive: _isActiveLabel('Project Controls')));
-    }
-    if ('scope tracking plan'.contains(query) ||
-        'scope tracking'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.track_changes_outlined, 'Scope Tracking Plan',
-          onTap: _openScopeTrackingPlan,
-          isActive: _isActiveLabel('Scope Tracking Plan')));
     }
     if ('project plan'.contains(query)) {
       results.add(_buildMenuItem(Icons.assignment_outlined, 'Project Plan',
@@ -3955,11 +3933,15 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     }
     if ('backlog'.contains(query) ||
         'backlog governance'.contains(query) ||
-        'grooming'.contains(query) ||
         'refinement'.contains(query)) {
       results.add(_buildMenuItem(Icons.list_alt_outlined, 'Backlog Governance',
           onTap: _openAgileBacklogGovernance,
           isActive: _isActiveLabel('Agile Delivery Model - Backlog Governance')));
+    }
+    if ('backlog grooming'.contains(query) || 'grooming'.contains(query)) {
+      results.add(_buildMenuItem(Icons.tune_outlined, 'Backlog Grooming',
+          onTap: _openAgileBacklogGrooming,
+          isActive: _isActiveLabel('Agile Delivery Model - Backlog Grooming')));
     }
     if ('start-up planning'.contains(query) ||
         'startup planning'.contains(query) ||

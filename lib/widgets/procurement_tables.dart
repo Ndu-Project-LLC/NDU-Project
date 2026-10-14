@@ -72,7 +72,7 @@ class _ContractsTableState extends State<ContractsTable> {
                 verticalInside: BorderSide.none,
               ),
               columns: const [
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('CONTRACT ITEM',
@@ -83,7 +83,7 @@ class _ContractsTableState extends State<ContractsTable> {
                             fontSize: 12,
                             color: Color(0xFF64748B))),
                   )),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('CONTRACTOR',
@@ -94,7 +94,7 @@ class _ContractsTableState extends State<ContractsTable> {
                             fontSize: 12,
                             color: Color(0xFF64748B))),
                   )),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('VALUE',
@@ -105,7 +105,7 @@ class _ContractsTableState extends State<ContractsTable> {
                             fontSize: 12,
                             color: Color(0xFF64748B))),
                   )),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('TIMELINE',
@@ -116,7 +116,7 @@ class _ContractsTableState extends State<ContractsTable> {
                             fontSize: 12,
                             color: Color(0xFF64748B))),
                   )),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('OWNER',
@@ -127,7 +127,7 @@ class _ContractsTableState extends State<ContractsTable> {
                             fontSize: 12,
                             color: Color(0xFF64748B))),
                   )),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Align(
                     alignment: Alignment.centerLeft,
                     child: Text('STATUS',
@@ -138,7 +138,7 @@ class _ContractsTableState extends State<ContractsTable> {
                             fontSize: 12,
                             color: Color(0xFF64748B))),
                   )),
-                  DataColumn(label: Center(child: Text(''))),
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Center(child: Text(''))),
                 ],
                 rows: visible.map((contract) {
                   return DataRow(
@@ -316,44 +316,44 @@ class _ProcurementTableState extends State<ProcurementTable> {
                   width: 0.5,
                   borderRadius: BorderRadius.circular(8)),
               columns: [
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                     label: Center(
                         child: Text('Item / Equipment',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                     label: Center(
                         child: Text('Stage',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                     label: Center(
                         child: Text('Responsible',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                     label: Center(
                         child: Text('Est. Price',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                     label: Center(
                         child: Text('Status',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                     label: Center(
                         child: Text('Comments',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
                   if (hasActions)
-                    const DataColumn(label: Center(child: Text(''))),
+                    const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Center(child: Text(''))),
                 ],
                 rows: visible.map((item) {
                   final actionItems = <PopupMenuEntry<String>>[];

@@ -42,6 +42,7 @@ class UnifiedPhaseHeader extends StatelessWidget {
     this.showDrawerButton = true,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
+    this.walkthroughId,
     this.showExportPdf = false,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -65,6 +66,11 @@ class UnifiedPhaseHeader extends StatelessWidget {
   /// Optional page title for the breadcrumb bar (e.g. "Risk Assessment").
   /// Falls back to [title] if not provided.
   final String? breadcrumbTitle;
+
+  /// Page id for the walkthrough. Set this when several screens share a header
+  /// wrapper without a title, so each page gets its own tour. Does not change
+  /// the visible breadcrumb.
+  final String? walkthroughId;
 
   /// Show Export PDF button in the header.
   final bool showExportPdf;
@@ -161,8 +167,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 PageWalkthroughButton(
-                  pageId: breadcrumbTitle ?? title,
-                  pageTitle: breadcrumbTitle ?? title,
+                  pageId: walkthroughId ?? breadcrumbTitle ?? title,
+                  pageTitle: walkthroughId ?? breadcrumbTitle ?? title,
                   compact: true,
                 ),
                 if (ProjectDataInherited.maybeRead(context) != null)
@@ -342,8 +348,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
                 const SizedBox(width: 8),
                 Flexible(
                   child: _WalkthroughSlot(
-                    pageId: breadcrumbTitle ?? title,
-                    pageTitle: breadcrumbTitle ?? title,
+                    pageId: walkthroughId ?? breadcrumbTitle ?? title,
+                    pageTitle: walkthroughId ?? breadcrumbTitle ?? title,
                   ),
                 ),
               ],

@@ -57,6 +57,7 @@ class ExecutionPlanBestPracticesScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Plan - Best Practices',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_best_practices'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

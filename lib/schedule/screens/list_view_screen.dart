@@ -22,6 +22,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
+import 'package:ndu_project/schedule/screens/builder_screen.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/utils/schedule_duplicate_guard.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -228,6 +229,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                             sortAscending: _sortAsc,
                             columns: [
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Code',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -236,6 +238,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.code, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Name',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -244,6 +247,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.name, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Domain',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -253,6 +257,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.domain, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Duration',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -262,6 +267,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.duration, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Start',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -270,6 +276,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.start, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Finish',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -279,6 +286,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.finish, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Cost',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -287,6 +295,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.cost, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Status',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -296,7 +305,16 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.status, asc),
                               ),
                               const DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: Text('Traceability',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                              const DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
+                                label: Text('Actions',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
                                         fontSize: 12,
@@ -384,6 +402,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                               message: r.dateMismatchMessage,
                                               child: _TraceabilityCell(row: r),
                                             )),
+                                      DataCell(_buildDeleteButton(
+                                          r, schedule.isLocked)),
                                     ]))
                                 .toList(),
                           ),
@@ -401,6 +421,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                             sortAscending: _sortAsc,
                             columns: [
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Code',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -409,6 +430,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.code, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Name',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -417,6 +439,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.name, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Domain',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -426,6 +449,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.domain, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Duration',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -435,6 +459,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.duration, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Start',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -443,6 +468,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.start, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Finish',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -452,6 +478,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.finish, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Cost',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -460,6 +487,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                 onSort: (c, asc) => _onSort(_SortBy.cost, asc),
                               ),
                               DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: const Text('Status',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
@@ -469,7 +497,16 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                     _onSort(_SortBy.status, asc),
                               ),
                               const DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
                                 label: Text('Traceability',
+                                    style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                              const DataColumn(
+                                headingRowAlignment: MainAxisAlignment.center,
+                                label: Text('Actions',
                                     style: TextStyle(
                                         color: Color(0xFF6B7280),
                                         fontSize: 12,
@@ -557,6 +594,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                               message: r.dateMismatchMessage,
                                               child: _TraceabilityCell(row: r),
                                             )),
+                                      DataCell(_buildDeleteButton(
+                                          r, schedule.isLocked)),
                                     ]))
                                 .toList(),
                           ),
@@ -585,6 +624,45 @@ class _ListViewScreenState extends State<ListViewScreen> {
         );
       },
     );
+  }
+
+  /// Trash button for a live activity row. Demo rows have no activityId and
+  /// are not in the schedule, so they get no button. Hidden when the schedule
+  /// is locked, matching the Builder's card and table rows.
+  Widget _buildDeleteButton(_ListRow row, bool locked) {
+    if (row.activityId == null || locked) return const SizedBox.shrink();
+    return IconButton(
+      icon:
+          const Icon(Icons.delete_outline, size: 16, color: Color(0xFFB91C1C)),
+      tooltip: 'Delete activity',
+      onPressed: () => _deleteRow(row),
+    );
+  }
+
+  /// Routes through the Builder's shared confirmation so the List View and
+  /// Builder delete identically (dialog, descendant count, snackbar).
+  Future<void> _deleteRow(_ListRow row) async {
+    final id = row.activityId;
+    if (id == null || id.isEmpty) return;
+    final provider = context.read<ScheduleProvider>();
+    final activity =
+        _findActivity(provider.schedule?.activities ?? const [], id);
+    if (activity == null) return;
+    await confirmActivityRemoval(
+      context,
+      provider: provider,
+      activity: activity,
+      isLocked: provider.schedule?.isLocked ?? false,
+    );
+  }
+
+  ScheduleActivity? _findActivity(List<ScheduleActivity> nodes, String id) {
+    for (final node in nodes) {
+      if (node.id == id) return node;
+      final hit = _findActivity(node.children, id);
+      if (hit != null) return hit;
+    }
+    return null;
   }
 
   void _onSort(_SortBy by, bool asc) {

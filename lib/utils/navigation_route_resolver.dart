@@ -28,7 +28,6 @@ import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
 import 'package:ndu_project/screens/issue_management_screen.dart';
 import 'package:ndu_project/screens/cost_estimate_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/screens/project_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
@@ -317,8 +316,6 @@ class NavigationRouteResolver {
         return const IssueManagementScreen();
       case 'cost_estimate':
         return const CostEstimateScreen();
-      case 'scope_tracking_plan':
-        return const ScopeTrackingPlanScreen();
       case 'contracts':
         return const PlanningContractingScreen();
       case 'procurement':
@@ -608,7 +605,6 @@ class NavigationRouteResolver {
     'change_management': '/${AppRoutes.changeManagementModule}',
     'issue_management': '/${AppRoutes.issueManagement}',
     'cost_estimate': '/${AppRoutes.costEstimateScreen}',
-    'scope_tracking_plan': '/${AppRoutes.scopeTrackingPlan}',
     'contracts': '/${AppRoutes.fepContracts}',
     'procurement': '/${AppRoutes.planningProcurement}',
     'project_plan': '/${AppRoutes.projectPlan}',

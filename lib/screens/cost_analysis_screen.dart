@@ -1577,6 +1577,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                 Expanded(
                     child: Column(children: [
                   BusinessCaseHeader(
+                    walkthroughId: 'Initial Cost Estimate',
                       scaffoldKey: _scaffoldKey,
                       onExportPdf: _exportPdf,
                       onAiAssist: _aiAssist),

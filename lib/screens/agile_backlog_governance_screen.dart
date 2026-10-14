@@ -41,6 +41,15 @@ const List<String> _defaultWorkingAgreements = [
   'No meeting Wednesdays (focus time)',
 ];
 
+const List<String> _defaultGroomingActivities = [
+  'Story refinement & splitting',
+  'Estimation updates',
+  'Dependency review',
+  'Duplicate detection',
+  'AI story quality scoring',
+  'Readiness assessment',
+];
+
 class _ChecklistItem {
   final String id;
   String label;
@@ -53,7 +62,10 @@ class _ChecklistItem {
 }
 
 class AgileBacklogGovernanceScreen extends StatefulWidget {
-  const AgileBacklogGovernanceScreen({super.key});
+  /// When true, the page scrolls to its Backlog Grooming section on open.
+  final bool focusGrooming;
+
+  const AgileBacklogGovernanceScreen({super.key, this.focusGrooming = false});
 
   @override
   State<AgileBacklogGovernanceScreen> createState() =>
@@ -67,10 +79,12 @@ class _AgileBacklogGovernanceScreenState
   final Map<String, int> _fieldHistoryIndices = {};
   final Map<String, bool> _fieldIsAiGenerated = {};
   final Map<String, bool> _fieldIsRegenerating = {};
+  final GlobalKey _groomingKey = GlobalKey();
 
   List<_ChecklistItem> _doRItems = [];
   List<_ChecklistItem> _doDItems = [];
   List<_ChecklistItem> _waItems = [];
+  List<_ChecklistItem> _groomingItems = [];
 
   /// Saved keys for the prose form of the two gates.
   static const List<String> _proseGateKeys = [
@@ -224,6 +238,13 @@ class _AgileBacklogGovernanceScreenState
               .map((l) => _ChecklistItem(label: l))
               .toList();
         }
+        _groomingItems =
+            _checklistFromJson(data['grooming_activities'] as List?);
+        if (_groomingItems.isEmpty) {
+          _groomingItems = _defaultGroomingActivities
+              .map((l) => _ChecklistItem(label: l))
+              .toList();
+        }
         _showDoRChecklist =
             data[AgileGateDefinitions.readyChecklistModeKey] as bool? ?? false;
         _showDoDChecklist =
@@ -233,6 +254,15 @@ class _AgileBacklogGovernanceScreenState
       debugPrint('Error: $e');
     }
     if (mounted) setState(() => _isLoading = false);
+    if (mounted && widget.focusGrooming) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final groomingContext = _groomingKey.currentContext;
+        if (groomingContext != null) {
+          Scrollable.ensureVisible(groomingContext,
+              duration: const Duration(milliseconds: 300));
+        }
+      });
+    }
   }
 
   void _scheduleAutoSave() {
@@ -260,6 +290,7 @@ class _AgileBacklogGovernanceScreenState
         readyChecklist: _checklistToJson(_doRItems),
         doneChecklist: _checklistToJson(_doDItems),
         workingAgreements: _checklistToJson(_waItems),
+        groomingActivities: _checklistToJson(_groomingItems),
         readyChecklistMode: _showDoRChecklist,
         doneChecklistMode: _showDoDChecklist,
       );
@@ -451,6 +482,9 @@ class _AgileBacklogGovernanceScreenState
   @override
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
+    final String activeLabel = widget.focusGrooming
+        ? 'Agile Delivery Model - Backlog Grooming'
+        : 'Agile Delivery Model - Backlog Governance';
     final double hp = isMobile ? 20 : 40;
 
     return Scaffold(
@@ -461,16 +495,13 @@ class _AgileBacklogGovernanceScreenState
           children: [
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
-              child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Agile Delivery Model - Backlog Governance'),
+              child: InitiationLikeSidebar(activeItemLabel: activeLabel),
             ),
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
-                        activeItemLabel:
-                            'Agile Delivery Model - Backlog Governance'),
+                  MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(activeItemLabel: activeLabel),
                   ),
                   SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
@@ -545,6 +576,11 @@ class _AgileBacklogGovernanceScreenState
                           ..._fields.map((f) => _buildField(f)),
                           const SizedBox(height: 20),
                           _buildWorkingAgreementsSection(),
+                          const SizedBox(height: 20),
+                          KeyedSubtree(
+                            key: _groomingKey,
+                            child: _buildGroomingSection(),
+                          ),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -571,6 +607,56 @@ class _AgileBacklogGovernanceScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildGroomingSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Grooming Activities',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: _kHeadline)),
+          const SizedBox(height: 4),
+          const Text(
+              'Work the team completes when refining the backlog ahead of each sprint.',
+              style: TextStyle(fontSize: 12, color: _kMuted)),
+          const SizedBox(height: 12),
+          ..._groomingItems.asMap().entries.map(
+                (entry) => _buildChecklistRow(
+                  entry.value,
+                  (checked) {
+                    setState(() => _groomingItems[entry.key].checked = checked);
+                    _scheduleAutoSave();
+                  },
+                  (label) {
+                    setState(() => _groomingItems[entry.key].label = label);
+                    _scheduleAutoSave();
+                  },
+                  () {
+                    setState(() => _groomingItems.removeAt(entry.key));
+                    _scheduleAutoSave();
+                  },
+                ),
+              ),
+          TextButton.icon(
+            onPressed: () {
+              setState(() => _groomingItems.add(_ChecklistItem(label: '')));
+              _scheduleAutoSave();
+            },
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Add activity'),
+          ),
+        ],
       ),
     );
   }

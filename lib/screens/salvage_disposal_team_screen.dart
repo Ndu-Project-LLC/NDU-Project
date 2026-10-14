@@ -115,6 +115,28 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
         'Active', 9, Colors.green),
   ];
 
+  static const List<String> _inventoryCategories = [
+    'Electronics',
+    'Hardware',
+    'Safety',
+    'Power',
+    'Physical Infrastructure',
+    'Other',
+  ];
+
+  static const List<String> _inventoryConditions = [
+    'Excellent',
+    'Good',
+    'Fair',
+    'Needs Review',
+  ];
+
+  static const List<String> _inventoryStatuses = [
+    'Ready',
+    'Pending',
+    'Flagged',
+  ];
+
   static const List<_InventoryItem> _defaultInventoryItems = [
     _InventoryItem('SVG-019', 'Server Rack Set', 'Electronics', 'Excellent',
         'Data Center', 'Ready', '\$18,400', Colors.green),
@@ -1321,10 +1343,6 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                       tableTitle: 'Asset Inventory',
                       columns: [
                         const CsvColumnSpec(
-                            key: 'assetId',
-                            label: 'Asset ID',
-                            sampleValue: 'SVG-001'),
-                        const CsvColumnSpec(
                             key: 'name',
                             label: 'Asset Name',
                             sampleValue: 'Server Rack'),
@@ -1362,7 +1380,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                   for (final row in rows) {
                     await SalvageService.createInventoryItem(
                         projectId: pid,
-                        assetId: row['assetId'] ?? '',
+                        assetId: '',
                         name: row['name'] ?? '',
                         category: row['category'] ?? '',
                         condition: row['condition'] ?? 'Good',
@@ -1448,37 +1466,37 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                       dataRowMinHeight: 56,
                       dataRowMaxHeight: 72,
                       columns: const [
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Asset',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Category',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Condition',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Location',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Status',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Est. Value',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Actions',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
@@ -1594,37 +1612,37 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                       dataRowMinHeight: 56,
                       dataRowMaxHeight: 72,
                       columns: const [
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Asset',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Category',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Condition',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Location',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Status',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Est. Value',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white))),
-                        DataColumn(
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text('Actions',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
@@ -1729,133 +1747,137 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
     );
   }
 
+  List<String> _inventoryOptions(List<String> base, String current) =>
+      current.isEmpty || base.contains(current) ? base : [...base, current];
+
   void _showEditInventoryDialog(
       BuildContext context, SalvageInventoryItemModel item) {
     final projectId = _getProjectId();
     if (projectId == null) return;
 
-    final assetIdController =
-        SpellCheckTextEditingController(text: item.assetId);
     final nameController = SpellCheckTextEditingController(text: item.name);
-    final categoryController =
-        SpellCheckTextEditingController(text: item.category);
-    final conditionController =
-        SpellCheckTextEditingController(text: item.condition);
     final locationController =
         SpellCheckTextEditingController(text: item.location);
-    final statusController = SpellCheckTextEditingController(text: item.status);
     final valueController =
         SpellCheckTextEditingController(text: item.estimatedValue);
+    var category = item.category;
+    var condition = item.condition;
+    var status = item.status;
 
     showAppDialog(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => LaunchModalShell(
-        icon: Icons.edit_rounded,
-        accent: const Color(0xFFFFC812),
-        title: 'Edit Inventory Item',
-        subtitle: 'Update the salvage inventory item details.',
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LaunchModalTextField(
-              label: 'Asset ID *',
-              controller: assetIdController,
-              hint: 'Unique asset identifier',
-            ),
-            const SizedBox(height: 12),
-            LaunchModalTextField(
-              label: 'Name *',
-              controller: nameController,
-              hint: 'Asset name or description',
-            ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Category *',
-                    controller: categoryController,
-                    hint: 'e.g. Electronics',
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => LaunchModalShell(
+          icon: Icons.edit_rounded,
+          accent: const Color(0xFFFFC812),
+          title: 'Edit Inventory Item',
+          subtitle: 'Update the salvage inventory item details.',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'Name *',
+                controller: nameController,
+                hint: 'Asset name or description',
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Category *',
+                      value: category.isEmpty ? null : category,
+                      items:
+                          _inventoryOptions(_inventoryCategories, category),
+                      hint: 'Select category',
+                      onChanged: (v) =>
+                          setDialogState(() => category = v ?? ''),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Condition *',
-                    controller: conditionController,
-                    hint: 'e.g. Good',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Condition *',
+                      value: condition.isEmpty ? null : condition,
+                      items:
+                          _inventoryOptions(_inventoryConditions, condition),
+                      hint: 'Select condition',
+                      onChanged: (v) =>
+                          setDialogState(() => condition = v ?? ''),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: LaunchModalTextField(
+                      label: 'Location *',
+                      controller: locationController,
+                      hint: 'Where it is stored',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Status *',
+                      value: status.isEmpty ? null : status,
+                      items: _inventoryOptions(_inventoryStatuses, status),
+                      hint: 'Select status',
+                      onChanged: (v) => setDialogState(() => status = v ?? ''),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              LaunchModalTextField(
+                label: 'Estimated Value *',
+                controller: valueController,
+                hint: 'e.g. 1500.00',
+                keyboardType: TextInputType.text,
+              ),
+            ],
+          ),
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(ctx),
             ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Location *',
-                    controller: locationController,
-                    hint: 'Where it is stored',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Status *',
-                    controller: statusController,
-                    hint: 'Pending / Disposed / etc.',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            LaunchModalTextField(
-              label: 'Estimated Value *',
-              controller: valueController,
-              hint: 'e.g. 1500.00',
-              keyboardType: TextInputType.text,
+            LaunchModalPrimaryButton(
+              label: 'Update',
+              icon: Icons.check_rounded,
+              onPressed: () async {
+                try {
+                  await SalvageService.updateInventoryItem(
+                    projectId: projectId,
+                    itemId: item.id,
+                    name: nameController.text,
+                    category: category,
+                    condition: condition,
+                    location: locationController.text,
+                    status: status,
+                    estimatedValue: valueController.text,
+                  );
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Item updated successfully')));
+                  }
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                }
+              },
             ),
           ],
         ),
-        actions: [
-          LaunchModalCancelButton(
-            label: 'Cancel',
-            onPressed: () => Navigator.pop(ctx),
-          ),
-          LaunchModalPrimaryButton(
-            label: 'Update',
-            icon: Icons.check_rounded,
-            onPressed: () async {
-              try {
-                await SalvageService.updateInventoryItem(
-                  projectId: projectId,
-                  itemId: item.id,
-                  assetId: assetIdController.text,
-                  name: nameController.text,
-                  category: categoryController.text,
-                  condition: conditionController.text,
-                  location: locationController.text,
-                  status: statusController.text,
-                  estimatedValue: valueController.text,
-                );
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Item updated successfully')));
-                }
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('Error: $e')));
-                }
-              }
-            },
-          ),
-        ],
       ),
     );
   }
@@ -1870,136 +1892,140 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
       return;
     }
 
-    final assetIdController = SpellCheckTextEditingController();
     final nameController = SpellCheckTextEditingController();
-    final categoryController = SpellCheckTextEditingController();
-    final conditionController = SpellCheckTextEditingController();
     final locationController = SpellCheckTextEditingController();
-    final statusController = SpellCheckTextEditingController(text: 'Pending');
     final valueController = SpellCheckTextEditingController();
+    var category = '';
+    var condition = '';
+    var status = 'Pending';
 
     showAppDialog(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => LaunchModalShell(
-        icon: Icons.inventory_2_rounded,
-        accent: const Color(0xFFFFC812),
-        title: 'Add Inventory Item',
-        subtitle: 'Capture a new salvageable inventory item.',
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LaunchModalTextField(
-              label: 'Asset ID *',
-              controller: assetIdController,
-              hint: 'Unique asset identifier',
-            ),
-            const SizedBox(height: 12),
-            LaunchModalTextField(
-              label: 'Name *',
-              controller: nameController,
-              hint: 'Asset name or description',
-            ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Category *',
-                    controller: categoryController,
-                    hint: 'e.g. Electronics',
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => LaunchModalShell(
+          icon: Icons.inventory_2_rounded,
+          accent: const Color(0xFFFFC812),
+          title: 'Add Inventory Item',
+          subtitle: 'Capture a new salvageable inventory item.',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'Name *',
+                controller: nameController,
+                hint: 'Asset name or description',
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Category *',
+                      value: category.isEmpty ? null : category,
+                      items:
+                          _inventoryOptions(_inventoryCategories, category),
+                      hint: 'Select category',
+                      onChanged: (v) =>
+                          setDialogState(() => category = v ?? ''),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Condition *',
-                    controller: conditionController,
-                    hint: 'e.g. Good',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Condition *',
+                      value: condition.isEmpty ? null : condition,
+                      items:
+                          _inventoryOptions(_inventoryConditions, condition),
+                      hint: 'Select condition',
+                      onChanged: (v) =>
+                          setDialogState(() => condition = v ?? ''),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: LaunchModalTextField(
+                      label: 'Location *',
+                      controller: locationController,
+                      hint: 'Where it is stored',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Status *',
+                      value: status.isEmpty ? null : status,
+                      items: _inventoryOptions(_inventoryStatuses, status),
+                      hint: 'Select status',
+                      onChanged: (v) => setDialogState(() => status = v ?? ''),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              LaunchModalTextField(
+                label: 'Estimated Value *',
+                controller: valueController,
+                hint: 'e.g. 1500.00',
+                keyboardType: TextInputType.text,
+              ),
+            ],
+          ),
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(ctx),
             ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Location *',
-                    controller: locationController,
-                    hint: 'Where it is stored',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: LaunchModalTextField(
-                    label: 'Status *',
-                    controller: statusController,
-                    hint: 'Pending / Disposed / etc.',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            LaunchModalTextField(
-              label: 'Estimated Value *',
-              controller: valueController,
-              hint: 'e.g. 1500.00',
-              keyboardType: TextInputType.text,
+            LaunchModalPrimaryButton(
+              label: 'Add Item',
+              icon: Icons.add_rounded,
+              onPressed: () async {
+                if (nameController.text.isEmpty ||
+                    category.isEmpty ||
+                    condition.isEmpty ||
+                    locationController.text.isEmpty ||
+                    status.isEmpty ||
+                    valueController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Please fill in all required fields')),
+                  );
+                  return;
+                }
+
+                try {
+                  await SalvageService.createInventoryItem(
+                    projectId: projectId,
+                    assetId: '',
+                    name: nameController.text,
+                    category: category,
+                    condition: condition,
+                    location: locationController.text,
+                    status: status,
+                    estimatedValue: valueController.text,
+                  );
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Item added successfully')));
+                  }
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                }
+              },
             ),
           ],
         ),
-        actions: [
-          LaunchModalCancelButton(
-            label: 'Cancel',
-            onPressed: () => Navigator.pop(ctx),
-          ),
-          LaunchModalPrimaryButton(
-            label: 'Add Item',
-            icon: Icons.add_rounded,
-            onPressed: () async {
-              if (assetIdController.text.isEmpty ||
-                  nameController.text.isEmpty ||
-                  categoryController.text.isEmpty ||
-                  conditionController.text.isEmpty ||
-                  locationController.text.isEmpty ||
-                  statusController.text.isEmpty ||
-                  valueController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Please fill in all required fields')),
-                );
-                return;
-              }
-
-              try {
-                await SalvageService.createInventoryItem(
-                  projectId: projectId,
-                  assetId: assetIdController.text,
-                  name: nameController.text,
-                  category: categoryController.text,
-                  condition: conditionController.text,
-                  location: locationController.text,
-                  status: statusController.text,
-                  estimatedValue: valueController.text,
-                );
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Item added successfully')));
-                }
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('Error: $e')));
-                }
-              }
-            },
-          ),
-        ],
       ),
     );
   }
@@ -2289,8 +2315,6 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
     }
 
     final isEdit = item != null;
-    final assetIdController =
-        SpellCheckTextEditingController(text: item?.assetId ?? '');
     final nameController =
         SpellCheckTextEditingController(text: item?.name ?? '');
     final categoryController =
@@ -2328,36 +2352,29 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: LaunchModalTextField(
-                      label: 'Asset ID *',
-                      controller: assetIdController,
-                      hint: 'Unique asset ID',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: LaunchModalTextField(
-                      label: 'Description *',
-                      controller: nameController,
-                      hint: 'Asset description',
-                    ),
-                  ),
-                ],
+              LaunchModalTextField(
+                label: 'Description *',
+                controller: nameController,
+                hint: 'Asset description',
               ),
               const SizedBox(height: 12),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: LaunchModalTextField(
+                    child: LaunchModalDropdown<String>(
                       label: 'Category *',
-                      controller: categoryController,
-                      hint: 'e.g. Electronics',
+                      value: categoryController.text.isEmpty
+                          ? null
+                          : categoryController.text,
+                      items: _inventoryOptions(
+                          _inventoryCategories, categoryController.text),
+                      hint: 'Select category',
+                      onChanged: (v) {
+                        if (v != null) {
+                          setDialogState(() => categoryController.text = v);
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -2509,8 +2526,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
               label: isEdit ? 'Update' : 'Add Item',
               icon: isEdit ? Icons.check_rounded : Icons.add_rounded,
               onPressed: () async {
-                if (assetIdController.text.trim().isEmpty ||
-                    nameController.text.trim().isEmpty ||
+                if (nameController.text.trim().isEmpty ||
                     categoryController.text.trim().isEmpty ||
                     valueController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -2525,7 +2541,6 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                     await SalvageService.updateDisposalItem(
                       projectId: projectId,
                       itemId: item.id,
-                      assetId: assetIdController.text.trim(),
                       name: nameController.text.trim(),
                       category: categoryController.text.trim(),
                       condition: conditionController.text.trim(),
@@ -2541,7 +2556,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                   } else {
                     await SalvageService.createDisposalItem(
                       projectId: projectId,
-                      assetId: assetIdController.text.trim(),
+                      assetId: '',
                       name: nameController.text.trim(),
                       category: categoryController.text.trim(),
                       condition: conditionController.text.trim(),
@@ -2926,27 +2941,27 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                         dataRowMinHeight: 56,
                         dataRowMaxHeight: 72,
                         columns: const [
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Name',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Role',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Focus Area',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Workload',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Status',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Actions',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
@@ -3050,27 +3065,27 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                         dataRowMinHeight: 56,
                         dataRowMaxHeight: 72,
                         columns: const [
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Name',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Role',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Focus Area',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Workload',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Status',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Actions',
                                   style:
                                       TextStyle(fontWeight: FontWeight.w600))),
@@ -3395,27 +3410,27 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                             dataRowMinHeight: 56,
                             dataRowMaxHeight: 72,
                             columns: const [
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Name',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Role',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Email',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Status',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Items Handled',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Actions',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
@@ -3538,27 +3553,27 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                             dataRowMinHeight: 56,
                             dataRowMaxHeight: 72,
                             columns: const [
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Name',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Role',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Email',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Status',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Items Handled',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Actions',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w600))),
@@ -3774,20 +3789,20 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                             columnSpacing: 10,
                             horizontalMargin: 10,
                             columns: const [
-                              DataColumn(label: Text('Description')),
-                              DataColumn(label: Text('Category')),
-                              DataColumn(label: Text('Condition')),
-                              DataColumn(label: Text('Disposal Method')),
-                              DataColumn(label: Text('Status')),
-                              DataColumn(label: Text('Priority')),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Description')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Condition')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Disposal Method')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Est. Value'), numeric: true),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Disp. Cost'), numeric: true),
-                              DataColumn(label: Text('Assigned To')),
-                              DataColumn(label: Text('Target Date')),
-                              DataColumn(label: Text('Location')),
-                              DataColumn(label: Text('Actions')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Assigned To')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Target Date')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Location')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
                             ],
                             rows: items.isEmpty
                                 ? [
@@ -3954,20 +3969,20 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                             columnSpacing: 10,
                             horizontalMargin: 10,
                             columns: const [
-                              DataColumn(label: Text('Description')),
-                              DataColumn(label: Text('Category')),
-                              DataColumn(label: Text('Condition')),
-                              DataColumn(label: Text('Disposal Method')),
-                              DataColumn(label: Text('Status')),
-                              DataColumn(label: Text('Priority')),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Description')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Condition')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Disposal Method')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Est. Value'), numeric: true),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Disp. Cost'), numeric: true),
-                              DataColumn(label: Text('Assigned To')),
-                              DataColumn(label: Text('Target Date')),
-                              DataColumn(label: Text('Location')),
-                              DataColumn(label: Text('Actions')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Assigned To')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Target Date')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Location')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
                             ],
                             rows: items.isEmpty
                                 ? [
@@ -4242,7 +4257,6 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _detailRow('Asset ID', item.assetId),
             _detailRow('Category', item.category),
             _detailRow('Condition',
                 item.condition.isNotEmpty ? item.condition : 'Not specified'),
@@ -4532,23 +4546,23 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                         columnSpacing: 16,
                         horizontalMargin: 12,
                         columns: const [
-                          DataColumn(label: Text('Regulation/Standard')),
-                          DataColumn(label: Text('Category')),
-                          DataColumn(label: Text('Status')),
-                          DataColumn(label: Text('Score %'), numeric: true),
-                          DataColumn(label: Text('Last Audit')),
-                          DataColumn(label: Text('Next Audit')),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Regulation/Standard')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Score %'), numeric: true),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Last Audit')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Next Audit')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Days to Exp.'), numeric: true),
-                          DataColumn(label: Text('Responsible')),
-                          DataColumn(label: Text('Risk')),
-                          DataColumn(label: Text('Findings'), numeric: true),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Responsible')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Risk')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Findings'), numeric: true),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Corr. Actions'), numeric: true),
-                          DataColumn(label: Text('Priority')),
-                          DataColumn(label: Text('Workflow')),
-                          DataColumn(label: Text('Updated')),
-                          DataColumn(label: Text('Actions')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Workflow')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Updated')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
                         ],
                         rows: _complianceRows.asMap().entries.map((entry) {
                           final idx = entry.key;
@@ -4739,23 +4753,23 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                         columnSpacing: 16,
                         horizontalMargin: 12,
                         columns: const [
-                          DataColumn(label: Text('Regulation/Standard')),
-                          DataColumn(label: Text('Category')),
-                          DataColumn(label: Text('Status')),
-                          DataColumn(label: Text('Score %'), numeric: true),
-                          DataColumn(label: Text('Last Audit')),
-                          DataColumn(label: Text('Next Audit')),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Regulation/Standard')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Score %'), numeric: true),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Last Audit')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Next Audit')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Days to Exp.'), numeric: true),
-                          DataColumn(label: Text('Responsible')),
-                          DataColumn(label: Text('Risk')),
-                          DataColumn(label: Text('Findings'), numeric: true),
-                          DataColumn(
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Responsible')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Risk')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Findings'), numeric: true),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                               label: Text('Corr. Actions'), numeric: true),
-                          DataColumn(label: Text('Priority')),
-                          DataColumn(label: Text('Workflow')),
-                          DataColumn(label: Text('Updated')),
-                          DataColumn(label: Text('Actions')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Workflow')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Updated')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
                         ],
                         rows: _complianceRows.asMap().entries.map((entry) {
                           final idx = entry.key;
@@ -5532,19 +5546,19 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                             columnSpacing: 10,
                             horizontalMargin: 10,
                             columns: const [
-                              DataColumn(label: Text('Milestone')),
-                              DataColumn(label: Text('Description')),
-                              DataColumn(label: Text('Phase')),
-                              DataColumn(label: Text('Status')),
-                              DataColumn(label: Text('Owner')),
-                              DataColumn(label: Text('Start Date')),
-                              DataColumn(label: Text('Due Date')),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Milestone')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Description')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Phase')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Start Date')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Due Date')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Progress'), numeric: true),
-                              DataColumn(label: Text('Priority')),
-                              DataColumn(label: Text('Dependencies')),
-                              DataColumn(label: Text('Notes')),
-                              DataColumn(label: Text('Actions')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Dependencies')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Notes')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
                             ],
                             rows: items.map((item) {
                               return DataRow(cells: [
@@ -5725,19 +5739,19 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
                             columnSpacing: 10,
                             horizontalMargin: 10,
                             columns: const [
-                              DataColumn(label: Text('Milestone')),
-                              DataColumn(label: Text('Description')),
-                              DataColumn(label: Text('Phase')),
-                              DataColumn(label: Text('Status')),
-                              DataColumn(label: Text('Owner')),
-                              DataColumn(label: Text('Start Date')),
-                              DataColumn(label: Text('Due Date')),
-                              DataColumn(
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Milestone')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Description')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Phase')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Start Date')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Due Date')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                   label: Text('Progress'), numeric: true),
-                              DataColumn(label: Text('Priority')),
-                              DataColumn(label: Text('Dependencies')),
-                              DataColumn(label: Text('Notes')),
-                              DataColumn(label: Text('Actions')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Dependencies')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Notes')),
+                              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
                             ],
                             rows: items.map((item) {
                               return DataRow(cells: [

@@ -170,6 +170,34 @@ void main() {
     expect(buildCard.center.dx, closeTo(engineeringBand.left + 390, 1.0));
   });
 
+  testWidgets('an expanded sibling widens the rail so every stub lands on its card',
+      (tester) async {
+    final provider = await newWbsProvider(tester);
+    await pumpBuilder(tester, provider);
+
+    // Expanding Engineering gives it 2 slots, so the root row is 3 slots wide:
+    // Engineering's centre is at slot 1 (260px) and Procurement's at slot 3
+    // (650px). The root rail must span the whole row, not one slot per child.
+    await tester.tap(find
+        .descendant(
+          of: cardFor('Engineering'),
+          matching: find.byIcon(Icons.expand_more),
+        )
+        .first);
+    await tester.pump();
+    await tester.pump();
+
+    final rootBand = tester.getRect(topDownBands().first);
+    final engineeringCard = tester.getRect(cardFor('Engineering'));
+    final procurementCard = tester.getRect(cardFor('Procurement'));
+
+    expect(rootBand.width, closeTo(780, 1.0));
+    expect(engineeringCard.center.dx, closeTo(rootBand.left + 260, 1.0));
+    expect(procurementCard.center.dx, closeTo(rootBand.left + 650, 1.0));
+    expect(rootBand.bottom, engineeringCard.top);
+    expect(rootBand.bottom, procurementCard.top);
+  });
+
   testWidgets('left-right connectors touch the cards too', (tester) async {
     final provider = await newWbsProvider(tester);
     await pumpBuilder(tester, provider);

@@ -34,8 +34,9 @@ class ProjectBaselineScreen extends StatefulWidget {
 class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  bool _loading = true;
  bool _showComparison = false;
- bool _isGenerating = false;
- bool _autoPopulated = false;
+ bool _isGenerating = false;  bool _autoPopulated = false;
+  int _selectedSectionTab = 0;
+
  bool _isAutoPopulating = false;
 
  String _projectName = '';
@@ -710,11 +711,9 @@ onBack: () =>
  const SizedBox(height: 24),
  _buildBaselineCards(context),
  const SizedBox(height: 24),
- _buildMilestonesSection(),
- const SizedBox(height: 24),
- _buildPhasesSection(),
- const SizedBox(height: 24),
- _buildBaselineHistory(),
+ _buildSectionTabs(),
+ const SizedBox(height: 16),
+ _buildSelectedSection(),
  const SizedBox(height: 24),
  _buildVarianceAnalysis(),
  const SizedBox(height: 24),
@@ -1322,11 +1321,56 @@ onBack: () =>
  return '${(value / 1000000).toStringAsFixed(1)}M';
  } else if (value >= 1000) {
  return '${(value / 1000).toStringAsFixed(0)}K';
- }
- return value.toStringAsFixed(0);
- }
+ }    return value.toStringAsFixed(0);
+  }
 
- Widget _buildMilestonesSection() {
+  static const List<String> _sectionTabLabels = [
+    'Key Milestones',
+    'Schedule Phases',
+    'Baseline History',
+  ];
+
+  Widget _buildSectionTabs() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: List<Widget>.generate(_sectionTabLabels.length, (index) {
+        final selected = index == _selectedSectionTab;
+        return ChoiceChip(
+          label: Text(_sectionTabLabels[index]),
+          selected: selected,
+          onSelected: (_) => setState(() => _selectedSectionTab = index),
+          showCheckmark: false,
+          selectedColor: const Color(0xFF111827),
+          labelStyle: TextStyle(
+            color: selected ? Colors.white : const Color(0xFF111827),
+            fontWeight: FontWeight.w600,
+          ),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: selected ? const Color(0xFF111827) : const Color(0xFFE5E7EB),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildSelectedSection() {
+    switch (_selectedSectionTab) {
+      case 1:
+        return _buildPhasesSection();
+      case 2:
+        return _buildBaselineHistory();
+      default:
+        return _buildMilestonesSection();
+    }
+  }
+
+  Widget _buildMilestonesSection() {
+
  return Container(
  padding: const EdgeInsets.all(24),
  decoration: BoxDecoration(

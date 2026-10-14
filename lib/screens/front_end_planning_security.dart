@@ -1349,7 +1349,8 @@ Security Training:
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Security',onExportPdf: _exportPdf),
  Expanded(
  child: ScrollIndicatorOverlay(
  controller: _contentScrollController,

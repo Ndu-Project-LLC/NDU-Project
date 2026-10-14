@@ -102,9 +102,9 @@ class AgileReleasePlanTableView extends StatelessWidget {
           context: context,
           title: 'Project epics & milestones',
           columns: const [
-            DataColumn(label: Text('Epic')),
-            DataColumn(label: Text('WBS')),
-            DataColumn(label: Text('Milestones')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Epic')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('WBS')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Milestones')),
           ],
           rows: [
             for (final row in epicRows)
@@ -137,13 +137,13 @@ class AgileReleasePlanTableView extends StatelessWidget {
           context: context,
           title: 'Release plan',
           columns: const [
-            DataColumn(label: Text('Release')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Epic')),
-            DataColumn(label: Text('Milestones')),
-            DataColumn(label: Text('Stories'), numeric: true),
-            DataColumn(label: Text('Points'), numeric: true),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Release')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Date')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Epic')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Milestones')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Stories'), numeric: true),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Points'), numeric: true),
           ],
           rows: [
             for (final row in rows)

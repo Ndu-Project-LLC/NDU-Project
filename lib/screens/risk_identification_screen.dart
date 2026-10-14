@@ -609,6 +609,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                             child: Column(
                               children: [
                                 BusinessCaseHeader(
+                                  walkthroughId: 'Risk Identification',
                                   scaffoldKey: _scaffoldKey,
                                   onExportPdf: _exportPdf,
                                 ),

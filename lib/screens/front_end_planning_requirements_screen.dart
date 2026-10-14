@@ -29,6 +29,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/wbs_mapping_selectors.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
@@ -97,6 +98,7 @@ class _FrontEndPlanningRequirementsScreenState
       _notesController.text = projectData.frontEndPlanning.requirementsNotes;
       _notesController.addListener(_handleNotesChanged);
       _loadSavedRequirements(projectData);
+      unawaited(_loadWbs(projectData));
       unawaited(_initializeMemberContext(projectData));
       if (mounted) setState(() {});
     });
@@ -115,6 +117,18 @@ class _FrontEndPlanningRequirementsScreenState
         PdfSection.text('Notes', fep.requirementsNotes),
       ],
     );
+  }
+
+  /// Loads this project's WBS so the Goal and Element pickers have real
+  /// options (see the matching helper in planning_requirements_screen.dart).
+  Future<void> _loadWbs(ProjectDataModel data) async {
+    final projectId = data.projectId;
+    if (projectId == null || projectId.isEmpty) return;
+    try {
+      await context.read<WBSProvider>().ensureProjectLoaded(projectId);
+    } catch (e) {
+      debugPrint('Failed loading WBS for front end requirements: $e');
+    }
   }
 
   _RequirementRow _createRow(int number, {bool expanded = false}) {
@@ -682,7 +696,8 @@ class _FrontEndPlanningRequirementsScreenState
                   const AdminEditToggle(),
                   Column(
                     children: [
-                      FrontEndPlanningHeader(onExportPdf: _exportPdf),
+                      FrontEndPlanningHeader(
+                        walkthroughId: 'Project Requirements',onExportPdf: _exportPdf),
                       Expanded(
                         child: Column(
                           children: [

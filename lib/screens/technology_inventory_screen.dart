@@ -259,15 +259,15 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  title: 'Technology Inventory',
  maxHeight: 420,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Center(
  child: Text('Name',
  textAlign: TextAlign.center))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Center(
  child: Text('Category',
  textAlign: TextAlign.center))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Center(
  child: Text('Notes',
  textAlign: TextAlign.center))),

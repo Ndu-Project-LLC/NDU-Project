@@ -18,6 +18,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/integration_dashboard/integration_view_switcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/portfolio_model.dart';
 import 'package:ndu_project/models/program_model.dart';
@@ -306,6 +307,8 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  _buildHeader(metrics: metrics),
+  const SizedBox(height: 24),
+  const IntegrationViewSwitcherLink(),
  const SizedBox(height: 24),
  _buildActionButtons(context),
  const SizedBox(height: 24),

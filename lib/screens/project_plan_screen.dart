@@ -4083,12 +4083,12 @@ class _KeyDeliverablesCard extends StatelessWidget {
                       horizontalMargin: 28,
                       columnSpacing: 48,
                       columns: const [
-                        DataColumn(label: Text('ID')),
-                        DataColumn(label: Text('Deliverable')),
-                        DataColumn(label: Text('Phase')),
-                        DataColumn(label: Text('Due Date')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Owner')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('ID')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Deliverable')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Phase')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Due Date')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
                       ],
                       rows: deliverables
                           .map((d) => DataRow(
@@ -4133,12 +4133,12 @@ class _KeyDeliverablesCard extends StatelessWidget {
                       horizontalMargin: 28,
                       columnSpacing: 48,
                       columns: const [
-                        DataColumn(label: Text('ID')),
-                        DataColumn(label: Text('Deliverable')),
-                        DataColumn(label: Text('Phase')),
-                        DataColumn(label: Text('Due Date')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Owner')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('ID')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Deliverable')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Phase')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Due Date')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
                       ],
                       rows: deliverables
                           .map((d) => DataRow(
@@ -4346,10 +4346,10 @@ class _CommunicationPlanCard extends StatelessWidget {
                       horizontalMargin: 28,
                       columnSpacing: 48,
                       columns: const [
-                        DataColumn(label: Text('Meeting Type')),
-                        DataColumn(label: Text('Frequency')),
-                        DataColumn(label: Text('Attendees')),
-                        DataColumn(label: Text('Purpose')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Meeting Type')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Frequency')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Attendees')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Purpose')),
                       ],
                       rows: communications
                           .map((c) => DataRow(
@@ -4394,10 +4394,10 @@ class _CommunicationPlanCard extends StatelessWidget {
                       horizontalMargin: 28,
                       columnSpacing: 48,
                       columns: const [
-                        DataColumn(label: Text('Meeting Type')),
-                        DataColumn(label: Text('Frequency')),
-                        DataColumn(label: Text('Attendees')),
-                        DataColumn(label: Text('Purpose')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Meeting Type')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Frequency')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Attendees')),
+                        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Purpose')),
                       ],
                       rows: communications
                           .map((c) => DataRow(

@@ -79,7 +79,8 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Front End Summary',onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),

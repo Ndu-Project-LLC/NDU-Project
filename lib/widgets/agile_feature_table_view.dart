@@ -56,12 +56,12 @@ class AgileFeatureTableView extends StatelessWidget {
           context: context,
           title: 'All features',
           columns: const [
-            DataColumn(label: Text('Feature')),
-            DataColumn(label: Text('Epic')),
-            DataColumn(label: Text('Priority')),
-            DataColumn(label: Text('Points'), numeric: true),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('WBS')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Feature')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Epic')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Points'), numeric: true),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('WBS')),
           ],
           rows: [
             for (final row in rows)

@@ -34,7 +34,6 @@ import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:ndu_project/widgets/scrollable_section_header.dart';
 import 'package:go_router/go_router.dart';
 
-
 class ScheduleModuleScreen extends StatefulWidget {
   const ScheduleModuleScreen({super.key});
 
@@ -47,8 +46,15 @@ class ScheduleModuleScreen extends StatefulWidget {
 }
 
 class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final TabController _tabController = TabController(
+    length: 3,
+    vsync: this,
+  );
+
+  /// Tabs for the header panels (WBS Packages / Cost Estimate / Cross-Section
+  /// Sync) that sit between the section navigator and the active view.
+  late final TabController _panelTabController = TabController(
     length: 3,
     vsync: this,
   );
@@ -74,6 +80,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
+    _panelTabController.addListener(_onPanelTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _syncActiveProject();
       await _autoSyncAll();
@@ -104,8 +111,9 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     final provider = context.read<ScheduleProvider>();
     final data = ProjectDataHelper.getData(context, listen: false);
     final projectId = (data.projectId ?? '').trim();
-    final projectName =
-        data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
+    final projectName = data.projectName.trim().isNotEmpty
+        ? data.projectName.trim()
+        : 'Project';
 
     if (provider.activeProjectId != _scopeIdFor(projectId)) {
       await provider.ensureProjectLoaded(projectId, projectName: projectName);
@@ -170,13 +178,13 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     final wbsProvider = context.read<WBSProvider>();
     final data = ProjectDataHelper.getData(context, listen: false);
     final projectId = (data.projectId ?? '').trim();
-    final projectName =
-        data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
+    final projectName = data.projectName.trim().isNotEmpty
+        ? data.projectName.trim()
+        : 'Project';
     // Bind the estimate to THIS project first — otherwise the purchases of the
     // project on screen would be pulled into whichever project's estimate the
     // provider still held.
-    await costProvider.ensureProjectLoaded(projectId,
-        projectName: projectName);
+    await costProvider.ensureProjectLoaded(projectId, projectName: projectName);
     if (!mounted) return;
     // Auto-setup mirrors the Cost Estimate module: opening the module
     // creates a default estimate, so the pull is always one click.
@@ -251,8 +259,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     var priced = 0;
     for (final lineId in lineIds) {
       if (!mounted) break;
-      final estimate =
-          context.read<CostEstimateProvider>().estimate;
+      final estimate = context.read<CostEstimateProvider>().estimate;
       CostLine? line;
       if (estimate != null) {
         for (final l in estimate.lines) {
@@ -284,6 +291,12 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     ));
   }
 
+  void _onPanelTabChanged() {
+    if (!_panelTabController.indexIsChanging) {
+      setState(() {});
+    }
+  }
+
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
       setState(() {});
@@ -294,6 +307,8 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
   void dispose() {
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
+    _panelTabController.removeListener(_onPanelTabChanged);
+    _panelTabController.dispose();
     super.dispose();
   }
 
@@ -348,7 +363,8 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                         SizedBox(height: 12),
                         Text(
                           'Loading schedule…',
-                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                          style:
+                              TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                         ),
                       ],
                     ),
@@ -356,17 +372,17 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                 ),
               ],
             ),
-          bottomBar: const SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: PageNavigationFooter(
-                checkpoint: 'schedule',
-                pageTitle: 'Schedule',
-                showBorders: false,
+            bottomBar: const SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+                child: PageNavigationFooter(
+                  checkpoint: 'schedule',
+                  pageTitle: 'Schedule',
+                  showBorders: false,
+                ),
               ),
             ),
-          ),
           );
         }
 
@@ -403,9 +419,8 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
             .where((c) => !costProvider.isScheduledPurchaseRepresented(c))
             .toList(growable: false);
 
-        final fepMilestones = data.keyMilestones
-            .where((m) => m.name.trim().isNotEmpty)
-            .toList();
+        final fepMilestones =
+            data.keyMilestones.where((m) => m.name.trim().isNotEmpty).toList();
         final fepMilestoneCount = fepMilestones.length;
 
         // Count managed-import activities in the tree
@@ -417,6 +432,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
           }
           return c;
         }
+
         final syncedPkgs =
             countBySource(PlanningSyncService.importSourceWorkPackage);
         final syncedStories =
@@ -436,135 +452,172 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                    // ── Page header — the same section the Development
-                    // Set Up screen shows: back chevron, centered title
-                    // and the outstanding-tasks pill ──────────────────────
-                    const PlanningPhaseHeader(
-                      title: 'Schedule',
-                      breadcrumbPhase: 'Planning Phase',
-                      breadcrumbTitle: 'Schedule',
-                      showExportPdf: false,
+                // ── Page header — the same section the Development
+                // Set Up screen shows: back chevron, centered title
+                // and the outstanding-tasks pill ──────────────────────
+                const PlanningPhaseHeader(
+                  title: 'Schedule',
+                  breadcrumbPhase: 'Planning Phase',
+                  breadcrumbTitle: 'Schedule',
+                  showExportPdf: false,
+                ),
+                const SizedBox(height: 12),
+                // ── World-class Section Navigator ──────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: SectionNavigator(
+                    title: 'Schedule Navigation',
+                    subtitle: 'Navigate between schedule sections',
+                    icon: Icons.calendar_month_outlined,
+                    tabs: _sectionTabs,
+                    controller: _tabController,
+                    onChanged: (index) => setState(() {}),
+                    isCollapsible: true,
+                    initiallyCollapsed: true,
+                  ),
+                ),
+                // ── Resync button ──────────────────────────────────────
+                if (fepMilestoneCount > 0 ||
+                    syncedPkgs > 0 ||
+                    syncedStories > 0)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Row(
+                      children: [
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: () async {
+                            await PlanningSyncService.syncAll(
+                              context: context,
+                              provider: provider,
+                              replaceExisting: true,
+                            );
+                            if (mounted) setState(() {});
+                          },
+                          icon: const Icon(Icons.refresh, size: 16),
+                          label: const Text('Resync from Planning'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFFB8860B),
+                            textStyle: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    // ── World-class Section Navigator ──────────────────────
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: SectionNavigator(
-                        title: 'Schedule Navigation',
-                        subtitle: 'Navigate between schedule sections',
-                        icon: Icons.calendar_month_outlined,
-                        tabs: _sectionTabs,
-                        controller: _tabController,
-                        onChanged: (index) => setState(() {}),
-                        isCollapsible: true,
-                        initiallyCollapsed: true,
-                      ),
+                  ),
+                // ── Panel tabs: WBS / Cost Estimate / Cross-Section Sync ─
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
                     ),
-                    // ── Resync button ──────────────────────────────────────
-                    if (fepMilestoneCount > 0 ||
-                        syncedPkgs > 0 ||
-                        syncedStories > 0)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                        child: Row(
-                          children: [
-                            const Spacer(),
-                            TextButton.icon(
-                              onPressed: () async {
-                                await PlanningSyncService.syncAll(
-                                  context: context,
-                                  provider: provider,
-                                  replaceExisting: true,
-                                );
-                                if (mounted) setState(() {});
-                              },
-                              icon: const Icon(Icons.refresh, size: 16),
-                              label: const Text('Resync from Planning'),
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFFB8860B),
-                                textStyle: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
+                    child: TabBar(
+                      controller: _panelTabController,
+                      isScrollable: true,
+                      labelColor: const Color(0xFFB45309),
+                      unselectedLabelColor: const Color(0xFF6B7280),
+                      indicatorColor: const Color(0xFFD97706),
+                      indicatorSize: TabBarIndicatorSize.label,
+                      labelStyle: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600),
+                      unselectedLabelStyle: const TextStyle(fontSize: 13),
+                      tabs: const [
+                        Tab(text: 'Work Packages'),
+                        Tab(text: 'Cost Estimate'),
+                        Tab(text: 'Cross-Section Sync'),
+                      ],
+                    ),
+                  ),
+                ),
+                // ── Pull scheduled purchases into the Cost Estimate ────
+                if (_panelTabController.index == 1 &&
+                    purchaseCandidates.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: pendingPurchasePull.isEmpty
+                            ? const Color(0xFFF0FDF4)
+                            : const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: pendingPurchasePull.isEmpty
+                              ? const Color(0xFFBBF7D0)
+                              : const Color(0xFFFDE68A),
                         ),
                       ),
-                    // ── Pull scheduled purchases into the Cost Estimate ────
-                    if (purchaseCandidates.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
+                      child: Row(
+                        children: [
+                          Icon(
+                            pendingPurchasePull.isEmpty
+                                ? Icons.check_circle_outline
+                                : Icons.shopping_cart_checkout,
+                            size: 16,
                             color: pendingPurchasePull.isEmpty
-                                ? const Color(0xFFF0FDF4)
-                                : const Color(0xFFFFFBEB),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: pendingPurchasePull.isEmpty
-                                  ? const Color(0xFFBBF7D0)
-                                  : const Color(0xFFFDE68A),
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFFB45309),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              pendingPurchasePull.isEmpty
+                                  ? 'All ${purchaseCandidates.length} scheduled purchase${purchaseCandidates.length == 1 ? '' : 's'} are in the Cost Estimate.'
+                                  : '${pendingPurchasePull.length} scheduled purchase${pendingPurchasePull.length == 1 ? '' : 's'} not yet in the Cost Estimate.',
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF374151)),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                pendingPurchasePull.isEmpty
-                                    ? Icons.check_circle_outline
-                                    : Icons.shopping_cart_checkout,
-                                size: 16,
-                                color: pendingPurchasePull.isEmpty
-                                    ? const Color(0xFF16A34A)
-                                    : const Color(0xFFB45309),
+                          if (pendingPurchasePull.isNotEmpty)
+                            TextButton.icon(
+                              onPressed: () => _pullScheduledPurchases(
+                                  context, pendingPurchasePull),
+                              icon: const Icon(Icons.arrow_downward, size: 14),
+                              label: Text(
+                                  'Pull ${pendingPurchasePull.length} into Cost Estimate',
+                                  style: const TextStyle(fontSize: 11)),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFB45309),
+                                backgroundColor: const Color(0xFFFFF7ED),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  pendingPurchasePull.isEmpty
-                                      ? 'All ${purchaseCandidates.length} scheduled purchase${purchaseCandidates.length == 1 ? '' : 's'} are in the Cost Estimate.'
-                                      : '${pendingPurchasePull.length} scheduled purchase${pendingPurchasePull.length == 1 ? '' : 's'} not yet in the Cost Estimate.',
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF374151)),
-                                ),
-                              ),
-                              if (pendingPurchasePull.isNotEmpty)
-                                TextButton.icon(
-                                  onPressed: () => _pullScheduledPurchases(
-                                      context, pendingPurchasePull),
-                                  icon: const Icon(Icons.arrow_downward,
-                                      size: 14),
-                                  label: Text(
-                                      'Pull ${pendingPurchasePull.length} into Cost Estimate',
-                                      style: const TextStyle(fontSize: 11)),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFFB45309),
-                                    backgroundColor: const Color(0xFFFFF7ED),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 6),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
+                            ),
+                        ],
                       ),
-                    // ── WBS packages carried by this schedule ───────────────
-                    // The owner's ask (2026-09-10): the schedule must be able
-                    // to put out everything that is on the WBS, so every
-                    // package can find itself on the schedule, take its
-                    // start/finish from the WBS, and carry a cost item that
-                    // then shows up in the Cost Estimate and in the WBS cost
-                    // views.
-                    const ScheduleWbsPackagesCard(),
-                    // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ───────
-                    const CrossSectionSyncCard(
-                      currentSection: CrossSection.schedule,
                     ),
-                  ],
+                  ),
+                if (_panelTabController.index == 1 &&
+                    purchaseCandidates.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      'No scheduled purchases yet. Purchases on the schedule appear here so you can pull them into the Cost Estimate.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ),
+                // ── WBS packages carried by this schedule ───────────────
+                // The owner's ask (2026-09-10): the schedule must be able
+                // to put out everything that is on the WBS, so every
+                // package can find itself on the schedule, take its
+                // start/finish from the WBS, and carry a cost item that
+                // then shows up in the Cost Estimate and in the WBS cost
+                // views.
+                if (_panelTabController.index == 0)
+                  const ScheduleWbsPackagesCard(),
+                // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ───────
+                if (_panelTabController.index == 2)
+                  const CrossSectionSyncCard(
+                    currentSection: CrossSection.schedule,
+                  ),
+              ],
             ),
             // Tab content: inherits the NestedScrollView inner controller,
             // so header and content scroll as one continuous surface.

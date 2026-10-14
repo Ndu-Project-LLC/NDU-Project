@@ -1775,7 +1775,7 @@ class _ContractLogSection extends StatelessWidget {
       columnSpacing: 16,
       columns: <DataColumn>[
         for (final column in contractLogColumns)
-          DataColumn(label: Text(column.label)),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text(column.label)),
       ],
       rows: <DataRow>[
         for (final row in visible)

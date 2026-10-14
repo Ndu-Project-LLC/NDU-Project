@@ -115,6 +115,7 @@ class _ExecutionPlanSolutionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Executive Plan Strategy',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_strategy'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

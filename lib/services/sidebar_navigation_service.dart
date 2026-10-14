@@ -304,8 +304,6 @@ class SidebarNavigationService {
     SidebarItem(
         checkpoint: 'integration_dashboard', label: 'Integration Dashboard'),
     // Scope & Change Management
-    SidebarItem(
-        checkpoint: 'scope_tracking_plan', label: 'Scope Tracking Plan'),
     SidebarItem(checkpoint: 'change_management', label: 'Change Management'),
     SidebarItem(checkpoint: 'issue_management', label: 'Issue Management'),
     SidebarItem(checkpoint: 'lessons_learned', label: 'Lessons Learned'),

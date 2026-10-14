@@ -8,6 +8,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
+import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
@@ -115,7 +116,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     _showAddRoleModal();
   }
 
-  /// World-class modal dialog for adding a new staffing role.
+  /// Add-role pop-up, built on the shared Launch modal kit so it matches the
+  /// other initiation-phase modals.
   Future<void> _showAddRoleModal() async {
     final roleController = SpellCheckTextEditingController();
     final qtyController = SpellCheckTextEditingController(text: '1');
@@ -128,433 +130,193 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     String status = 'Not Started';
     bool aiLoading = false;
 
-    try {
-      await showAppDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierColor: Colors.black54,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setModalState) => Dialog(
-            backgroundColor: modalSurface(context),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24)),
-            elevation: 24,
-            child: Container(
-              width: 560,
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.85,
+    // Controllers are not disposed here: the dialog is still animating out
+    // when showAppDialog's future completes, so they stay alive until GC.
+    await showAppDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => LaunchModalShell(
+          icon: Icons.person_add_alt_1_rounded,
+          title: 'Add Staffing Role',
+          subtitle: 'Define the role, timeline, and cost details',
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LaunchModalTextField(
+                label: 'Role / Capability',
+                controller: roleController,
+                hint: 'e.g. Senior Cloud Architect',
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Header ──
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8FAFC),
-                      border:
-                          Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.person_add_alt_1_rounded,
-                              size: 22, color: Color(0xFF4338CA)),
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Add Staffing Role',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF111827))),
-                              SizedBox(height: 2),
-                              Text(
-                                  'Define the role, timeline, and cost details',
-                                  style: TextStyle(
-                                      fontSize: 13, color: Color(0xFF6B7280))),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          icon: const Icon(Icons.close_rounded,
-                              size: 22, color: Color(0xFF6B7280)),
-                          tooltip: 'Close',
-                        ),
-                      ],
+                  Expanded(
+                    child: LaunchModalTextField(
+                      label: 'Quantity',
+                      controller: qtyController,
+                      hint: '1',
+                      keyboardType: TextInputType.number,
                     ),
                   ),
-                  // ── Form Body ──
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(28, 24, 28, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Role Name
-                          _ModalField(
-                            label: 'Role / Capability',
-                            controller: roleController,
-                            hint: 'e.g. Senior Cloud Architect',
-                            icon: Icons.work_outline_rounded,
-                            autofocus: true,
-                          ),
-                          const SizedBox(height: 16),
-                          // Qty + Type row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ModalField(
-                                  label: 'Quantity',
-                                  controller: qtyController,
-                                  hint: '1',
-                                  icon: Icons.groups_outlined,
-                                  keyboardType: TextInputType.number,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _ModalField(
-                                  label: 'Start Date',
-                                  controller: startDateController,
-                                  hint: 'Month 1',
-                                  icon: Icons.calendar_today_rounded,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _ModalField(
-                                  label: 'Duration (months)',
-                                  controller: durationController,
-                                  hint: '6',
-                                  icon: Icons.schedule_rounded,
-                                  keyboardType: TextInputType.number,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _ModalField(
-                                  label: 'Monthly Rate',
-                                  controller: costController,
-                                  hint: '5000',
-                                  icon: Icons.attach_money_rounded,
-                                  keyboardType: TextInputType.number,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Type + Status
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Type',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF374151))),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF9FAFB),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color: const Color(0xFFE5E7EB)),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12),
-                                      child: DropdownButton<bool>(
-                                        value: isInternal,
-                                        isExpanded: true,
-                                        underline: const SizedBox(),
-                                        iconSize: 18,
-                                        style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Color(0xFF111827)),
-                                        items: const [
-                                          DropdownMenuItem(
-                                              value: true,
-                                              child: Text('Internal')),
-                                          DropdownMenuItem(
-                                              value: false,
-                                              child: Text('External')),
-                                        ],
-                                        onChanged: (v) {
-                                          if (v != null) {
-                                            setModalState(() => isInternal = v);
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Status',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF374151))),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF9FAFB),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color: const Color(0xFFE5E7EB)),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12),
-                                      child: DropdownButton<String>(
-                                        value: status,
-                                        isExpanded: true,
-                                        underline: const SizedBox(),
-                                        iconSize: 18,
-                                        style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Color(0xFF111827)),
-                                        items: const [
-                                          DropdownMenuItem(
-                                              value: 'Not Started',
-                                              child: Text('Not Started')),
-                                          DropdownMenuItem(
-                                              value: 'In Progress',
-                                              child: Text('In Progress')),
-                                          DropdownMenuItem(
-                                              value: 'Active',
-                                              child: Text('Active')),
-                                          DropdownMenuItem(
-                                              value: 'Completed',
-                                              child: Text('Completed')),
-                                        ],
-                                        onChanged: (v) {
-                                          if (v != null) {
-                                            setModalState(() => status = v);
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Description
-                          const Text('Role Description',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF374151))),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: descController,
-                            maxLines: 2,
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText:
-                                  'Brief description of responsibilities...',
-                              hintStyle: const TextStyle(
-                                  fontSize: 13, color: Color(0xFF9CA3AF)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF4338CA), width: 1.5),
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                              filled: true,
-                              fillColor: const Color(0xFFF9FAFB),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // Notes
-                          const Text('Notes',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF374151))),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: notesController,
-                            maxLines: 2,
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: 'Additional notes...',
-                              hintStyle: const TextStyle(
-                                  fontSize: 13, color: Color(0xFF9CA3AF)),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide:
-                                    const BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF4338CA), width: 1.5),
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                              filled: true,
-                              fillColor: const Color(0xFFF9FAFB),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // ── Footer ──
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8FAFC),
-                      border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-
-                    ),
-                    child: Row(
-                      children: [
-                        // KAZ AI suggestion button
-                        OutlinedButton.icon(
-                          onPressed: aiLoading
-                              ? null
-                              : () async {
-                                  setModalState(() => aiLoading = true);
-                                  try {
-                                    final data =
-                                        ProjectDataHelper.getData(context);
-                                    final ctx = ProjectDataHelper
-                                        .buildExecutivePlanContext(data,
-                                            sectionLabel:
-                                                'Staff Team Orchestration');
-                                    final ai = OpenAiServiceSecure();
-                                    final suggestions = await ai
-                                        .generateStaffingRoleSuggestions(
-                                            context: ctx, maxSuggestions: 1);
-                                    if (suggestions.isNotEmpty) {
-                                      roleController.text = suggestions.first;
-                                    }
-                                  } catch (_) {
-                                    // silent
-                                  }
-                                  if (ctx.mounted) {
-                                    setModalState(() => aiLoading = false);
-                                  }
-                                },
-                          icon: aiLoading
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2))
-                              : const Icon(Icons.auto_awesome_rounded,
-                                  size: 16),
-                          label: Text(
-                              aiLoading ? 'Generating...' : 'KAZ AI Suggest'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFB8860B),
-                            side: const BorderSide(color: Color(0xFFFEF3C7)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            textStyle: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        const Spacer(),
-                        // Cancel
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancel',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF6B7280))),
-                        ),
-                        const SizedBox(width: 8),
-                        // Add Role
-                        FilledButton.icon(
-                          onPressed: () {
-                            final newRow = StaffingRow(
-                              role: roleController.text.trim(),
-                              quantity: int.tryParse(qtyController.text) ?? 1,
-                              isInternal: isInternal,
-                              startDate: startDateController.text.trim(),
-                              durationMonths: durationController.text.trim(),
-                              monthlyCost: costController.text.trim(),
-                              roleDescription: descController.text.trim(),
-                              notes: notesController.text.trim(),
-                              status: status,
-                            );
-                            final updated = [..._rows, newRow];
-                            widget.onRowsChanged(updated);
-                            Navigator.pop(ctx);
-                          },
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text('Add Role'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F172A),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            textStyle: const TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalTextField(
+                      label: 'Start Date',
+                      controller: startDateController,
+                      hint: 'Month 1',
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: LaunchModalTextField(
+                      label: 'Duration (months)',
+                      controller: durationController,
+                      hint: '6',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalTextField(
+                      label: 'Monthly Rate',
+                      controller: costController,
+                      hint: '5000',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: LaunchModalDropdown<bool>(
+                      label: 'Type',
+                      value: isInternal,
+                      items: const [true, false],
+                      labelBuilder: (v) => v ? 'Internal' : 'External',
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => isInternal = v);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: LaunchModalDropdown<String>(
+                      label: 'Status',
+                      value: status,
+                      items: const [
+                        'Not Started',
+                        'In Progress',
+                        'Active',
+                        'Completed',
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => status = v);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              LaunchModalTextField(
+                label: 'Role Description',
+                controller: descController,
+                hint: 'Brief description of responsibilities...',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              LaunchModalTextField(
+                label: 'Notes',
+                controller: notesController,
+                hint: 'Additional notes...',
+                maxLines: 2,
+              ),
+            ],
           ),
+          leadingActions: [
+            OutlinedButton.icon(
+              onPressed: aiLoading
+                  ? null
+                  : () async {
+                      setModalState(() => aiLoading = true);
+                      try {
+                        final data = ProjectDataHelper.getData(context);
+                        final contextText =
+                            ProjectDataHelper.buildExecutivePlanContext(
+                                data,
+                                sectionLabel: 'Staff Team Orchestration');
+                        final ai = OpenAiServiceSecure();
+                        final suggestions =
+                            await ai.generateStaffingRoleSuggestions(
+                                context: contextText, maxSuggestions: 1);
+                        if (suggestions.isNotEmpty) {
+                          roleController.text = suggestions.first;
+                        }
+                      } catch (_) {
+                        // Suggestion failures are silent, as before.
+                      }
+                      if (ctx.mounted) {
+                        setModalState(() => aiLoading = false);
+                      }
+                    },
+              icon: aiLoading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.auto_awesome_rounded, size: 16),
+              label: Text(aiLoading ? 'Generating...' : 'KAZ AI Suggest'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFB8860B),
+                side: const BorderSide(color: Color(0xFFFEF3C7)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                textStyle:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+          actions: [
+            LaunchModalCancelButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(ctx),
+            ),
+            LaunchModalPrimaryButton(
+              label: 'Add Role',
+              icon: Icons.add_rounded,
+              onPressed: () {
+                final newRow = StaffingRow(
+                  role: roleController.text.trim(),
+                  quantity: int.tryParse(qtyController.text) ?? 1,
+                  isInternal: isInternal,
+                  startDate: startDateController.text.trim(),
+                  durationMonths: durationController.text.trim(),
+                  monthlyCost: costController.text.trim(),
+                  roleDescription: descController.text.trim(),
+                  notes: notesController.text.trim(),
+                  status: status,
+                );
+                final updated = [..._rows, newRow];
+                widget.onRowsChanged(updated);
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
         ),
-      );
-    } finally {
-      roleController.dispose();
-      qtyController.dispose();
-      startDateController.dispose();
-      durationController.dispose();
-      costController.dispose();
-      descController.dispose();
-      notesController.dispose();
-    }
+      ),
+    );
   }
 
   /// CSV column specs for the Staffing Needs table. These mirror the
@@ -1967,76 +1729,6 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ─── Modal Form Field ──────────────────────────────────────────────────────────
-/// A styled form field used inside the Add Role modal dialog.
-class _ModalField extends StatelessWidget {
-  const _ModalField({
-    required this.label,
-    required this.controller,
-    required this.hint,
-    required this.icon,
-    this.keyboardType,
-    this.autofocus = false,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final String hint;
-  final IconData icon;
-  final TextInputType? keyboardType;
-  final bool autofocus;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 14, color: const Color(0xFF6B7280)),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF374151),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          autofocus: autofocus,
-          keyboardType: keyboardType,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: Color(0xFF4338CA), width: 1.5),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            filled: true,
-            fillColor: const Color(0xFFF9FAFB),              ),
-        ),
-      ],
     );
   }
 }

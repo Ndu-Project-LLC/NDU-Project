@@ -674,6 +674,7 @@ class _PreferredSolutionAnalysisScreenState
               Expanded(
                   child: Column(children: [
                 BusinessCaseHeader(
+                  walkthroughId: 'Preferred Solution Analysis',
                     scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
                 Expanded(child: _buildMainContent()),
               ])),

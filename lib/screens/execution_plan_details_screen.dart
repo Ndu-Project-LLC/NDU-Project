@@ -154,6 +154,7 @@ class _ExecutionPlanDetailsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Plan Details',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context,
                     widget.showEarlyWorks

@@ -188,6 +188,20 @@ void main() {
     await tester.ensureVisible(addButton);
     await tester.pump();
     await tester.tap(addButton);
+    // The page has ongoing animations, so pumpAndSettle would never return.
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // "Add another" opens a modal; the row is only added once it is confirmed.
+    final dialog = find.byType(AlertDialog);
+    expect(dialog, findsOneWidget);
+    await tester.enterText(
+        find.descendant(of: dialog, matching: find.byType(TextField)),
+        'The system shall send weekly status emails');
+    await tester.pump();
+    await tester.tap(find.descendant(
+        of: dialog, matching: find.widgetWithText(ElevatedButton, 'Add')));
+    await tester.pump(const Duration(milliseconds: 400));
+
     // Let the debounced autosave persist the new row. The third table row sits
     // below the scroll viewport and is built lazily, so the persisted items are
     // the reliable signal that the row was added.

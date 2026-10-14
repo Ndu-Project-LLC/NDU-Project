@@ -453,7 +453,8 @@ class _FrontEndPlanningWorkspaceScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          FrontEndPlanningHeader(onExportPdf: _exportPdf),
+                          FrontEndPlanningHeader(
+                            walkthroughId: 'Front End Workspace',onExportPdf: _exportPdf),
                           const SizedBox(height: 24),
 
                           // Structured Cards Grid/Column

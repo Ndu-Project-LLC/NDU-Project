@@ -1968,23 +1968,23 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  color: Color(0xFF111827),
  ),
  columns: const [
- DataColumn(label: _TableHeaderCell('#', indexWidth)),
- DataColumn(label: _TableHeaderCell('Activity', activityWidth)),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('#', indexWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Activity', activityWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: _TableHeaderCell('Description', descriptionWidth)),
- DataColumn(label: _TableHeaderCell('Phase', phaseWidth)),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Phase', phaseWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: _TableHeaderCell('Discipline', disciplineWidth)),
- DataColumn(label: _TableHeaderCell('Role', roleWidth)),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Role', roleWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: _TableHeaderCell('Assigned To', assignedToWidth)),
- DataColumn(label: _TableHeaderCell('Status', statusWidth)),
- DataColumn(label: _TableHeaderCell('Approval', approvalWidth)),
- DataColumn(label: _TableHeaderCell('Source', sourceWidth)),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Status', statusWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Approval', approvalWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Source', sourceWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: _TableHeaderCell('Applies To', appliesToWidth)),
- DataColumn(label: _TableHeaderCell('Updated', updatedWidth)),
- DataColumn(label: _TableHeaderCell('Actions', actionsWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Updated', updatedWidth)),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: _TableHeaderCell('Actions', actionsWidth)),
  ],
  rows: widget.activities.asMap().entries.map((entry) {
  final localIndex = entry.key;

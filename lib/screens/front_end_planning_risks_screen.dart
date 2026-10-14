@@ -1350,7 +1350,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Project Risks',onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
  padding: const EdgeInsets.symmetric(

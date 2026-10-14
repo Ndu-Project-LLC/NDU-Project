@@ -487,7 +487,7 @@ class DeliverableAggregationService {
         description: item.description,
         phase: DeliverablePhase.planning,
         category: DeliverableCategory.requirements,
-        sourceCheckpoint: 'scope_tracking_plan',
+        sourceCheckpoint: 'project_charter',
         sourceType: DeliverableSourceType.requirement,
         sourceItemId: item.id,
         status: RoadmapDeliverableStatus.completed,

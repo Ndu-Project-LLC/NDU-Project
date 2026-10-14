@@ -46,6 +46,7 @@ class ExecutionPlanHeader extends StatelessWidget {
     this.onNext,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
+    this.walkthroughId,
     this.showExportPdf = true,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -56,6 +57,9 @@ class ExecutionPlanHeader extends StatelessWidget {
   final VoidCallback? onNext;
   final String? breadcrumbPhase;
   final String? breadcrumbTitle;
+
+  /// Walkthrough page id; see UnifiedPhaseHeader.walkthroughId.
+  final String? walkthroughId;
 
   /// Show Export PDF button in the action row.
   final bool showExportPdf;
@@ -96,6 +100,7 @@ class ExecutionPlanHeader extends StatelessWidget {
           title: 'Execution Plan',
           breadcrumbPhase: breadcrumbPhase,
           breadcrumbTitle: breadcrumbTitle,
+          walkthroughId: walkthroughId,
           showDrawerButton: true,
           onBackPressed: onBack,
           onForwardPressed: onNext,

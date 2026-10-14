@@ -378,7 +378,8 @@ if (!mounted) return;
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Front End Infrastructure',onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
  padding: const EdgeInsets.symmetric(

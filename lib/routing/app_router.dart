@@ -209,7 +209,6 @@ import 'package:ndu_project/screens/execution_issue_management_screen.dart';
 import 'package:ndu_project/screens/finalize_project_screen.dart';
 import 'package:ndu_project/screens/commerce_viability_screen.dart';
 import 'package:ndu_project/screens/team_handover_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
 import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
 import 'package:ndu_project/screens/risk_tracking_screen.dart';
 import 'package:ndu_project/screens/recognition_awards_screen.dart';
@@ -455,7 +454,6 @@ class AppRoutes {
   static const finalizeProject = 'finalize-project';
   static const commerceViability = 'commerce-viability';
   static const teamHandover = 'team-handover';
-  static const scopeTrackingPlan = 'scope-tracking-plan';
   static const salvageDisposalTeam = 'salvage-disposal-team';
   static const riskTrackingScreen = 'risk-tracking-screen';
   static const recognitionAwards = 'recognition-awards';
@@ -1569,10 +1567,6 @@ class AppRouter {
           name: AppRoutes.teamHandover,
           path: '/${AppRoutes.teamHandover}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TeamHandoverScreen())),
-      GoRoute(
-          name: AppRoutes.scopeTrackingPlan,
-          path: '/${AppRoutes.scopeTrackingPlan}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ScopeTrackingPlanScreen())),
       GoRoute(
           name: AppRoutes.salvageDisposalTeam,
           path: '/${AppRoutes.salvageDisposalTeam}',

@@ -179,6 +179,31 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the panel tabs switch between WBS, cost and sync content',
+      (tester) async {
+    await pumpModule(tester, size: const Size(1400, 1600));
+
+    // Work Packages is the default panel.
+    expect(find.widgetWithText(Tab, 'Work Packages'), findsOneWidget);
+    expect(find.text('Search WBS packages by code or name'), findsOneWidget);
+
+    // Switching to Cross-Section Sync swaps the WBS card out for the sync card.
+    await tester.tap(find.widgetWithText(Tab, 'Cross-Section Sync'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.text('Search WBS packages by code or name'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    // Cost Estimate with nothing scheduled shows its empty-state line.
+    await tester.tap(find.widgetWithText(Tab, 'Cost Estimate'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.textContaining('No scheduled purchases yet'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the whole header stack is visible at rest on a tall window',
       (tester) async {
     await pumpModule(tester, size: const Size(1400, 1600));

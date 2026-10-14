@@ -1414,6 +1414,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
                     children: [
                       // Header sits inside the content area (right of sidebar)
                       BusinessCaseHeader(
+                        walkthroughId: 'Business Case Detail',
                           scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
                       Expanded(child: _buildMainContent()),
                     ],

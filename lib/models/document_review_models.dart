@@ -719,15 +719,6 @@ class DocumentTemplates {
       defaultReviewerRoles: ['Finance Department'],
     ),
     DocumentReviewTemplate(
-      documentId: 'scope_tracking_plan',
-      documentName: 'Scope Tracking Plan',
-      description: 'Scope management and control procedures',
-      phase: DocumentPhase.planning,
-      category: DocumentCategory.requirements,
-      sourceCheckpoint: 'scope_tracking_plan',
-      defaultReviewerRoles: ['Change Control Board'],
-    ),
-    DocumentReviewTemplate(
       documentId: 'change_management',
       documentName: 'Change Management Plan',
       description: 'Change control procedures',

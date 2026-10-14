@@ -60,7 +60,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
             dataRowMinHeight: 52,
             dataRowMaxHeight: 120,
             columns: const [
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Stakeholder Name/Role',
                         textAlign: TextAlign.center,
@@ -70,7 +70,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Alignment Status',
                         textAlign: TextAlign.center,
@@ -80,7 +80,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Key Interest/Value',
                         textAlign: TextAlign.center,
@@ -90,7 +90,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Feedback Summary',
                         textAlign: TextAlign.center,
@@ -100,7 +100,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Last Engagement',
                         textAlign: TextAlign.center,
@@ -110,7 +110,7 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Actions',
                         textAlign: TextAlign.center,

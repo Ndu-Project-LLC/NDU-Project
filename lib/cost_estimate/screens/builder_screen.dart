@@ -959,9 +959,9 @@ class _SchedulePackagesTable extends StatelessWidget {
       child: NduResponsiveDataTable(
         columnSpacing: 28,
         columns: const [
-          DataColumn(label: Text('Work Package')),
-          DataColumn(label: Text('Duration')),
-          DataColumn(label: Text('Cost')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Work Package')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Duration')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Cost')),
         ],
         rows: [
           for (final row in rows)

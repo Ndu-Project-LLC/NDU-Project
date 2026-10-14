@@ -41,19 +41,19 @@ class CharterContractors extends StatelessWidget {
  headingRowHeight: 40,
  columnSpacing: 24,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Contractor Name',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Service / Responsibility',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Est. Cost',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
@@ -88,19 +88,19 @@ class CharterContractors extends StatelessWidget {
  headingRowHeight: 40,
  columnSpacing: 24,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Contractor Name',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Service / Responsibility',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Est. Cost',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
@@ -170,19 +170,19 @@ class CharterVendors extends StatelessWidget {
  headingRowHeight: 40,
  columnSpacing: 24,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Vendor Name',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Equipment / Service',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Est. Price',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Stage',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
@@ -206,19 +206,19 @@ class CharterVendors extends StatelessWidget {
  headingRowHeight: 40,
  columnSpacing: 24,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Vendor Name',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Equipment / Service',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Est. Price',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Stage',
  style: TextStyle(
  fontWeight: FontWeight.bold, fontSize: 12))),

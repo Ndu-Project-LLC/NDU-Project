@@ -49,6 +49,7 @@ class ExecutionPlanConstructionPlanScreen extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  ExecutionPlanHeader(
+   walkthroughId: 'Execution Plan - Construction Plan',
  onBack: () => PlanningPhaseNavigation.goToPrevious(
  context, 'execution_plan_construction_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(

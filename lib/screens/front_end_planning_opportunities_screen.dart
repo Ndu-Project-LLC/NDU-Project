@@ -576,7 +576,8 @@ Opportunity generation constraints:
                   const AdminEditToggle(),
                   Column(
                     children: [
-                      FrontEndPlanningHeader(onExportPdf: _exportPdf),
+                      FrontEndPlanningHeader(
+                        walkthroughId: 'Project Opportunities',onExportPdf: _exportPdf),
                       Expanded(
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.symmetric(

@@ -1,0 +1,24 @@
+import 'package:ndu_project/widgets/page_tours/page_tour.dart';
+import 'package:ndu_project/widgets/page_tours/agile_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/closeout_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/design_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/execution_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/front_end_planning_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/initiation_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/planning_page_tours.dart';
+
+export 'package:ndu_project/widgets/page_tours/page_tour.dart';
+
+/// Every bespoke page tour, keyed by the page id the header passes in.
+///
+/// Pages not listed here fall back to the derived tour. Add a new phase's map
+/// to this merge when it is written.
+final Map<String, PageTour> pageTours = {
+  ...initiationPageTours,
+  ...frontEndPlanningPageTours,
+  ...planningPageTours,
+  ...designPageTours,
+  ...executionPageTours,
+  ...agilePageTours,
+  ...closeoutPageTours,
+};

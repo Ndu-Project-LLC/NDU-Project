@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/integration_dashboard/integration_view_switcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -286,6 +287,8 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _buildHeader(),
+                                    const SizedBox(height: 20),
+                                    const IntegrationViewSwitcherLink(),
                                     const SizedBox(height: 28),
                                     _buildSearchBar(),
                                     const SizedBox(height: 20),

@@ -796,56 +796,56 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  dataRowMaxHeight: 80,
  columnSpacing: 12,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Risk',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Category',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Score',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('L/I',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Owner',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Next Review',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Actions',
  style: TextStyle(
  fontSize: 12,
@@ -981,56 +981,56 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  dataRowMaxHeight: 120,
  columnSpacing: 18,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Risk',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Category',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Score',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('L/I',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Owner',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Next Review',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF374151))),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Actions',
  style: TextStyle(
  fontSize: 12,

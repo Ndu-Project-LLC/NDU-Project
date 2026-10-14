@@ -3170,10 +3170,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  dataRowMinHeight: 56,
  dataRowMaxHeight: 80,
  columns: const [
- DataColumn(label: Text('Scope')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Last Updated')),
- DataColumn(label: Text('Actions')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Scope')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Last Updated')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
  ],
  rows: sorted.map((item) {
  final status = _trackingStatusForScope(item.id, notes);
@@ -3306,11 +3306,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  dataRowMinHeight: 56,
  dataRowMaxHeight: 80,
  columns: const [
- DataColumn(label: Text('Report')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Updated')),
- DataColumn(label: Text('Actions')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Report')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Updated')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
  ],
  rows: reports.map((report) {
  return DataRow(
@@ -3411,11 +3411,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  dataRowMinHeight: 56,
  dataRowMaxHeight: 80,
  columns: const [
- DataColumn(label: Text('Contractor')),
- DataColumn(label: Text('Category')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Rating')),
- DataColumn(label: Text('Actions')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Contractor')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Rating')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
  ],
  rows: rows.map((name) {
  final vendor = _vendorForName(contractors, name);
@@ -6949,7 +6949,7 @@ class _ContractingScopeTable extends StatelessWidget {
  borderRadius: BorderRadius.circular(10),
  ),
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -6959,7 +6959,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -6969,7 +6969,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -6979,7 +6979,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -6989,7 +6989,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -6999,7 +6999,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7009,7 +7009,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7019,7 +7019,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7029,7 +7029,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(label: Center(child: Text(''))),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Center(child: Text(''))),
  ],
  rows: items.asMap().entries.map((entry) {
  final index = entry.key;
@@ -7114,7 +7114,7 @@ class _ContractingScopeTable extends StatelessWidget {
  borderRadius: BorderRadius.circular(10),
  ),
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7124,7 +7124,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7134,7 +7134,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7144,7 +7144,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7154,7 +7154,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7164,7 +7164,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7174,7 +7174,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7184,7 +7184,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Align(
  alignment: Alignment.centerLeft,
  child: Text(
@@ -7194,7 +7194,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ),
  ),
  ),
- DataColumn(label: Center(child: Text(''))),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Center(child: Text(''))),
  ],
  rows: items.asMap().entries.map((entry) {
  final index = entry.key;

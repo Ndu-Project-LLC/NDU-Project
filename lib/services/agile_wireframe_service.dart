@@ -46,6 +46,7 @@ class AgileWireframeService {
     required List<Map<String, dynamic>> workingAgreements,
     required bool readyChecklistMode,
     required bool doneChecklistMode,
+    List<Map<String, dynamic>> groomingActivities = const [],
   }) =>
       <String, dynamic>{
         ...fields,
@@ -54,6 +55,7 @@ class AgileWireframeService {
         AgileGateDefinitions.readyChecklistKey: readyChecklist,
         AgileGateDefinitions.doneChecklistKey: doneChecklist,
         'working_agreements': workingAgreements,
+        'grooming_activities': groomingActivities,
         AgileGateDefinitions.readyChecklistModeKey: readyChecklistMode,
         AgileGateDefinitions.doneChecklistModeKey: doneChecklistMode,
       };

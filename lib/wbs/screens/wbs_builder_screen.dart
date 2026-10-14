@@ -71,9 +71,12 @@ class _TopDownConnectorBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (childSlots.isEmpty) return const SizedBox.shrink();
+    // Must match the child row's total width (the sum of every child's
+    // slots), or the stubs drift away from the cards they land on.
+    final totalSlots = childSlots.fold<int>(0, (sum, s) => sum + s);
     return CustomPaint(
       size: Size(
-          _SimpleDiagram.slotWidth * childSlots.length,
+          _SimpleDiagram.slotWidth * totalSlots,
           _SimpleDiagram.topDownDrop * 2),
       painter: _TopDownConnectorPainter(childSlots: childSlots),
     );
@@ -105,12 +108,17 @@ class _TopDownConnectorPainter extends CustomPainter {
       return;
     }
 
-    // Rail across every child slot's centre, then a stub down into each card.
-    const firstX = _SimpleDiagram.slotWidth / 2;
-    final lastX = size.width - _SimpleDiagram.slotWidth / 2;
-    canvas.drawLine(const Offset(firstX, railY), Offset(lastX, railY), paint);
-    for (int i = 0; i < childSlots.length; i++) {
-      final x = _SimpleDiagram.slotWidth * (i + childSlots[i] / 2);
+    // Each child's stub sits at the centre of its own slot range: the cards
+    // before it occupy their slots' full widths, so the offset is cumulative.
+    final centers = <double>[];
+    var offset = 0;
+    for (final slots in childSlots) {
+      centers.add(_SimpleDiagram.slotWidth * (offset + slots / 2));
+      offset += slots;
+    }
+    canvas.drawLine(
+        Offset(centers.first, railY), Offset(centers.last, railY), paint);
+    for (final x in centers) {
       canvas.drawLine(Offset(x, railY), Offset(x, size.height), paint);
     }
   }

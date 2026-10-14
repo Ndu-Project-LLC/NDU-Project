@@ -614,11 +614,11 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       dataTextStyle: const TextStyle(
           fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
       columns: const [
-        DataColumn(label: Text('Metric')),
-        DataColumn(label: Text('Description')),
-        DataColumn(label: Text('Status')),
-        DataColumn(label: Text('Readiness')),
-        DataColumn(label: Text('Action')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Metric')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Description')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Readiness')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Action')),
       ],
       rows: _snapshotMetrics.asMap().entries.map((entry) {
         final idx = entry.key;
@@ -1242,9 +1242,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       dataTextStyle: const TextStyle(
           fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
       columns: const [
-        DataColumn(label: Text('Insight')),
-        DataColumn(label: Text('Detail')),
-        DataColumn(label: Text('Action')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Insight')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Detail')),
+        DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Action')),
       ],
       rows: _insights.asMap().entries.map((entry) {
         final idx = entry.key;

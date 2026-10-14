@@ -285,7 +285,6 @@ class ProjectIntelligenceService {
       role: 'Project Manager',
       applicableSections: const <String>[
         'project_charter',
-        'scope_tracking_plan',
       ],
       now: now,
       existingById: existingById,

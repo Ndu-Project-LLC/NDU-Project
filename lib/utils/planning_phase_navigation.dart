@@ -33,7 +33,6 @@ import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/screens/planning_procurement_screen.dart';
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
 import 'package:ndu_project/screens/cost_estimate_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
 import 'package:ndu_project/screens/issue_management_screen.dart';
 import 'package:ndu_project/screens/lessons_learned_screen.dart';
@@ -332,11 +331,6 @@ class PlanningPhaseNavigation {
       id: 'cost_estimate',
       title: 'Cost Estimate',
       builder: (_) => const CostEstimateScreen(),
-    ),
-    PlanningPage(
-      id: 'scope_tracking_plan',
-      title: 'Scope Tracking Plan',
-      builder: (_) => const ScopeTrackingPlanScreen(),
     ),
     PlanningPage(
       id: 'change_management',

@@ -5105,10 +5105,10 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
  child: buildNduDataTable(
  context: context,
  columns: const [
- DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
- DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
  ],
  rows: rows,
  headingRowColor: const Color(0xFF1F2937),
@@ -5124,10 +5124,10 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
  tableBuilder: (fsContext) => buildNduDataTable(
  context: fsContext,
  columns: const [
- DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
- DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
  ],
  rows: rows,
  headingRowColor: const Color(0xFF1F2937),

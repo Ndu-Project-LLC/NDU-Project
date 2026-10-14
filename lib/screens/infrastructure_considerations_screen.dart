@@ -335,7 +335,8 @@ class _InfrastructureConsiderationsScreenState
  ),
  Expanded(
  child: Column(children: [
- BusinessCaseHeader(scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
+ BusinessCaseHeader(
+   walkthroughId: 'Infrastructure Considerations',scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
  Expanded(child: _buildMainContent()),
  ])),
  ]),

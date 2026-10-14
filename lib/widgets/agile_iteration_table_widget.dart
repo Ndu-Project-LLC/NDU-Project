@@ -59,7 +59,7 @@ class AgileIterationTableWidget extends StatelessWidget {
             dataRowMinHeight: 52,
             dataRowMaxHeight: 120,
             columns: const [
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('User Story/Task',
                         textAlign: TextAlign.center,
@@ -69,7 +69,7 @@ class AgileIterationTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Assigned Role',
                         textAlign: TextAlign.center,
@@ -79,7 +79,7 @@ class AgileIterationTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Story Points',
                         textAlign: TextAlign.center,
@@ -89,7 +89,7 @@ class AgileIterationTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Priority',
                         textAlign: TextAlign.center,
@@ -99,7 +99,7 @@ class AgileIterationTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Status',
                         textAlign: TextAlign.center,
@@ -109,7 +109,7 @@ class AgileIterationTableWidget extends StatelessWidget {
                             color: Color(0xFF374151))),
                   ),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: Center(
                     child: Text('Actions',
                         textAlign: TextAlign.center,

@@ -112,6 +112,7 @@ class _ExecutionEnablingWorkPlanScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Enabling Work Plan',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_enabling_work_plan'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

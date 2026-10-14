@@ -229,25 +229,6 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
   ),
   AgileHubSection(
     number: 9,
-    title: 'Backlog Grooming',
-    sidebarTitle: 'Backlog Grooming',
-    subtitle: 'Maintain backlog readiness',
-    icon: Icons.tune_outlined,
-    gradientStart: Color(0xFFEAB308),
-    gradientEnd: Color(0xFFCA8A04),
-    features: [
-      'Story refinement & splitting',
-      'Estimation updates',
-      'Dependency review',
-      'Duplicate detection',
-      'AI story quality scoring',
-      'Readiness assessment',
-    ],
-    route: AppRoutes.agileBacklogGovernance,
-    activeLabel: 'Agile Delivery Model - Backlog Governance',
-  ),
-  AgileHubSection(
-    number: 10,
     title: 'Agile Metrics & Reporting',
     sidebarTitle: 'Agile Metrics',
     subtitle: 'Comprehensive delivery analytics',
@@ -266,7 +247,7 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
     activeLabel: 'Agile Metrics',
   ),
   AgileHubSection(
-    number: 11,
+    number: 10,
     title: 'Release Planning',
     sidebarTitle: 'Release Planning',
     subtitle: 'Coordinate multiple sprints into releases',
@@ -285,7 +266,7 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
     activeLabel: 'Agile Delivery Model - Release Plan',
   ),
   AgileHubSection(
-    number: 12,
+    number: 11,
     title: 'Agile Risks & Impediments',
     sidebarTitle: 'Agile Risks',
     subtitle: 'Track delivery blockers',
@@ -304,7 +285,7 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
     activeLabel: 'Agile Risks & Impediments',
   ),
   AgileHubSection(
-    number: 13,
+    number: 12,
     title: 'Team Capacity & Workload',
     sidebarTitle: 'Team Capacity',
     subtitle: 'Support sustainable delivery',
@@ -323,7 +304,7 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
     activeLabel: 'Agile Delivery Model - Capacity Planning',
   ),
   AgileHubSection(
-    number: 14,
+    number: 13,
     title: 'AI Agile Coach',
     sidebarTitle: 'AI Agile Coach',
     subtitle: 'Embedded guidance throughout execution',
@@ -342,7 +323,7 @@ const List<AgileHubSection> agileHubSections = <AgileHubSection>[
     activeLabel: 'AI Agile Coach',
   ),
   AgileHubSection(
-    number: 15,
+    number: 14,
     title: 'Agile Roadmap',
     sidebarTitle: 'Agile Roadmap',
     subtitle: 'Strategic visual roadmap',

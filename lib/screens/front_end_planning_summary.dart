@@ -220,7 +220,8 @@ class _FrontEndPlanningSummaryScreenState
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Front End Details',onExportPdf: _exportPdf),
  Expanded(
  child: ScrollIndicatorOverlay(
  controller: _contentScrollController,

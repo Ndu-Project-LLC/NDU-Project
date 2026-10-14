@@ -59,6 +59,7 @@ class ExecutionPlanStakeholderIdentificationScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Stakeholder Identification',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_stakeholder_identification'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

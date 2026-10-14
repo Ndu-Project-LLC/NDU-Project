@@ -105,24 +105,24 @@ class AgileBacklogTableView extends StatelessWidget {
     // With no parent to show, say why instead of rendering two blank columns.
     final columns = showParentColumns
         ? [
-            const DataColumn(label: Text('Epic')),
-            const DataColumn(label: Text('Feature')),
-            const DataColumn(label: Text('Story')),
-            const DataColumn(label: Text('Order')),
-            const DataColumn(label: Text('Priority')),
-            const DataColumn(label: Text('Points'), numeric: true),
-            const DataColumn(label: Text('Readiness')),
-            const DataColumn(label: Text('Sprint')),
-            const DataColumn(label: Text('Release')),
-            if (boardLabel != null) const DataColumn(label: Text('Board')),
-            const DataColumn(label: Text('WBS')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Epic')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Feature')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Story')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Order')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Points'), numeric: true),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Readiness')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Sprint')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Release')),
+            if (boardLabel != null) const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Board')),
+            const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('WBS')),
           ]
         : const [
-            DataColumn(label: Text('Story')),
-            DataColumn(label: Text('Why unlinked')),
-            DataColumn(label: Text('Priority')),
-            DataColumn(label: Text('Points'), numeric: true),
-            DataColumn(label: Text('Readiness')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Story')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Why unlinked')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Points'), numeric: true),
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Readiness')),
           ];
 
     return buildNduTableWithExpand(

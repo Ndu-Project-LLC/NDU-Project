@@ -60,6 +60,7 @@ class ExecutionPlanCommunicationPlanScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Plan - Communication Plan',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_communication_plan'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

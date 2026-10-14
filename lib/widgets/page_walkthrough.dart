@@ -22,6 +22,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:ndu_project/widgets/page_tours/page_tour_index.dart';
+
 /// Brand accents shared with the rest of the app.
 const _kBrandGold = Color(0xFFFFC812);
 const _kBrandAmber = Color(0xFFB45309);
@@ -232,6 +234,9 @@ List<SpotlightStep> _buildSteps({
   final custom = PageWalkthroughRegistry.builderFor(pageId);
   if (custom != null) return custom(stops);
 
+  final tour = pageTours[pageId];
+  if (tour != null) return _stepsFromTour(tour, stops);
+
   final subject = (pageTitle ?? pageId).trim();
   final steps = <SpotlightStep>[
     SpotlightStep(
@@ -268,6 +273,40 @@ List<SpotlightStep> _buildSteps({
     description:
         'You can revisit this tour at any time with the Walkthrough button. '
         'Your work saves automatically as you go.',
+  ));
+  return steps;
+}
+
+/// Turns an authored [PageTour] into cards. Each discovered section heading is
+/// matched to its authored description; headings without one fall back to a
+/// generic line.
+List<SpotlightStep> _stepsFromTour(PageTour tour, List<PageTourStop> stops) {
+  final steps = <SpotlightStep>[
+    SpotlightStep(
+      icon: tour.icon,
+      badgeLabel: 'Quick tour',
+      title: tour.title,
+      description: tour.intro,
+      bullets: tour.bullets,
+    ),
+  ];
+  for (final stop in stops) {
+    steps.add(SpotlightStep(
+      icon: Icons.looks_one_outlined,
+      title: stop.label,
+      description: tour.sections[stop.label] ??
+          stop.detail ??
+          'This is "${stop.label}" on this page. Work through it, then move '
+              'on to the next section.',
+    ));
+  }
+  steps.add(SpotlightStep(
+    icon: Icons.check_circle_outline,
+    badgeLabel: 'All set',
+    title: "That's the whole page",
+    description: tour.outro ??
+        'You can revisit this tour at any time with the Walkthrough button. '
+            'Your work saves automatically as you go.',
   ));
   return steps;
 }

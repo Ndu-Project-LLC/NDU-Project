@@ -14,6 +14,7 @@ class BusinessCaseHeader extends StatelessWidget {
     this.scaffoldKey,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
+    this.walkthroughId,
     this.showExportPdf = true,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -24,6 +25,9 @@ class BusinessCaseHeader extends StatelessWidget {
   final GlobalKey<ScaffoldState>? scaffoldKey;
   final String? breadcrumbPhase;
   final String? breadcrumbTitle;
+
+  /// Walkthrough page id; see UnifiedPhaseHeader.walkthroughId.
+  final String? walkthroughId;
 
   /// Show Export PDF button in the action row.
   final bool showExportPdf;
@@ -64,6 +68,7 @@ class BusinessCaseHeader extends StatelessWidget {
           title: 'Initiation Phase',
           breadcrumbPhase: breadcrumbPhase,
           breadcrumbTitle: breadcrumbTitle,
+          walkthroughId: walkthroughId,
           scaffoldKey: scaffoldKey,
           onBackPressed: onBackPressed,
         ),

@@ -1143,61 +1143,61 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                 : null;
           }),
           columns: const [
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('CR #',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Title',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Type',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Priority',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Status',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Score',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Cost Impact',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Schedule',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Originator',
                     style: TextStyle(
                         color: Color(0xFF475467),
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
-            DataColumn(
+            DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Text('Date',
                     style: TextStyle(
                         color: Color(0xFF475467),

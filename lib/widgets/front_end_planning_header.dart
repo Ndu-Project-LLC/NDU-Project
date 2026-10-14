@@ -17,6 +17,7 @@ class FrontEndPlanningHeader extends StatelessWidget {
     this.onOpenActivityLog,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
+    this.walkthroughId,
     this.showExportPdf = true,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -30,6 +31,9 @@ class FrontEndPlanningHeader extends StatelessWidget {
   final VoidCallback? onOpenActivityLog;
   final String? breadcrumbPhase;
   final String? breadcrumbTitle;
+
+  /// Walkthrough page id; see UnifiedPhaseHeader.walkthroughId.
+  final String? walkthroughId;
 
   /// Show Export PDF button in the action row.
   final bool showExportPdf;
@@ -68,6 +72,7 @@ class FrontEndPlanningHeader extends StatelessWidget {
           title: title,
           breadcrumbPhase: breadcrumbPhase,
           breadcrumbTitle: breadcrumbTitle,
+          walkthroughId: walkthroughId,
           scaffoldKey: scaffoldKey,
           onBackPressed: onBackPressed,
           showActivityLogAction: showActivityLogAction,

@@ -63,31 +63,31 @@ class VendorsTableWidget extends StatelessWidget {
             dataRowMinHeight: 56,
             dataRowMaxHeight: 72,
             columns: const [
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: _TableHeader('Vendor', icon: Icons.business_outlined),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label:
                       _TableHeader('Category', icon: Icons.category_outlined),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: _TableHeader('Criticality',
                       icon: Icons.signal_cellular_alt),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: _TableHeader('SLA', icon: Icons.verified_outlined),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: _TableHeader('Rating', icon: Icons.star_outline),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: _TableHeader('Status', icon: Icons.circle_outlined),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label:
                       _TableHeader('Lead Time', icon: Icons.schedule_outlined),
                 ),
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: _TableHeader('Actions', icon: Icons.more_horiz),
                 ),
               ],

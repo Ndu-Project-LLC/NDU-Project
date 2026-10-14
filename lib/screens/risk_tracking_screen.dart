@@ -418,31 +418,31 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  columnSpacing: 16,
  horizontalMargin: 12,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Risk',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Owner',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Probability',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Impact',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Next review',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Actions',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -570,43 +570,43 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Risk Ref',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Mitigation Strategy',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Owner',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Category',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Coverage',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Target',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Effectiveness',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Residual',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Actions',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -840,39 +840,39 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Signal',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Category',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Severity',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Confidence',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Description',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Linked Risk',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Trend',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Detected',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Actions',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -1077,47 +1077,47 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Escalation Event',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Level',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Trigger Condition',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Responsible',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Escalation Target',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Status',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Readiness',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Response',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Decision Required',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Last Review',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, 
  label: Text('Actions',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -1700,16 +1700,18 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  final formKey = GlobalKey<FormState>();
  var selectedImpact = 'High';
  var selectedStatus = 'Mitigating';
- var selectedCategory = 'Technical';
-
- showAppDialog(
+ var selectedCategory = 'Technical';    showAppDialog(
  context: context,
  builder: (context) {
+ final dialogWidth =
+ (MediaQuery.of(context).size.width - 80).clamp(280.0, 640.0);
  return StatefulBuilder(
  builder: (context, setDialogState) {
  return AlertDialog(
  title: const Text('Add risk'),
- content: Form(
+ content: SizedBox(
+ width: dialogWidth,
+ child: Form(
  key: formKey,
  child: SingleChildScrollView(
  child: Column(
@@ -1788,10 +1790,10 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  const SizedBox(height: 12),
  VoiceTextFormField(
  controller: nextReviewController,
- decoration: const InputDecoration(
- labelText: 'Next review (date or note)'),
+ decoration: const InputDecoration(        labelText: 'Next review (date or note)'),
  ),
  ],
+ ),
  ),
  ),
  ),

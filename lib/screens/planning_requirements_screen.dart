@@ -13,6 +13,8 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wbs_mapping_selectors.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -113,7 +115,8 @@ class _PlanningRequirementsScreenState
  _requirementsPlanController.addListener(_handlePlanChanged);
 
  _loadSavedRequirements(projectData);
- await _loadAssignableMembers(projectData);
+ unawaited(_loadWbs(projectData));
+    await _loadAssignableMembers(projectData);
 
  if (_rows.isEmpty) {
  _rows.add(_createRow(1));
@@ -129,7 +132,20 @@ class _PlanningRequirementsScreenState
  });
  }
 
- _RequirementRow _createRow(int number) {
+ /// Loads this project's WBS so the Goal and Element pickers have real
+  /// options. Without it the pickers stay empty until the user visits the WBS
+  /// screen, because WBSProvider only holds a tree once it has been loaded.
+  Future<void> _loadWbs(ProjectDataModel data) async {
+    final projectId = data.projectId;
+    if (projectId == null || projectId.isEmpty) return;
+    try {
+      await context.read<WBSProvider>().ensureProjectLoaded(projectId);
+    } catch (e) {
+      debugPrint('Failed loading WBS for planning requirements: $e');
+    }
+  }
+
+  _RequirementRow _createRow(int number) {
  return _RequirementRow(
  number: number, onChanged: _handleRequirementChanged);
  }
@@ -1497,340 +1513,299 @@ if (!mounted) return;
 
   Widget _buildRequirementsTable(BuildContext context) {
     const headerStyle = TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w700,
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
       color: Color(0xFF4B5563),
     );
     const borderColor = Color(0xFFE5E7EB);
     const bgHeader = Color(0xFFF9FAFB);
+    const cellTextStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
+    const hintStyle = TextStyle(fontSize: 14, color: Color(0xFF9CA3AF));
+    const cellPadding = EdgeInsets.symmetric(horizontal: 10, vertical: 8);
 
-    // Column widths matching the original table. The WBS Goal / WBS Element
-    // columns (Lusaka 28) are inserted after Phase and narrow the two widest
-    // free-text columns so the table does not grow unbounded.
+    // Column widths. The table width is derived from these, so the header and
+    // every row always share one grid.
     const colW = <double>[
-      64,   // 0: No + drag handle
-      520,  // 1: Requirement
-      190,  // 2: Requirement type
-      180,  // 3: Discipline
-      190,  // 4: Role
-      190,  // 5: Person
-      150,  // 6: Phase
-      170,  // 7: WBS goal (level 1)
-      200,  // 8: WBS elements (level 2)
-      230,  // 9: Requirement source
-      380,  // 10: Comments & source links
-      230,  // 11: Codes / standards (Lusaka 14)
-      56,   // 12: Delete
+      72, // 0: No + drag handle
+      480, // 1: Requirement description
+      180, // 2: Requirement type
+      170, // 3: Discipline
+      170, // 4: Role
+      180, // 5: Person
+      150, // 6: Phase
+      180, // 7: WBS goal (level 1)
+      200, // 8: WBS elements (level 2)
+      200, // 9: Requirement source
+      320, // 10: Comments and source links
+      220, // 11: Codes / standards
+      152, // 12: Actions (regenerate, undo, delete)
     ];
-    const totalWidth = 2750.0;
+    final double totalWidth = colW.fold<double>(0.0, (sum, w) => sum + w);
 
-    // Helper to build a header cell
-    Widget hCell(String text, double w) {
+    Widget headerCell(String text, double width, {bool center = false}) {
       return SizedBox(
-        width: w,
+        width: width,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Center(
-              child:
-                  Text(text, style: headerStyle, textAlign: TextAlign.center)),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            text,
+            style: headerStyle,
+            textAlign: center ? TextAlign.center : TextAlign.start,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       );
     }
 
-    // Helper to build a data row
+    Widget cell(int column, Widget child) {
+      return SizedBox(
+        width: colW[column],
+        child: Padding(padding: cellPadding, child: child),
+      );
+    }
+
+    // Every free-text cell shares this boxed look so it lines up with the
+    // dropdown cells beside it. Focus turns the border brand yellow.
+    InputDecoration fieldDecoration(String hint) {
+      final border = OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: borderColor),
+      );
+      return InputDecoration(
+        hintText: hint,
+        hintStyle: hintStyle,
+        isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFFFC812), width: 1.5),
+        ),
+      );
+    }
+
+    Widget rowAction({
+      required String tooltip,
+      required IconData icon,
+      required Color color,
+      required VoidCallback? onPressed,
+      bool loading = false,
+    }) {
+      // IconButton's default minimum tap target is 48px, which would overflow
+      // the 34px action slots. The tight SizedBox overrides that minimum.
+      return Tooltip(
+        message: tooltip,
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: IconButton(
+            onPressed: onPressed,
+            icon: loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(icon, size: 18, color: color),
+            padding: EdgeInsets.zero,
+            splashRadius: 18,
+          ),
+        ),
+      );
+    }
+
     Widget buildDataRow(int index) {
       final row = _rows[index];
       final isRowLoading = _isRegeneratingRow && _regeneratingRowIndex == index;
 
-      return Container(
+      return _HoverableTableRow(
         key: ValueKey('req_row_$index'),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: borderColor)),
-        ),
         child: Row(
           children: [
-            // Col 0: No + drag handle
-            ReorderableDragStartListener(
-                    index: index,
-                    child: SizedBox(
-                width: colW[0],
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.drag_indicator,
-                          size: 18, color: Color(0xFF9CA3AF)),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${row.number}',
-                        style: const TextStyle(
-                            fontSize: 14, color: Color(0xFF111827)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-                  ),
-            // Col 1: Requirement
+            // No + drag handle. The whole cell is the drag target.
             SizedBox(
-              width: colW[1],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Tooltip(
-                            message: 'Regenerate (AI)',
-                            child: IconButton(
-                              onPressed: isRowLoading
-                                  ? null
-                                  : () => _regenerateRequirementRow(index),
-                              icon: isRowLoading
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2))
-                                  : const Icon(Icons.refresh,
-                                      size: 18, color: Color(0xFFFFC812)),
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                  minWidth: 36, minHeight: 36),
-                              splashRadius: 18,
+              width: colW[0],
+              child: ReorderableDragStartListener(
+                index: index,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.grab,
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.drag_indicator,
+                            size: 18, color: Color(0xFF9CA3AF)),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF3F4F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${row.number}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF374151),
                             ),
                           ),
-                          Tooltip(
-                            message: 'Undo',
-                            child: IconButton(
-                              onPressed: () => _undoRequirementRow(index),
-                              icon: const Icon(Icons.undo,
-                                  size: 18, color: Color(0xFF6B7280)),
-                              padding: const EdgeInsets.all(6),
-                              constraints: const BoxConstraints(
-                                  minWidth: 36, minHeight: 36),
-                              splashRadius: 18,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    VoiceTextField(
-                      controller: row.descriptionController,
-                      minLines: 2,
-                      maxLines: null,
-                      onChanged: (_) => _handleRequirementChanged(),
-                      decoration: const InputDecoration(
-                        hintText: 'Requirement description',
-                        hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                        border: InputBorder.none,
-                        isDense: true,
-                      ),
-                      style: const TextStyle(
-                          fontSize: 14, color: Color(0xFF111827)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Col 2: Requirement type
-            SizedBox(
-              width: colW[2],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: _TypeDropdown(
-                  value: row.selectedType,
-                  onChanged: (value) {
-                    row.selectedType = value;
-                    _handleRequirementChanged();
-                  },
-                ),
-              ),
-            ),
-            // Col 3: Discipline
-            SizedBox(
-              width: colW[3],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: _DisciplineDropdown(
-                  value: row.selectedDiscipline,
-                  onChanged: (value) {
-                    row.selectedDiscipline = value;
-                    _handleRequirementChanged();
-                  },
-                ),
-              ),
-            ),
-            // Col 4: Role
-            SizedBox(
-              width: colW[4],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: VoiceTextField(
-                  controller: row.roleController,
-                  maxLines: 1,
-                  onChanged: (_) => _handleRequirementChanged(),
-                  decoration: const InputDecoration(
-                    hintText: 'Role',
-                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                    border: InputBorder.none,
-                    isDense: true,
                   ),
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFF111827)),
                 ),
               ),
             ),
-            // Col 5: Person
-            SizedBox(
-              width: colW[5],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: _PersonDropdownField(
-                  value: row.personController.text,
-                  options: _memberOptions,
-                  hint: 'Person',
-                  onChanged: (value) {
-                    row.personController.text = value;
-                    _handleRequirementChanged();
-                  },
-                ),
+            cell(
+              1,
+              VoiceTextField(
+                controller: row.descriptionController,
+                minLines: 2,
+                maxLines: null,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: fieldDecoration('Requirement description'),
+                style: cellTextStyle,
               ),
             ),
-            // Col 6: Phase
-            SizedBox(
-              width: colW[6],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: _PhaseDropdown(
-                  value: row.selectedPhase,
-                  onChanged: (value) {
-                    row.selectedPhase = value;
-                    _handleRequirementChanged();
-                  },
-                ),
+            cell(
+              2,
+              _TypeDropdown(
+                value: row.selectedType,
+                onChanged: (value) {
+                  row.selectedType = value;
+                  _handleRequirementChanged();
+                },
               ),
             ),
-            // Col 7: WBS goal (level 1) — Lusaka 28
-            SizedBox(
-              width: colW[7],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: WbsGoalDropdown(
-                  value: row.selectedWbsGoal,
-                  onChanged: (value) {
-                    setState(() {
-                      row.selectedWbsGoal = value;
-                      // Elements live under the goal — reset them when the
-                      // goal changes so stale children cannot linger.
-                      row.selectedWbsElements = [];
-                    });
-                    _handleRequirementChanged();
-                  },
-                ),
+            cell(
+              3,
+              _DisciplineDropdown(
+                value: row.selectedDiscipline,
+                onChanged: (value) {
+                  row.selectedDiscipline = value;
+                  _handleRequirementChanged();
+                },
               ),
             ),
-            // Col 8: WBS elements (level 2) — Lusaka 28
-            SizedBox(
-              width: colW[8],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: WbsElementMultiSelect(
-                  goalId: row.selectedWbsGoal,
-                  selectedIds: row.selectedWbsElements,
-                  onChanged: (ids) {
-                    setState(() => row.selectedWbsElements = ids);
-                    _handleRequirementChanged();
-                  },
-                ),
+            cell(
+              4,
+              VoiceTextField(
+                controller: row.roleController,
+                maxLines: 1,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: fieldDecoration('Role'),
+                style: cellTextStyle,
               ),
             ),
-            // Col 9: Requirement source
-            SizedBox(
-              width: colW[9],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: VoiceTextField(
-                  controller: row.sourceController,
-                  maxLines: 1,
-                  onChanged: (_) => _handleRequirementChanged(),
-                  decoration: const InputDecoration(
-                    hintText: 'Requirement source',
-                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                    border: InputBorder.none,
-                    isDense: true,
+            cell(
+              5,
+              _PersonDropdownField(
+                value: row.personController.text,
+                options: _memberOptions,
+                hint: 'Person',
+                onChanged: (value) {
+                  row.personController.text = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            cell(
+              6,
+              _PhaseDropdown(
+                value: row.selectedPhase,
+                onChanged: (value) {
+                  row.selectedPhase = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            cell(
+              7,
+              WbsGoalDropdown(
+                value: row.selectedWbsGoal,
+                onChanged: (value) {
+                  setState(() {
+                    row.selectedWbsGoal = value;
+                    // Elements live under the goal, so reset them when the
+                    // goal changes so stale children cannot linger.
+                    row.selectedWbsElements = [];
+                  });
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            cell(
+              8,
+              WbsElementMultiSelect(
+                goalId: row.selectedWbsGoal,
+                selectedIds: row.selectedWbsElements,
+                onChanged: (ids) {
+                  setState(() => row.selectedWbsElements = ids);
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+            cell(
+              9,
+              VoiceTextField(
+                controller: row.sourceController,
+                maxLines: 1,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: fieldDecoration('Requirement source'),
+                style: cellTextStyle,
+              ),
+            ),
+            cell(
+              10,
+              VoiceTextField(
+                controller: row.commentsController,
+                minLines: 1,
+                maxLines: null,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: fieldDecoration('Comments / source links'),
+                style: cellTextStyle,
+              ),
+            ),
+            // Codes / standards are read-only here. They are authored in
+            // Design Planning and surface in this column.
+            cell(
+              11,
+              CodesStandardsReadOnly(selected: row.selectedCodesStandards),
+            ),
+            cell(
+              12,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  rowAction(
+                    tooltip: 'Regenerate (AI)',
+                    icon: Icons.refresh,
+                    color: const Color(0xFFFFC812),
+                    loading: isRowLoading,
+                    onPressed: isRowLoading
+                        ? null
+                        : () => _regenerateRequirementRow(index),
                   ),
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFF111827)),
-                ),
-              ),
-            ),
-            // Col 10: Comments & source links
-            SizedBox(
-              width: colW[10],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: VoiceTextField(
-                  controller: row.commentsController,
-                  minLines: 2,
-                  maxLines: null,
-                  onChanged: (_) => _handleRequirementChanged(),
-                  decoration: const InputDecoration(
-                    hintText: 'Comments / source links',
-                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
-                    border: InputBorder.none,
-                    isDense: true,
+                  rowAction(
+                    tooltip: 'Undo',
+                    icon: Icons.undo,
+                    color: const Color(0xFF6B7280),
+                    onPressed: () => _undoRequirementRow(index),
                   ),
-                  style:
-                      const TextStyle(fontSize: 14, color: Color(0xFF111827)),
-                ),
-              ),
-            ),
-            // Col 11: Codes / standards — read-only (Lusaka 15).
-            //
-            // A requirement finishes at its WBS mapping; the codes and
-            // standards it must satisfy are authored in Design Planning
-            // (Design Specifications → Requirements Mapping) and surface here.
-            // The picker that used to live in this cell let the page look like
-            // the place to fill them in, so the cell is now a greyed,
-            // non-tappable report of what Design Planning mapped.
-            SizedBox(
-              width: colW[11],
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: CodesStandardsReadOnly(
-                  selected: row.selectedCodesStandards,
-                ),
-              ),
-            ),
-            // Col 12: Delete
-            SizedBox(
-              width: colW[12],
-              child: Center(
-                child: IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      size: 20, color: Color(0xFFEF4444)),
-                  onPressed: () => _deleteRow(index),
-                  tooltip: 'Delete requirement',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
+                  rowAction(
+                    tooltip: 'Delete requirement',
+                    icon: Icons.delete_outline,
+                    color: const Color(0xFFEF4444),
+                    onPressed: () => _deleteRow(index),
+                  ),
+                ],
               ),
             ),
           ],
@@ -2086,190 +2061,138 @@ if (!mounted) return;
       );
     }
 
+    Widget headerRow() {
+      return Container(
+        key: const ValueKey('req_header'),
+        height: 40,
+        decoration: const BoxDecoration(
+          color: bgHeader,
+          border: Border(bottom: BorderSide(color: borderColor)),
+        ),
+        child: Row(
+          children: [
+            headerCell('No', colW[0], center: true),
+            headerCell('Requirement', colW[1]),
+            headerCell('Requirement type', colW[2]),
+            headerCell('Discipline', colW[3]),
+            headerCell('Role', colW[4]),
+            headerCell('Person', colW[5]),
+            headerCell('Phase', colW[6]),
+            headerCell('WBS Goal (Level 1)', colW[7]),
+            headerCell('WBS Elements (Level 2)', colW[8]),
+            headerCell('Requirement source', colW[9]),
+            headerCell('Comments and Requirement Source Links', colW[10]),
+            headerCell('Codes / Standards', colW[11]),
+            headerCell('Actions', colW[12], center: true),
+          ],
+        ),
+      );
+    }
+
+    Widget emptyState() {
+      return const Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.assignment_outlined,
+                  size: 28, color: Color(0xFFD1D5DB)),
+              SizedBox(height: 10),
+              Text(
+                'No requirements yet',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6B7280),
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Add one manually, or import a CSV to get started.',
+                style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Shared by the inline view and the fullscreen view. Each passes its own
+    // controllers: a Scrollbar and the list it paints for must share one
+    // ScrollController, or it throws "no ScrollPosition attached".
+    //
+    // The horizontal SizedBox has a bounded width (totalWidth). Using only
+    // minWidth leaves maxWidth infinite, which propagates unbounded width into
+    // the vertical ReorderableListView and into any Row with an Expanded child.
+    Widget buildTable({
+      required ScrollController horizontal,
+      required ScrollController vertical,
+    }) {
+      return Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        child: SizedBox(
+          height: 460,
+          child: Scrollbar(
+            controller: horizontal,
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              controller: horizontal,
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: totalWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    headerRow(),
+                    Expanded(
+                      child: _rows.isEmpty
+                          ? emptyState()
+                          : Scrollbar(
+                              controller: vertical,
+                              thumbVisibility: true,
+                              child: ReorderableListView(
+                                scrollController: vertical,
+                                buildDefaultDragHandles: false,
+                                onReorder: _onReorder,
+                                children: List.generate(
+                                  _rows.length,
+                                  (i) => buildDataRow(i),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final isMobile = AppBreakpoints.isMobile(context);
 
     return FullScreenTableWrapper(
-    title: 'Planning Requirements',
+      title: 'Planning Requirements',
       showExpandButton: !isMobile,
       child: isMobile
           ? buildMobileCards()
-          : Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: SizedBox(
-        height: 460,
-        child: Scrollbar(
-          controller: _requirementsHorizontalController,
-          thumbVisibility: true,
-          child: SingleChildScrollView(
-            controller: _requirementsHorizontalController,
-            scrollDirection: Axis.horizontal,
-            // The table has a fixed content width (the sum of its column
-            // widths). This MUST be a bounded width: `minWidth` alone leaves
-            // maxWidth infinite, and inside a horizontal scroll view that
-            // propagates unbounded width to the vertical ReorderableListView
-            // ("Vertical viewport was given unbounded width") and to any Row
-            // with an Expanded child ("RenderFlex children have non-zero flex
-            // but incoming width constraints are unbounded"). The table only
-            // rendered while it was empty because the empty state has no
-            // viewport.
-            child: SizedBox(
-              width: totalWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header row (non-draggable)
-                  Container(
-                    key: const ValueKey('req_header'),
-                    decoration: const BoxDecoration(
-                      color: bgHeader,
-                      border: Border(
-                        bottom: BorderSide(color: borderColor),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        hCell('No', colW[0]),
-                        hCell('Requirement', colW[1]),
-                        hCell('Requirement type', colW[2]),
-                        hCell('Discipline', colW[3]),
-                        hCell('Role', colW[4]),
-                        hCell('Person', colW[5]),
-                        hCell('Phase', colW[6]),
-                        hCell('WBS Goal (Level 1)', colW[7]),
-                        hCell('WBS Elements (Level 2)', colW[8]),
-                        hCell('Requirement source', colW[9]),
-                                hCell('Comments and Requirement Source Links',
-                                    colW[10]),
-                        hCell('Codes / Standards', colW[11]),
-                        hCell('', colW[12]),
-                      ],
-                    ),
-                  ),
-                  // Data rows (draggable) or empty state
-                  Expanded(
-                    child: _rows.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No requirements yet. Add one or import from CSV.',
-                                      style:
-                                          TextStyle(color: Color(0xFF9CA3AF)),
-                            ),
-                          )
-                        : Scrollbar(
-                            controller: _requirementsVerticalController,
-                            thumbVisibility: true,
-                            child: ReorderableListView(
-                              // The Scrollbar above paints from this very
-                              // controller, so the list must adopt it —
-                              // otherwise the Scrollbar throws "The Scrollbar's
-                              // ScrollController has no ScrollPosition
-                              // attached" every frame.
-                                      scrollController:
-                                          _requirementsVerticalController,
-                              buildDefaultDragHandles: false,
-                              onReorder: _onReorder,
-                                      children: List.generate(
-                                          _rows.length, (i) => buildDataRow(i)),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
+          : buildTable(
+              horizontal: _requirementsHorizontalController,
+              vertical: _requirementsVerticalController,
             ),
-          ),
-        ),
+      tableBuilder: (fsContext) => buildTable(
+        horizontal: _fullScreenHorizontalController,
+        vertical: _fullScreenVerticalController,
       ),
-    ),
-    tableBuilder: (fsContext) => Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: SizedBox(
-        height: 460,
-        child: Scrollbar(
-          controller: _fullScreenHorizontalController,
-          thumbVisibility: true,
-          child: SingleChildScrollView(
-            controller: _fullScreenHorizontalController,
-            scrollDirection: Axis.horizontal,
-            // The table has a fixed content width (the sum of its column
-            // widths). This MUST be a bounded width: `minWidth` alone leaves
-            // maxWidth infinite, and inside a horizontal scroll view that
-            // propagates unbounded width to the vertical ReorderableListView
-            // ("Vertical viewport was given unbounded width") and to any Row
-            // with an Expanded child ("RenderFlex children have non-zero flex
-            // but incoming width constraints are unbounded"). The table only
-            // rendered while it was empty because the empty state has no
-            // viewport.
-            child: SizedBox(
-              width: totalWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header row (non-draggable)
-                  Container(
-                    key: const ValueKey('req_header'),
-                    decoration: const BoxDecoration(
-                      color: bgHeader,
-                      border: Border(
-                        bottom: BorderSide(color: borderColor),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        hCell('No', colW[0]),
-                        hCell('Requirement', colW[1]),
-                        hCell('Requirement type', colW[2]),
-                        hCell('Discipline', colW[3]),
-                        hCell('Role', colW[4]),
-                        hCell('Person', colW[5]),
-                        hCell('Phase', colW[6]),
-                        hCell('WBS Goal (Level 1)', colW[7]),
-                        hCell('WBS Elements (Level 2)', colW[8]),
-                        hCell('Requirement source', colW[9]),
-                          hCell('Comments and Requirement Source Links',
-                              colW[10]),
-                        hCell('Codes / Standards', colW[11]),
-                        hCell('', colW[12]),
-                      ],
-                    ),
-                  ),
-                  // Data rows (draggable) or empty state
-                  Expanded(
-                    child: _rows.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No requirements yet. Add one or import from CSV.',
-                              style: TextStyle(color: Color(0xFF9CA3AF)),
-                            ),
-                            )
-                          : Scrollbar(
-                            controller: _fullScreenVerticalController,
-                            thumbVisibility: true,
-                            child: ReorderableListView(
-                              // See the inline copy above: the Scrollbar and the
-                              // list must share one controller.
-                              scrollController: _fullScreenVerticalController,
-                              buildDefaultDragHandles: false,
-                              onReorder: _onReorder,
-                                children: List.generate(
-                                    _rows.length, (i) => buildDataRow(i)),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
     );
   }
 
@@ -2534,12 +2457,7 @@ if (!mounted) return;
   SizedBox(
   height: 44,
   child: OutlinedButton(
-            onPressed: () {
-  setState(() {
-  _rows.add(_createRow(_rows.length + 1));
-  });
-  _scheduleAutoSave(showSnack: false);
-  },
+            onPressed: _showAddRequirementDialog,
   style: OutlinedButton.styleFrom(
   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
   foregroundColor: const Color(0xFF111827),
@@ -2587,9 +2505,22 @@ if (!mounted) return;
  style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
  ),
  );
- }
+ }  Future<void> _showAddRequirementDialog() async {
+    final draft = await showAppDialog<({String description, String type})>(
+      context: context,
+      builder: (_) => const _AddRequirementDialog(),
+    );
+    if (draft == null || !mounted) return;
+    setState(() {
+      final row = _createRow(_rows.length + 1);
+      row.descriptionController.text = draft.description;
+      row.selectedType = draft.type;
+      _rows.add(row);
+    });
+    _scheduleAutoSave(showSnack: false);
+  }
 
- Future<void> _exportPdf() async {
+  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  await PdfExportHelper.exportScreenPdf(
  context: context,
@@ -2614,6 +2545,86 @@ if (!mounted) return;
  ],
  );
  }
+}
+
+class _AddRequirementDialog extends StatefulWidget {
+  const _AddRequirementDialog();
+
+  @override
+  State<_AddRequirementDialog> createState() => _AddRequirementDialogState();
+}
+
+class _AddRequirementDialogState extends State<_AddRequirementDialog> {
+  final TextEditingController _descriptionController = TextEditingController();
+  String _selectedType = 'Functional';
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final description = _descriptionController.text.trim();
+    if (description.isEmpty) return;
+    Navigator.pop(context, (description: description, type: _selectedType));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSubmit = _descriptionController.text.trim().isNotEmpty;
+    return AlertDialog(
+      title: const Text('Add requirement'),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _descriptionController,
+              autofocus: true,
+              minLines: 2,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Requirement description',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedType,
+              decoration: const InputDecoration(
+                labelText: 'Requirement type',
+                border: OutlineInputBorder(),
+              ),
+              items: _RequirementRow.requirementTypeOptions
+                  .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+                  .toList(),
+              onChanged: (value) =>
+                  setState(() => _selectedType = value ?? _selectedType),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: canSubmit ? _submit : null,
+          child: const Text('Add'),
+        ),
+      ],
+    );
+  }
 }
 
 class _AssignableMember {
@@ -3168,4 +3179,33 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  ],
  );
  }
+}
+
+class _HoverableTableRow extends StatefulWidget {
+  const _HoverableTableRow({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<_HoverableTableRow> createState() => _HoverableTableRowState();
+}
+
+class _HoverableTableRowState extends State<_HoverableTableRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        decoration: BoxDecoration(
+          color: _hovered ? const Color(0xFFFFFBEB) : Colors.white,
+          border: const Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+        ),
+        child: widget.child,
+      ),
+    );
+  }
 }

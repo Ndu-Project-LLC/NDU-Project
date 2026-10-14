@@ -173,10 +173,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildSummaryGrid(BuildContext context) {
  final double screenHeight = MediaQuery.of(context).size.height;
  final double tabHeight = screenHeight - 340 < 520 ? 520 : screenHeight - 340;
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _buildSectionTabBar(),
+  return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionTabBar(),
  const SizedBox(height: 16),
  SizedBox(
  height: tabHeight,
@@ -382,19 +382,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  columnSpacing: 8,
  horizontalMargin: 8,
  columns: const [
- DataColumn(label: Text('Category')),
- DataColumn(label: Text('Open'), numeric: true),
- DataColumn(label: Text('Critical'), numeric: true),
- DataColumn(label: Text('High'), numeric: true),
- DataColumn(label: Text('Medium'), numeric: true),
- DataColumn(label: Text('Low'), numeric: true),
- DataColumn(label: Text('Closed'), numeric: true),
- DataColumn(label: Text('Total'), numeric: true),
- DataColumn(label: Text('% Complete'), numeric: true),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Updated')),
- DataColumn(label: Text('Actions')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Open'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Critical'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('High'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Medium'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Low'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Closed'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Total'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('% Complete'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Updated')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
  ],
  rows: _distributionRows.asMap().entries.map((entry) {
  final idx = entry.key;
@@ -568,17 +568,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  columnSpacing: 8,
  horizontalMargin: 8,
  columns: const [
- DataColumn(label: Text('Workstream')),
- DataColumn(label: Text('Open'), numeric: true),
- DataColumn(label: Text('Closed'), numeric: true),
- DataColumn(label: Text('Velocity %'), numeric: true),
- DataColumn(label: Text('Throughput'), numeric: true),
- DataColumn(label: Text('Trend')),
- DataColumn(label: Text('Cycle Time'), numeric: true),
- DataColumn(label: Text('Period')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Actions')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Workstream')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Open'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Closed'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Velocity %'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Throughput'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Trend')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Cycle Time'), numeric: true),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Period')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+ DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
  ],
  rows: _velocityRows.asMap().entries.map((entry) {
  final idx = entry.key;
@@ -691,6 +691,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _panel(
  {required String title, String? subtitle, required Widget child}) {
  return Container(
+ width: double.infinity,
  constraints: const BoxConstraints(minHeight: _panelMinHeight),
  alignment: Alignment.topLeft,
  padding: const EdgeInsets.all(24),

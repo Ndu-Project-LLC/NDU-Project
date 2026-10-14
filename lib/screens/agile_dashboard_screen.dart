@@ -2,7 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ndu_project/models/agile_task.dart';
+import 'package:ndu_project/models/project_activity.dart';
+import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/roadmap_sprint.dart';
 import 'package:ndu_project/services/agile_wireframe_service.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/services/roadmap_service.dart';
 import 'package:ndu_project/utils/agile_metrics_catalog.dart';
 import 'package:ndu_project/utils/agile_project_context_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -42,58 +48,33 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
 
-  // Sprint metrics
-  String _activeSprint = 'Sprint 24';
-  int _sprintDay = 6;
-  int _sprintTotalDays = 10;
-  int _velocity = 42;
-  int _storiesCompleted = 18;
-  int _storiesTotal = 24;
-  int _teamCapacity = 88;
-  double _sprintCompletion = 0.72;
+  // Sprint metrics, read from the project's sprints and stories. Everything is
+  // zero or empty until the project has data, so no invented figures show.
+  String _activeSprint = 'No sprint scheduled';
+  DateTime? _sprintEnd;
+  int _sprintDay = 0;
+  int _sprintTotalDays = 0;
+  int _velocity = 0;
+  int _storiesCompleted = 0;
+  int _storiesTotal = 0;
+  int _storiesInProgress = 0;
+  int _teamSize = 0;
+  int _activeContributors = 0;
+  double _sprintCompletion = 0;
 
   /// What this page reports, read from Metrics Planning rather than assumed.
   List<AgileMetric> _trackedMetrics = const [];
   bool _metricsUsingDefaults = false;
 
-  // Burn-down data (story points remaining per day)
-  final List<double> _burnDown = [48, 44, 41, 38, 34, 30, 26, 21, 16, 10];
-  final List<double> _idealBurn = [
-    48,
-    43.2,
-    38.4,
-    33.6,
-    28.8,
-    24,
-    19.2,
-    14.4,
-    9.6,
-    4.8
-  ];
+  // Burn-down in story points. The ideal line runs linearly from the sprint's
+  // total points to zero. Actual holds only what is known: the starting total
+  // and today's remaining points. Days without a value are null, because no
+  // daily history is stored.
+  List<double?> _burnDown = const [];
+  List<double?> _idealBurn = const [];
 
-  // Sprint health indicators
-  final List<_HealthIndicator> _health = [
-    const _HealthIndicator('Scope Stability', 0.92, Colors.green, 'Stable'),
-    const _HealthIndicator('Velocity Trend', 0.78, _kAccent, 'On Track'),
-    const _HealthIndicator('Blocker Backlog', 0.45, Colors.red, 'At Risk'),
-    const _HealthIndicator('Team Capacity', 0.88, Colors.green, 'Healthy'),
-  ];
-
-  // Recent activity feed
-  final List<_ActivityItem> _activity = [
-    const _ActivityItem('Sarah Chen', 'completed', 'NDU-1042: Login validation',
-        '12m ago', Icons.check_circle, Colors.green),
-    const _ActivityItem('Marcus Reed', 'moved', 'NDU-1038: API rate limiting',
-        '34m ago', Icons.swap_horiz, Color(0xFFFFC812)),
-    const _ActivityItem('Kaz AI', 'flagged', 'Velocity drift detected on Sprint 24',
-        '1h ago', Icons.auto_awesome, _kAccent),
-    const _ActivityItem('Priya Nair', 'commented on', 'NDU-1031: Dashboard widgets',
-        '2h ago', Icons.chat_bubble_outline, Color(0xFFB8860B)),
-    const _ActivityItem('James Okoro', 'blocked', 'NDU-1029: SSO integration',
-        '3h ago', Icons.block, Colors.red),
-    const _ActivityItem('Lena Park', 'started', 'NDU-1045: Reporting module',
-        '4h ago', Icons.play_arrow, _kAccent),
-  ];
+  List<_HealthIndicator> _health = const [];
+  List<_ActivityItem> _activity = const [];
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
@@ -106,168 +87,235 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   Future<void> _loadData() async {
     final pid = _projectId;
     final projectData = ProjectDataHelper.getData(context);
-    if (pid == null) {
-      _seedFromProjectContext(projectData);
-      if (mounted) {
-        setState(() {
-          // No project to read a selection from, so report the default set
-          // rather than an empty strip.
-          _trackedMetrics = AgileMetricsCatalog.trackedMetrics(const {});
-          _metricsUsingDefaults = true;
-          _isLoading = false;
-        });
+    if (mounted) setState(() => _isLoading = true);
+
+    var sprints = <RoadmapSprint>[];
+    var stories = <AgileTask>[];
+    var metricsConfig = <String, dynamic>{};
+    if (pid != null) {
+      try {
+        sprints = await RoadmapService.loadSprints(projectId: pid);
+        stories = await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+        metricsConfig = await AgileWireframeService.loadMetricsConfig(pid);
+      } catch (e) {
+        debugPrint('Agile dashboard load error: $e');
       }
-      return;
     }
-    setState(() => _isLoading = true);
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(pid)
-          .collection('execution_phase_entries')
-          .doc('agile_dashboard')
-          .get();
-      final data = doc.data() ?? {};
-      if (data.isEmpty) {
-        _seedFromProjectContext(projectData);
-      }
+    if (!mounted) return;
+    setState(() {
       // The tracked set comes from Metrics Planning, so this page reports what
-      // the project said it would track instead of a fixed card list.
-      final metricsConfig = await AgileWireframeService.loadMetricsConfig(pid);
-      if (mounted) {
-        setState(() {
-          _trackedMetrics = AgileMetricsCatalog.trackedMetrics(metricsConfig);
-          _metricsUsingDefaults =
-              AgileMetricsCatalog.usesDefaultTrackedSet(metricsConfig);
-          _activeSprint = data['activeSprint'] as String? ?? _activeSprint;
-          _sprintDay = (data['sprintDay'] as num?)?.toInt() ?? _sprintDay;
-          _sprintTotalDays =
-              (data['sprintTotalDays'] as num?)?.toInt() ?? _sprintTotalDays;
-          _velocity = (data['velocity'] as num?)?.toInt() ?? _velocity;
-          _storiesCompleted =
-              (data['storiesCompleted'] as num?)?.toInt() ?? _storiesCompleted;
-          _storiesTotal =
-              (data['storiesTotal'] as num?)?.toInt() ?? _storiesTotal;
-          _teamCapacity =
-              (data['teamCapacity'] as num?)?.toInt() ?? _teamCapacity;
-          final completion =
-              _storiesTotal == 0 ? 0.0 : _storiesCompleted / _storiesTotal;
-          _sprintCompletion = completion;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Agile dashboard load error: $e');
-      _seedFromProjectContext(projectData);
-      if (mounted) setState(() => _isLoading = false);
-    }
+      // the project said it would track. A project that has never chosen gets
+      // the default set, and the strip says so.
+      _trackedMetrics = AgileMetricsCatalog.trackedMetrics(metricsConfig);
+      _metricsUsingDefaults =
+          AgileMetricsCatalog.usesDefaultTrackedSet(metricsConfig);
+      _applyProjectData(projectData, sprints, stories);
+      _isLoading = false;
+    });
   }
 
-  void _seedFromProjectContext(dynamic projectData) {
-    final people = AgileProjectContextHelper.people(projectData, limit: 6);
-    final workItems =
-        AgileProjectContextHelper.workItems(projectData, limit: 10);
-    final issues = AgileProjectContextHelper.issues(projectData, limit: 6);
-    final risks = AgileProjectContextHelper.risks(projectData, limit: 4);
+  /// Fills every figure on the page from the project's own sprints, stories,
+  /// issues, risks and activities. Anything the project has not recorded stays
+  /// empty or zero rather than falling back to sample values.
+  void _applyProjectData(
+    ProjectDataModel data,
+    List<RoadmapSprint> sprints,
+    List<AgileTask> stories,
+  ) {
+    final now = DateTime.now();
+    final sprint = _pickSprint(sprints, now);
+    final start = sprint?.startDate;
+    final end = sprint?.endDate;
+    final hasDates = start != null && end != null;
+    final sprintStories = sprint == null
+        ? const <AgileTask>[]
+        : stories.where((s) => s.plannedSprintId == sprint.id).toList();
 
-    _activeSprint = AgileProjectContextHelper.activeSprintLabel(projectData);
-    _storiesTotal = workItems.length;
-    _storiesCompleted = workItems
-        .where((item) => item.status == 'Done' || item.status == 'In Review')
+    _activeSprint = sprint == null
+        ? 'No sprint scheduled'
+        : (sprint.name.trim().isEmpty ? 'Sprint' : sprint.name.trim());
+    _sprintEnd = end;
+    _sprintTotalDays = (start != null && end != null)
+        ? math.max(1, end.difference(start).inDays)
+        : 0;
+    _sprintDay = (start != null && end != null)
+        ? (now.difference(start).inDays + 1).clamp(0, _sprintTotalDays).toInt()
+        : 0;
+
+    _storiesTotal = sprintStories.length;
+    _storiesCompleted = sprintStories.where((s) => s.status == 'Done').length;
+    _storiesInProgress = sprintStories
+        .where((s) => s.status == 'In-Progress' || s.status == 'Testing')
         .length;
-    _velocity = workItems.fold<int>(
-      0,
-      (total, item) =>
-          total + AgileProjectContextHelper.estimateStoryPoints(item.title),
-    );
-    _sprintTotalDays = 10;
-    _sprintDay = (_storiesCompleted == 0
-            ? 1
-            : ((_storiesCompleted / (_storiesTotal == 0 ? 1 : _storiesTotal)) *
-                    _sprintTotalDays)
-                .round())
-        .clamp(1, _sprintTotalDays)
-        .toInt();
-    _teamCapacity =
-        people.isEmpty ? 70 : (people.length * 14).clamp(42, 100).toInt();
     _sprintCompletion =
-        _storiesTotal == 0 ? 0 : _storiesCompleted / _storiesTotal;
+        _storiesTotal == 0 ? 0.0 : _storiesCompleted / _storiesTotal;
 
-    final totalPoints = math.max(1, _velocity).toDouble();
-    _burnDown
-      ..clear()
-      ..addAll(List.generate(_sprintTotalDays, (index) {
-        final remaining =
-            totalPoints - ((index + 1) * (totalPoints / _sprintTotalDays));
-        return remaining.clamp(0, totalPoints);
-      }));
-    _idealBurn
-      ..clear()
-      ..addAll(List.generate(_sprintTotalDays, (index) {
-        final remaining =
-            totalPoints - ((index + 1) * (totalPoints / _sprintTotalDays));
-        return remaining.clamp(0, totalPoints);
-      }));
+    final totalPoints =
+        sprintStories.fold<int>(0, (total, s) => total + s.storyPoints);
+    final donePoints = sprintStories
+        .where((s) => s.status == 'Done')
+        .fold<int>(0, (total, s) => total + s.storyPoints);
+    _velocity = donePoints;
 
-    _health
-      ..clear()
-      ..addAll([
-        _HealthIndicator(
-          'Scope Readiness',
-          (_storiesTotal / 8).clamp(0.35, 1.0).toDouble(),
-          Colors.green,
-          _storiesTotal >= 5 ? 'Ready' : 'Building',
-        ),
-        _HealthIndicator(
-          'Delivery Confidence',
-          _sprintCompletion.clamp(0.2, 1.0),
-          _kAccent,
-          _sprintCompletion >= 0.6 ? 'On Track' : 'Watch',
-        ),
-        _HealthIndicator(
-          'Blocker Backlog',
-          (1 - (issues.length / 10)).clamp(0.25, 0.95).toDouble(),
-          issues.isEmpty ? Colors.green : Colors.red,
-          issues.isEmpty ? 'Clear' : 'Attention',
-        ),
-        _HealthIndicator(
-          'Risk Posture',
-          (1 - (risks.length / 8)).clamp(0.2, 0.9).toDouble(),
-          risks.length > 3 ? Colors.red : Colors.green,
-          risks.length > 3 ? 'Elevated' : 'Healthy',
-        ),
-      ]);
+    if (_sprintTotalDays > 0 && totalPoints > 0) {
+      final days = math.max(2, _sprintTotalDays);
+      _idealBurn = [
+        for (var i = 0; i < days; i++) totalPoints * (1 - i / (days - 1)),
+      ];
+      _burnDown = List<double?>.filled(days, null);
+      _burnDown[0] = totalPoints.toDouble();
+      if (_sprintDay >= 1) {
+        _burnDown[math.min(_sprintDay - 1, days - 1)] =
+            (totalPoints - donePoints).toDouble();
+      }
+    } else {
+      _burnDown = const [];
+      _idealBurn = const [];
+    }
 
-    _activity
-      ..clear()
-      ..addAll([
-        for (final item in workItems.take(4))
-          _ActivityItem(
-            item.owner.isEmpty ? 'Project Team' : item.owner,
-            item.status.toLowerCase(),
-            '${item.id}: ${item.title}',
-            '${item.category} item',
-            item.status == 'Done'
-                ? Icons.check_circle
-                : item.status == 'Blocked'
-                    ? Icons.block
-                    : Icons.track_changes,
-            item.status == 'Done'
-                ? Colors.green
-                : item.status == 'Blocked'
-                    ? Colors.red
-                    : _kAccent,
-          ),
-        for (final risk in risks.take(2))
-          _ActivityItem(
-            risk.owner.isEmpty ? 'Risk Monitor' : risk.owner,
-            'flagged',
-            risk.title,
-            'Risk from project register',
-            Icons.warning_amber_rounded,
-            Colors.orange,
-          ),
-      ]);
+    final people = AgileProjectContextHelper.people(data, limit: 200);
+    _teamSize = people.length;
+    _activeContributors = sprintStories
+        .where((s) => s.status != 'Done' && s.assignedRole.trim().isNotEmpty)
+        .map((s) => s.assignedRole.trim())
+        .toSet()
+        .length;
+
+    final issues = AgileProjectContextHelper.issues(data, limit: 100);
+    final risks = AgileProjectContextHelper.risks(data, limit: 100);
+    final openIssues = issues.where((i) => i.status != 'Done').toList();
+    final highRisks =
+        risks.where((r) => r.probability * r.impact >= 12).length;
+
+    final indicators = <_HealthIndicator>[];
+    if (hasDates && sprintStories.isNotEmpty) {
+      final expected =
+          _sprintTotalDays == 0 ? 0.0 : _sprintDay / _sprintTotalDays;
+      final adherence =
+          expected == 0 ? 1.0 : math.min(1.0, _sprintCompletion / expected);
+      indicators.add(_HealthIndicator(
+        'Schedule Adherence',
+        adherence,
+        adherence >= 0.9 ? Colors.green : _kAccent,
+        adherence >= 0.9 ? 'On Track' : 'Behind',
+      ));
+    }
+    if (sprintStories.isNotEmpty) {
+      final estimated = sprintStories.where((s) => s.storyPoints > 0).length;
+      final coverage = estimated / sprintStories.length;
+      indicators.add(_HealthIndicator(
+        'Estimate Coverage',
+        coverage,
+        coverage >= 0.8
+            ? Colors.green
+            : (coverage >= 0.5 ? _kAccent : Colors.red),
+        coverage >= 0.8 ? 'Estimated' : 'Partial',
+      ));
+    }
+    final openCount = openIssues.length;
+    indicators.add(_HealthIndicator(
+      'Blocker Backlog',
+      openCount == 0 ? 1.0 : 1 - math.min(openCount, 10) / 10,
+      openCount == 0 ? Colors.green : (openCount <= 3 ? _kAccent : Colors.red),
+      openCount == 0 ? 'Clear' : '$openCount open',
+    ));
+    indicators.add(_HealthIndicator(
+      'Risk Exposure',
+      highRisks == 0 ? 1.0 : 1 - math.min(highRisks, 5) / 5,
+      highRisks == 0 ? Colors.green : Colors.red,
+      highRisks == 0 ? 'Low' : '$highRisks high',
+    ));
+    _health = indicators;
+
+    final projectActivities = [
+      ...data.projectActivities,
+      ...data.customProjectActivities,
+    ]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    _activity = [
+      for (final activity in projectActivities
+          .where((a) => a.title.trim().isNotEmpty)
+          .take(6))
+        _activityFromProject(activity, now),
+      for (final issue in openIssues.take(2))
+        _ActivityItem(
+          issue.owner.trim().isEmpty ? 'Issue log' : issue.owner.trim(),
+          'logged',
+          issue.title,
+          issue.due.isEmpty ? 'Open' : 'Due ${issue.due}',
+          Icons.report_problem_outlined,
+          issue.status == 'Blocked' ? Colors.red : _kAccent,
+        ),
+    ];
+  }
+
+  /// The sprint the dashboard reports: the one running now, else the next one
+  /// to start, else the most recent. Undated sprints fall back to the first.
+  RoadmapSprint? _pickSprint(List<RoadmapSprint> sprints, DateTime now) {
+    if (sprints.isEmpty) return null;
+    final dated = sprints
+        .where((s) => s.startDate != null && s.endDate != null)
+        .toList()
+      ..sort((a, b) => a.startDate!.compareTo(b.startDate!));
+    if (dated.isEmpty) return sprints.first;
+    for (final s in dated) {
+      if (!now.isBefore(s.startDate!) &&
+          now.isBefore(s.endDate!.add(const Duration(days: 1)))) {
+        return s;
+      }
+    }
+    for (final s in dated) {
+      if (s.startDate!.isAfter(now)) return s;
+    }
+    return dated.last;
+  }
+
+  _ActivityItem _activityFromProject(ProjectActivity activity, DateTime now) {
+    final assignee = activity.assignedTo?.trim() ?? '';
+    final actor = assignee.isNotEmpty
+        ? assignee
+        : (activity.role.trim().isEmpty ? 'Project team' : activity.role.trim());
+    var verb = 'added';
+    var icon = Icons.add_circle_outline;
+    var color = _kAccent;
+    switch (activity.status) {
+      case ProjectActivityStatus.implemented:
+        verb = 'completed';
+        icon = Icons.check_circle;
+        color = Colors.green;
+        break;
+      case ProjectActivityStatus.acknowledged:
+        verb = 'acknowledged';
+        icon = Icons.track_changes;
+        break;
+      case ProjectActivityStatus.rejected:
+        verb = 'rejected';
+        icon = Icons.block;
+        color = Colors.red;
+        break;
+      case ProjectActivityStatus.deferred:
+        verb = 'deferred';
+        icon = Icons.schedule;
+        break;
+      case ProjectActivityStatus.pending:
+        break;
+    }
+    return _ActivityItem(
+      actor,
+      verb,
+      activity.title.trim(),
+      _relativeTime(activity.updatedAt, now),
+      icon,
+      color,
+    );
+  }
+
+  String _relativeTime(DateTime at, DateTime now) {
+    final diff = now.difference(at);
+    if (diff.isNegative || diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${at.day.toString().padLeft(2, '0')}/${at.month.toString().padLeft(2, '0')}';
   }
 
   Future<void> _saveData() async {
@@ -287,7 +335,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         'velocity': _velocity,
         'storiesCompleted': _storiesCompleted,
         'storiesTotal': _storiesTotal,
-        'teamCapacity': _teamCapacity,
+        'teamMembers': _teamSize,
         'updatedAt': FieldValue.serverTimestamp(),
       });
       if (mounted) {
@@ -436,44 +484,39 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
       _MetricCard(
         title: 'Active Sprint',
         value: _activeSprint,
-        sublabel: 'Day $_sprintDay of $_sprintTotalDays',
+        sublabel: _sprintTotalDays > 0
+            ? 'Day $_sprintDay of $_sprintTotalDays'
+            : 'Add sprints in the Sprint Calendar',
         icon: Icons.directions_run,
         accent: _kAccent,
         accentBg: _kAccentBg,
-        trend: '+2 days',
-        trendUp: true,
       ),
       _MetricCard(
         title: 'Velocity',
         value: '$_velocity pts',
-        sublabel: '3-sprint avg: 40 pts',
+        sublabel: 'Story points completed this sprint',
         icon: Icons.speed,
         accent: Colors.green,
         accentBg: const Color(0xFFD1FAE5),
-        trend: '+5%',
-        trendUp: true,
         metricKey: 'velocity',
       ),
       _MetricCard(
         title: 'Stories Completed',
         value: '$_storiesCompleted / $_storiesTotal',
-        sublabel: '${(_sprintCompletion * 100).toInt()}% of sprint goal',
+        sublabel: '${(_sprintCompletion * 100).toInt()}% complete',
         icon: Icons.task_alt,
         accent: const Color(0xFFFFC812),
         accentBg: const Color(0xFFFEF3C7),
-        trend: '6 in progress',
-        trendUp: true,
+        trend: '$_storiesInProgress in progress',
         metricKey: 'throughput',
       ),
       _MetricCard(
-        title: 'Team Capacity',
-        value: '$_teamCapacity%',
-        sublabel: '7 of 8 members active',
+        title: 'Team Members',
+        value: '$_teamSize',
+        sublabel: '$_activeContributors with open stories',
         icon: Icons.groups,
         accent: const Color(0xFFB8860B),
         accentBg: const Color(0xFFFFF8E1),
-        trend: 'Healthy',
-        trendUp: true,
       ),
     ];
 
@@ -528,30 +571,27 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
                 child: Icon(c.icon, size: 18, color: c.accent),
               ),
               const Spacer(),
+              if (c.trend != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: c.trendUp
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.red.withValues(alpha: 0.1),
+                  color: _kMuted.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      c.trendUp ? Icons.trending_up : Icons.trending_down,
+                    const Icon(
+                      Icons.sync,
                       size: 12,
-                      color: c.trendUp ? Colors.green : Colors.red,
+                      color: _kMuted,
                     ),
                     const SizedBox(width: 4),
-                    Text(c.trend,
-                        style: TextStyle(
+                    Text(c.trend!,
+                        style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: c.trendUp
-                                ? Colors.green[700]
-                                : Colors.red[700])),
+                            color: _kMuted)),
                   ],
                 ),
               ),
@@ -609,11 +649,13 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             children: [
               const Icon(Icons.flag_outlined, size: 20, color: _kAccent),
               const SizedBox(width: 8),
-              Text('Sprint Progress — $_activeSprint',
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: _kHeadline)),
+              Flexible(
+                child: Text('Sprint Progress — $_activeSprint',
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _kHeadline)),
+              ),
               const Spacer(),
               Container(
                 padding:
@@ -646,15 +688,18 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               _chip('$_storiesCompleted Completed', Colors.green),
               const SizedBox(width: 8),
               _chip('${_storiesTotal - _storiesCompleted} Remaining', _kAccent),
-              const SizedBox(width: 8),
-              _chip('Day $_sprintDay/$_sprintTotalDays', const Color(0xFFFFC812)),
+              if (_sprintTotalDays > 0) ...[
+                const SizedBox(width: 8),
+                _chip('Day $_sprintDay/$_sprintTotalDays', const Color(0xFFFFC812)),
+              ],
               const Spacer(),
-              Text(
-                  'ETA: ${DateTime.now().add(Duration(days: _sprintTotalDays - _sprintDay)).day}/${DateTime.now().month}',
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _kMuted)),
+              if (_sprintEnd != null)
+                Text(
+                    'Ends ${_sprintEnd!.day}/${_sprintEnd!.month}/${_sprintEnd!.year}',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _kMuted)),
             ],
           ),
         ],
@@ -705,14 +750,22 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
           const SizedBox(height: 16),
           SizedBox(
             height: 220,
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: _BurnDownPainter(
-                actual: _burnDown,
-                ideal: _idealBurn,
-                accent: _kAccentLight,
-              ),
-            ),
+            child: _burnDown.isEmpty
+                ? const Center(
+                    child: Text(
+                      'The burn-down appears once the sprint has planned story points.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: _kMuted),
+                    ),
+                  )
+                : CustomPaint(
+                    size: Size.infinite,
+                    painter: _BurnDownPainter(
+                      actual: _burnDown,
+                      ideal: _idealBurn,
+                      accent: _kAccentLight,
+                    ),
+                  ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -769,7 +822,13 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          ..._health.map((h) => Padding(
+          if (_health.isEmpty)
+            const Text(
+              'Health indicators appear once sprint stories or project issues are recorded.',
+              style: TextStyle(fontSize: 12, color: _kMuted),
+            )
+          else
+            ..._health.map((h) => Padding(
                 padding: const EdgeInsets.only(bottom: 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -838,7 +897,13 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          ..._activity.map((a) => _buildActivityItem(a)),
+          if (_activity.isEmpty)
+            const Text(
+              'No recent activity is recorded for this project yet.',
+              style: TextStyle(fontSize: 12, color: _kMuted),
+            )
+          else
+            ..._activity.map((a) => _buildActivityItem(a)),
         ],
       ),
     );
@@ -932,8 +997,7 @@ class _MetricCard {
   final IconData icon;
   final Color accent;
   final Color accentBg;
-  final String trend;
-  final bool trendUp;
+  final String? trend;
 
   /// The Metrics Planning key this card reports, when it reports one at all.
   /// Cards without a key (sprint context, team capacity) are context, not
@@ -948,8 +1012,7 @@ class _MetricCard {
     required this.icon,
     required this.accent,
     required this.accentBg,
-    required this.trend,
-    required this.trendUp,
+    this.trend,
     this.metricKey,
   });
 }
@@ -1000,8 +1063,8 @@ class _LoadingStrip extends StatelessWidget {
 }
 
 class _BurnDownPainter extends CustomPainter {
-  final List<double> actual;
-  final List<double> ideal;
+  final List<double?> actual;
+  final List<double?> ideal;
   final Color accent;
   _BurnDownPainter({
     required this.actual,
@@ -1011,10 +1074,19 @@ class _BurnDownPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final maxVal = actual.reduce((a, b) => a > b ? a : b);
+    final values = [...actual, ...ideal].whereType<double>();
+    final maxVal = values.isEmpty
+        ? 1.0
+        : math.max(1.0, values.reduce((a, b) => a > b ? a : b));
     final w = size.width;
     final h = size.height;
     const pad = 8.0;
+    final count = math.max(actual.length, ideal.length);
+
+    double xOf(int i) =>
+        count <= 1 ? w / 2 : pad + (w - 2 * pad) * i / (count - 1);
+    // Higher remaining work sits higher on the chart.
+    double yOf(double value) => pad + (h - 2 * pad) * (1 - value / maxVal);
 
     // Grid
     final gridPaint = Paint()
@@ -1025,45 +1097,52 @@ class _BurnDownPainter extends CustomPainter {
       canvas.drawLine(Offset(pad, y), Offset(w - pad, y), gridPaint);
     }
 
+    // Path through the known values only. Gaps are skipped, not drawn as zero.
+    Path pathFor(List<double?> series) {
+      final path = Path();
+      var started = false;
+      for (var i = 0; i < series.length; i++) {
+        final value = series[i];
+        if (value == null) continue;
+        final x = xOf(i);
+        final y = yOf(value);
+        if (started) {
+          path.lineTo(x, y);
+        } else {
+          path.moveTo(x, y);
+          started = true;
+        }
+      }
+      return path;
+    }
+
     // Ideal line
     final idealPaint = Paint()
       ..color = const Color(0xFFCBD5E1)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    final idealPath = Path();
-    for (int i = 0; i < ideal.length; i++) {
-      final x = pad + (w - 2 * pad) * i / (ideal.length - 1);
-      final y = pad + (h - 2 * pad) * (ideal[i] / maxVal);
-      if (i == 0) {
-        idealPath.moveTo(x, y);
-      } else {
-        idealPath.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(idealPath, idealPaint);
+    canvas.drawPath(pathFor(ideal), idealPaint);
+
+    final knownActual = [
+      for (var i = 0; i < actual.length; i++)
+        if (actual[i] != null) i,
+    ];
+    if (knownActual.isEmpty) return;
 
     // Actual filled area
-    final actualPath = Path();
-    for (int i = 0; i < actual.length; i++) {
-      final x = pad + (w - 2 * pad) * i / (actual.length - 1);
-      final y = pad + (h - 2 * pad) * (actual[i] / maxVal);
-      if (i == 0) {
-        actualPath.moveTo(x, y);
-      } else {
-        actualPath.lineTo(x, y);
-      }
+    if (knownActual.length > 1) {
+      final areaPath = pathFor(actual)
+        ..lineTo(xOf(knownActual.last), h - pad)
+        ..lineTo(xOf(knownActual.first), h - pad)
+        ..close();
+      final areaPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [accent.withValues(alpha: 0.3), accent.withValues(alpha: 0.0)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h));
+      canvas.drawPath(areaPath, areaPaint);
     }
-    final areaPath = Path.from(actualPath)
-      ..lineTo(w - pad, h - pad)
-      ..lineTo(pad, h - pad)
-      ..close();
-    final areaPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [accent.withValues(alpha: 0.3), accent.withValues(alpha: 0.0)],
-      ).createShader(Rect.fromLTWH(0, 0, w, h));
-    canvas.drawPath(areaPath, areaPaint);
 
     // Actual line
     final actualPaint = Paint()
@@ -1071,23 +1150,14 @@ class _BurnDownPainter extends CustomPainter {
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    canvas.drawPath(actualPath, actualPaint);
+    canvas.drawPath(pathFor(actual), actualPaint);
 
     // Points
-    final pointPaint = Paint()..color = accent;
-    for (int i = 0; i < actual.length; i++) {
-      final x = pad + (w - 2 * pad) * i / (actual.length - 1);
-      final y = pad + (h - 2 * pad) * (actual[i] / maxVal);
-      canvas.drawCircle(Offset(x, y), 4, pointPaint);
+    for (final i in knownActual) {
+      final center = Offset(xOf(i), yOf(actual[i]!));
+      canvas.drawCircle(center, 4, Paint()..color = Colors.white);
       canvas.drawCircle(
-          Offset(x, y),
-          4,
-          Paint()
-            ..color = Colors.white
-            ..style = PaintingStyle.fill
-            ..strokeWidth = 2);
-      canvas.drawCircle(
-          Offset(x, y),
+          center,
           4,
           Paint()
             ..color = accent

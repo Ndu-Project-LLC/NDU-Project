@@ -1605,37 +1605,37 @@ Rules:
                 horizontalMargin: 12,
                 headingRowColor: const Color(0xFFF5F7FB),
                 columns: [
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Milestone',
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: _kPrimaryText))),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Date',
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: _kPrimaryText))),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Discipline',
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: _kPrimaryText))),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Mapped $_level1NounPlural',
                           style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: _kPrimaryText))),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('References',
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                               color: _kPrimaryText))),
-                  const DataColumn(
+                  const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Comments',
                           style: TextStyle(
                               fontWeight: FontWeight.w700,

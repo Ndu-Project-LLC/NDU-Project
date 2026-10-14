@@ -99,7 +99,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Seeded ${seed.rows.length} security item(s) from ${seed.source}.'),
+                  'Seeded ${seed.rows.length} security item(s) from ${seed.source}.'),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -207,15 +207,18 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
     _persistAccessLog(entry);
   }
 
-  Future<void> _openRoleDialog() async {
-    final nameController = SpellCheckTextEditingController();
-    final tierController = SpellCheckTextEditingController(text: 'Tier 1');
-    final descriptionController = SpellCheckTextEditingController();
+  Future<void> _openRoleDialog({_RoleRowData? existing}) async {
+    final nameController =
+        SpellCheckTextEditingController(text: existing?.name ?? '');
+    final tierController =
+        SpellCheckTextEditingController(text: existing?.tierLabel ?? 'Tier 1');
+    final descriptionController =
+        SpellCheckTextEditingController(text: existing?.description ?? '');
     final result = await showAppDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add role'),
+          title: Text(existing == null ? 'Add role' : 'Edit role'),
           content: SizedBox(
             width: 420,
             child: Column(
@@ -244,7 +247,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                 child: const Text('Cancel')),
             ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Add')),
+                child: Text(existing == null ? 'Add' : 'Save')),
           ],
         );
       },
@@ -260,19 +263,105 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
         : tier.toLowerCase().contains('2')
             ? _TierBadgeVariant.text
             : _TierBadgeVariant.neutral;
+    final editing = existing;
+    final isEdit = editing != null && editing.id.isNotEmpty;
     final role = _RoleRowData(
-      id: _newDocId('security_roles'),
+      id: editing != null && editing.id.isNotEmpty
+          ? editing.id
+          : _newDocId('security_roles'),
       name: name,
       tierLabel: tier,
       tierVariant: tierVariant,
       description: descriptionController.text.trim().isEmpty
           ? 'Custom role'
           : descriptionController.text.trim(),
-      created: _formatShortDate(DateTime.now()),
+      created: editing != null && editing.id.isNotEmpty
+          ? editing.created
+          : _formatShortDate(DateTime.now()),
+      permissionNames: editing?.permissionNames ?? const [],
     );
-    setState(() => _roles.add(role));
-    await _persistRole(role);
-    _logAccess(action: 'Created role', resource: name);
+    await _saveRole(role);
+    _logAccess(
+        action: isEdit ? 'Updated role' : 'Created role', resource: name);
+  }
+
+  /// Adds [role], or replaces the stored role with the same id. Demo rows have
+  /// no id, so the first save stores them as new roles.
+  Future<void> _saveRole(_RoleRowData role) async {
+    final index = _roles.indexWhere((r) => r.id == role.id);
+    setState(() {
+      if (index >= 0) {
+        _roles[index] = role;
+      } else {
+        _roles.add(role);
+      }
+    });
+    await _persistRole(role, isEdit: index >= 0);
+  }
+
+  Future<void> _openRolePermissionsDialog(_RoleRowData role) async {
+    final options = <String>{
+      for (final permission in _demoSystemPermissions) permission.name,
+      for (final permission in _permissions) permission.name,
+    }.toList();
+    final selected = <String>{...role.permissionNames};
+    final result = await showAppDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Permissions for ${role.name}'),
+              content: SizedBox(
+                width: 420,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final option in options)
+                        CheckboxListTile(
+                          value: selected.contains(option),
+                          title: Text(option),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (checked) => setDialogState(() {
+                            if (checked ?? false) {
+                              selected.add(option);
+                            } else {
+                              selected.remove(option);
+                            }
+                          }),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel')),
+                ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Save')),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (result != true) return;
+    final updated = _RoleRowData(
+      id: role.id.isNotEmpty ? role.id : _newDocId('security_roles'),
+      name: role.name,
+      tierLabel: role.tierLabel,
+      tierVariant: role.tierVariant,
+      description: role.description,
+      created:
+          role.id.isNotEmpty ? role.created : _formatShortDate(DateTime.now()),
+      permissionNames: options.where(selected.contains).toList(),
+    );
+    await _saveRole(updated);
+    _logAccess(action: 'Updated role permissions', resource: role.name);
   }
 
   Future<void> _openPermissionDialog() async {
@@ -423,15 +512,18 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
         .id;
   }
 
-  Future<void> _persistRole(_RoleRowData role) async {
+  Future<void> _persistRole(_RoleRowData role, {bool isEdit = false}) async {
     final projectId = ProjectDataHelper.getData(context).projectId;
     if (projectId == null || projectId.isEmpty) return;
     final projectRef =
         FirebaseFirestore.instance.collection('projects').doc(projectId);
+    final data = role.toFirestore();
+    // An edit keeps the original creation date.
+    if (isEdit) data.remove('createdAt');
     await projectRef
         .collection('security_roles')
         .doc(role.id)
-        .set(role.toFirestore());
+        .set(data, SetOptions(merge: isEdit));
   }
 
   Future<void> _persistPermission(_PermissionRowData permission) async {
@@ -506,7 +598,6 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                             title: 'Security Management',
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                       
                         const _PageHeader(),
                         if (_loadingData) ...[
                           const SizedBox(height: 12),
@@ -525,7 +616,9 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                           permissions: _permissions,
                           settings: _settings,
                           accessLogs: _accessLogs,
-                          onAddRole: _openRoleDialog,
+                          onAddRole: () => _openRoleDialog(),
+                          onEditRole: (role) => _openRoleDialog(existing: role),
+                          onEditRolePermissions: _openRolePermissionsDialog,
                           onAddPermission: _openPermissionDialog,
                           onAddSetting: _openSettingDialog,
                           onSaveSettings: _handleSettingsSaved,
@@ -547,17 +640,17 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
           ],
         ),
       ),
-    bottomNavigationBar: const SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
-        child: PageNavigationFooter(
-          checkpoint: 'security_management',
-          pageTitle: 'Security Management',
-          showBorders: false,
+      bottomNavigationBar: const SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: PageNavigationFooter(
+            checkpoint: 'security_management',
+            pageTitle: 'Security Management',
+            showBorders: false,
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -568,8 +661,16 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
       screenTitle: 'Security Management',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
-          {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
+          {
+            'Project Name': projectData.projectName.isEmpty
+                ? 'N/A'
+                : projectData.projectName
+          },
+          {
+            'Solution Title': projectData.solutionTitle.isEmpty
+                ? 'N/A'
+                : projectData.solutionTitle
+          },
         ]),
         PdfSection.text(
             'Notes',
@@ -708,7 +809,8 @@ class _SecurityNotesCardState extends State<_SecurityNotesCard> {
               hintText: 'Capture security notes here...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+                borderSide:
+                    BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
               ),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
@@ -886,6 +988,8 @@ class _TabContent extends StatelessWidget {
     required this.settings,
     required this.accessLogs,
     required this.onAddRole,
+    required this.onEditRole,
+    required this.onEditRolePermissions,
     required this.onAddPermission,
     required this.onAddSetting,
     required this.onSaveSettings,
@@ -898,6 +1002,8 @@ class _TabContent extends StatelessWidget {
   final List<_SettingEntry> settings;
   final List<_AccessLogEntry> accessLogs;
   final VoidCallback onAddRole;
+  final ValueChanged<_RoleRowData> onEditRole;
+  final ValueChanged<_RoleRowData> onEditRolePermissions;
   final VoidCallback onAddPermission;
   final VoidCallback onAddSetting;
   final ValueChanged<_SystemSettingsData> onSaveSettings;
@@ -914,7 +1020,12 @@ class _TabContent extends StatelessWidget {
           accessLogs: accessLogs,
         );
       case _SecurityTab.roles:
-        return _RolesView(roles: roles, onAdd: onAddRole);
+        return _RolesView(
+          roles: roles.isNotEmpty ? roles : _demoRoles,
+          onAdd: onAddRole,
+          onEdit: onEditRole,
+          onEditPermissions: onEditRolePermissions,
+        );
       case _SecurityTab.permissions:
         return _PermissionsView(
             permissions: permissions, onAdd: onAddPermission);
@@ -1076,10 +1187,10 @@ class _SettingsViewState extends State<_SettingsView> {
   void initState() {
     super.initState();
     final initial = widget.initialSettings;
-    _sessionTimeoutController =
-        SpellCheckTextEditingController(text: initial.sessionTimeoutMinutes.toString());
-    _minPasswordLengthController =
-        SpellCheckTextEditingController(text: initial.minPasswordLength.toString());
+    _sessionTimeoutController = SpellCheckTextEditingController(
+        text: initial.sessionTimeoutMinutes.toString());
+    _minPasswordLengthController = SpellCheckTextEditingController(
+        text: initial.minPasswordLength.toString());
     _requireMfa = initial.requireMfa;
     _requireUppercase = initial.requireUppercase;
     _requireNumbers = initial.requireNumbers;
@@ -1410,7 +1521,8 @@ class _AccessLogsView extends StatefulWidget {
 }
 
 class _AccessLogsViewState extends State<_AccessLogsView> {
-  final TextEditingController _searchController = SpellCheckTextEditingController();
+  final TextEditingController _searchController =
+      SpellCheckTextEditingController();
   String? _statusFilter;
   late final VoidCallback _searchListener;
 
@@ -1950,38 +2062,46 @@ class _StatusDropdown extends StatelessWidget {
   }
 }
 
+/// Sample roles shown until the project has real ones.
+const List<_RoleRowData> _demoRoles = [
+  _RoleRowData(
+    name: 'Admin',
+    tierLabel: 'Tier 1',
+    tierVariant: _TierBadgeVariant.primary,
+    description: 'Full system access',
+    created: '4/9/2025',
+  ),
+  _RoleRowData(
+    name: 'Manager',
+    tierLabel: 'Tier 2',
+    tierVariant: _TierBadgeVariant.text,
+    description: 'Contract approvals and team management',
+    created: '4/9/2025',
+  ),
+  _RoleRowData(
+    name: 'Contractor',
+    tierLabel: 'Tier 3',
+    tierVariant: _TierBadgeVariant.neutral,
+    description: 'Basic contract viewing and updates',
+    created: '4/9/2025',
+  ),
+];
+
 class _RolesView extends StatelessWidget {
-  const _RolesView({required this.roles, required this.onAdd});
+  const _RolesView({
+    required this.roles,
+    required this.onAdd,
+    required this.onEdit,
+    required this.onEditPermissions,
+  });
 
   final List<_RoleRowData> roles;
   final VoidCallback onAdd;
+  final ValueChanged<_RoleRowData> onEdit;
+  final ValueChanged<_RoleRowData> onEditPermissions;
 
   @override
   Widget build(BuildContext context) {
-    const roles = [
-      _RoleRowData(
-        name: 'Admin',
-        tierLabel: 'Tier 1',
-        tierVariant: _TierBadgeVariant.primary,
-        description: 'Full system access',
-        created: '4/9/2025',
-      ),
-      _RoleRowData(
-        name: 'Manager',
-        tierLabel: 'Tier 2',
-        tierVariant: _TierBadgeVariant.text,
-        description: 'Contract approvals and team management',
-        created: '4/9/2025',
-      ),
-      _RoleRowData(
-        name: 'Contractor',
-        tierLabel: 'Tier 3',
-        tierVariant: _TierBadgeVariant.neutral,
-        description: 'Basic contract viewing and updates',
-        created: '4/9/2025',
-      ),
-    ];
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 30),
@@ -2128,15 +2248,22 @@ class _RolesView extends StatelessWidget {
                                     fontSize: 14, color: Color(0xFF4B5563)),
                               ),
                             ),
-                            const Expanded(
+                            Expanded(
                               flex: 2,
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Wrap(
                                   spacing: 10,
                                   children: [
-                                    _TableActionButton(label: 'Edit'),
-                                    _TableActionButton(label: 'Permissions'),
+                                    _TableActionButton(
+                                      label: 'Edit',
+                                      onPressed: () => onEdit(roles[i]),
+                                    ),
+                                    _TableActionButton(
+                                      label: 'Permissions',
+                                      onPressed: () =>
+                                          onEditPermissions(roles[i]),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -2166,6 +2293,71 @@ class _RolesView extends StatelessWidget {
   }
 }
 
+/// Sample permissions shown on the Permissions tab and offered in the role
+/// permissions dialog.
+const List<_PermissionRowData> _demoSystemPermissions = [
+  _PermissionRowData(
+      name: 'Create Contract',
+      resource: 'contracts',
+      action: 'create',
+      description: 'Create new contracts'),
+  _PermissionRowData(
+      name: 'Read Contract',
+      resource: 'contracts',
+      action: 'read',
+      description: 'View contract details'),
+  _PermissionRowData(
+      name: 'Update Contract',
+      resource: 'contracts',
+      action: 'update',
+      description: 'Edit existing contracts'),
+  _PermissionRowData(
+      name: 'Delete Contract',
+      resource: 'contracts',
+      action: 'delete',
+      description: 'Remove contracts from the system'),
+  _PermissionRowData(
+      name: 'Approve Contract',
+      resource: 'contracts',
+      action: 'approve',
+      description: 'Approve contracts for execution'),
+  _PermissionRowData(
+      name: 'Create Bid',
+      resource: 'bids',
+      action: 'create',
+      description: 'Create vendor bids'),
+  _PermissionRowData(
+      name: 'Read Bid',
+      resource: 'bids',
+      action: 'read',
+      description: 'View bid details'),
+  _PermissionRowData(
+      name: 'Select Bid',
+      resource: 'bids',
+      action: 'select',
+      description: 'Select winning bids'),
+  _PermissionRowData(
+      name: 'Access Reports',
+      resource: 'reports',
+      action: 'read',
+      description: 'Access system reports and analytics'),
+  _PermissionRowData(
+      name: 'Manage Users',
+      resource: 'users',
+      action: 'manage',
+      description: 'Create and edit user accounts'),
+  _PermissionRowData(
+      name: 'Manage Roles',
+      resource: 'roles',
+      action: 'manage',
+      description: 'Create and edit roles'),
+  _PermissionRowData(
+      name: 'View Audit Log',
+      resource: 'audit',
+      action: 'read',
+      description: 'Access system audit logs'),
+];
+
 class _PermissionsView extends StatefulWidget {
   const _PermissionsView({required this.permissions, required this.onAdd});
 
@@ -2181,68 +2373,7 @@ class _PermissionsViewState extends State<_PermissionsView> {
 
   @override
   Widget build(BuildContext context) {
-    const permissions = [
-      _PermissionRowData(
-          name: 'Create Contract',
-          resource: 'contracts',
-          action: 'create',
-          description: 'Create new contracts'),
-      _PermissionRowData(
-          name: 'Read Contract',
-          resource: 'contracts',
-          action: 'read',
-          description: 'View contract details'),
-      _PermissionRowData(
-          name: 'Update Contract',
-          resource: 'contracts',
-          action: 'update',
-          description: 'Edit existing contracts'),
-      _PermissionRowData(
-          name: 'Delete Contract',
-          resource: 'contracts',
-          action: 'delete',
-          description: 'Remove contracts from the system'),
-      _PermissionRowData(
-          name: 'Approve Contract',
-          resource: 'contracts',
-          action: 'approve',
-          description: 'Approve contracts for execution'),
-      _PermissionRowData(
-          name: 'Create Bid',
-          resource: 'bids',
-          action: 'create',
-          description: 'Create vendor bids'),
-      _PermissionRowData(
-          name: 'Read Bid',
-          resource: 'bids',
-          action: 'read',
-          description: 'View bid details'),
-      _PermissionRowData(
-          name: 'Select Bid',
-          resource: 'bids',
-          action: 'select',
-          description: 'Select winning bids'),
-      _PermissionRowData(
-          name: 'Access Reports',
-          resource: 'reports',
-          action: 'read',
-          description: 'Access system reports and analytics'),
-      _PermissionRowData(
-          name: 'Manage Users',
-          resource: 'users',
-          action: 'manage',
-          description: 'Create and edit user accounts'),
-      _PermissionRowData(
-          name: 'Manage Roles',
-          resource: 'roles',
-          action: 'manage',
-          description: 'Create and edit roles'),
-      _PermissionRowData(
-          name: 'View Audit Log',
-          resource: 'audit',
-          action: 'read',
-          description: 'Access system audit logs'),
-    ];
+    const permissions = _demoSystemPermissions;
 
     final filteredPermissions = _selectedResource == null
         ? permissions
@@ -2461,6 +2592,7 @@ class _RoleRowData {
     required this.tierVariant,
     required this.description,
     required this.created,
+    this.permissionNames = const [],
   });
 
   final String id;
@@ -2469,11 +2601,13 @@ class _RoleRowData {
   final _TierBadgeVariant tierVariant;
   final String description;
   final String created;
+  final List<String> permissionNames;
 
   factory _RoleRowData.fromFirestore(
       DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
     final tierLabel = data['tierLabel']?.toString() ?? 'Tier 1';
+    final storedPermissions = data['permissionNames'];
     return _RoleRowData(
       id: doc.id,
       name: data['name']?.toString() ?? '',
@@ -2481,6 +2615,9 @@ class _RoleRowData {
       tierVariant: _tierVariantFromLabel(tierLabel),
       description: data['description']?.toString() ?? '',
       created: _formatShortDate(_readTimestamp(data['createdAt'])),
+      permissionNames: storedPermissions is List
+          ? storedPermissions.map((name) => name.toString()).toList()
+          : const [],
     );
   }
 
@@ -2488,6 +2625,7 @@ class _RoleRowData {
     return {
       'name': name,
       'tierLabel': tierLabel,
+      'permissionNames': permissionNames,
       'description': description,
       'createdAt': Timestamp.now(),
     };
@@ -2741,14 +2879,15 @@ class _TableHeaderCell extends StatelessWidget {
 }
 
 class _TableActionButton extends StatelessWidget {
-  const _TableActionButton({required this.label});
+  const _TableActionButton({required this.label, required this.onPressed});
 
   final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         foregroundColor: const Color(0xFF1F2937),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),

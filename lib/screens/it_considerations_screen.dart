@@ -369,6 +369,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
               Expanded(
                   child: Column(children: [
                 BusinessCaseHeader(
+                  walkthroughId: 'IT Considerations',
                     scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
                 Expanded(child: _buildMainContent()),
               ])),

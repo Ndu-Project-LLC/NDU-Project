@@ -1085,41 +1085,41 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                         dataRowMinHeight: 56,
                                         dataRowMaxHeight: 76,
                                         columns: const [
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 220,
                                                   child: Text('Title'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Spec type'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 220,
                                                   child: Text(
                                                       'Applies to requirements'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 140,
                                                   child: Text('Discipline'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 140,
                                                   child: Text('Area'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 170,
                                                   child: Text(
                                                       'WBS Work Package'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Source type'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Owner'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 90,
                                                   child: Text('Status'))),
@@ -1252,41 +1252,41 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                                         dataRowMinHeight: 56,
                                         dataRowMaxHeight: 76,
                                         columns: const [
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 220,
                                                   child: Text('Title'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Spec type'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 220,
                                                   child: Text(
                                                       'Applies to requirements'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 140,
                                                   child: Text('Discipline'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 140,
                                                   child: Text('Area'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 170,
                                                   child: Text(
                                                       'WBS Work Package'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Source type'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 120,
                                                   child: Text('Owner'))),
-                                          DataColumn(
+                                          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                                               label: SizedBox(
                                                   width: 90,
                                                   child: Text('Status'))),
@@ -5225,11 +5225,11 @@ class _RequirementsMappingTable extends StatelessWidget {
               dataRowMinHeight: 52,
               dataRowMaxHeight: 88,
               columns: const [
-                DataColumn(label: Text('#')),
-                DataColumn(label: Text('Requirement')),
-                DataColumn(label: Text('Codes / Standards')),
-                DataColumn(label: Text('Specification(s) applied')),
-                DataColumn(label: Text('Status')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('#')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Requirement')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Codes / Standards')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Specification(s) applied')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
               ],
               rows: [
                 for (final row in rows)
@@ -5377,16 +5377,16 @@ class _SpecificationsInlineTable extends StatelessWidget {
             dataRowMaxHeight: 64,
             columnSpacing: 20,
             columns: const [
-              DataColumn(label: Text('#')),
-              DataColumn(label: Text('Code / standard / specification')),
-              DataColumn(label: Text('Spec type')),
-              DataColumn(label: Text('Applies to requirements')),
-              DataColumn(label: Text('Discipline')),
-              DataColumn(label: Text('Area')),
-              DataColumn(label: Text('WBS Work Package')),
-              DataColumn(label: Text('Source type')),
-              DataColumn(label: Text('Owner')),
-              DataColumn(label: Text('Status')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('#')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Code / standard / specification')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Spec type')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Applies to requirements')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Discipline')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Area')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('WBS Work Package')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Source type')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
             ],
             rows: [
               for (var i = 0; i < rows.length; i++)
@@ -5500,11 +5500,11 @@ class _ArchitectureModulesTable extends StatelessWidget {
         dataRowMaxHeight: 72,
         columnSpacing: 22,
         columns: const [
-          DataColumn(label: Text('#')),
-          DataColumn(label: Text('Module')),
-          DataColumn(label: Text('Purpose')),
-          DataColumn(label: Text('Owner')),
-          DataColumn(label: Text('Status')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('#')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Module')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Purpose')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
         ],
         rows: [
           for (var i = 0; i < modules.length; i++)

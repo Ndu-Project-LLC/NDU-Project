@@ -57,6 +57,7 @@ class ExecutionPlanInterfaceManagementPlanScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Interface Management Plan',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_interface_management_plan'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

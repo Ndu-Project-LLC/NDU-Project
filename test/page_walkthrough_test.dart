@@ -8,7 +8,7 @@ import 'package:ndu_project/widgets/unified_phase_header.dart';
 /// The Tasks chip only renders when a project context exists, so these tests
 /// supply one — otherwise there is nothing for the Walkthrough chip to sit
 /// beside and the adjacency check would be meaningless.
-Widget _fakePage(WidgetTester tester) {
+Widget _fakePage(WidgetTester tester, {String pageTitle = 'Unlisted Page'}) {
   tester.view.physicalSize = const Size(1600, 1000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
@@ -41,7 +41,7 @@ Widget _fakePage(WidgetTester tester) {
       home: Scaffold(
         body: Column(
           children: [
-            const UnifiedPhaseHeader(title: 'Risk Assessment'),
+            UnifiedPhaseHeader(title: pageTitle),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -100,6 +100,23 @@ void main() {
     expect(find.text('Risk Register'), findsWidgets);
   });
 
+  testWidgets('a page with authored copy shows its own tour, not the derived one',
+      (tester) async {
+    await tester.pumpWidget(_fakePage(tester, pageTitle: 'Risk Assessment'));
+    await tester.pump();
+
+    await tester.tap(find.text('Walkthrough'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('Risk Assessment'), findsWidgets);
+    expect(
+      find.textContaining('Identify, score and plan responses'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('3 sections'), findsNothing);
+  });
+
   testWidgets('a registered bespoke tour overrides the derived one',
       (tester) async {
     addTearDown(PageWalkthroughRegistry.clear);
@@ -113,7 +130,7 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(_fakePage(tester));
+    await tester.pumpWidget(_fakePage(tester, pageTitle: 'Risk Assessment'));
     await tester.pump();
 
     await tester.tap(find.text('Walkthrough'));

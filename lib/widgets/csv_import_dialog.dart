@@ -806,7 +806,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                   columnSpacing: 16,
                   horizontalMargin: 12,
                   columns: widget.columns
-                      .map((c) => DataColumn(
+                      .map((c) => DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                             label: Text(
                               c.label,
                               style: const TextStyle(

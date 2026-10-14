@@ -68,7 +68,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
             dataRowMinHeight: 64,
             dataRowMaxHeight: 180,
             columns: const [
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Spec ID',
                       textAlign: TextAlign.center,
@@ -78,7 +78,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Design Element',
                       textAlign: TextAlign.center,
@@ -88,7 +88,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Type',
                       textAlign: TextAlign.center,
@@ -98,7 +98,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Specification',
                       textAlign: TextAlign.center,
@@ -108,7 +108,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Priority',
                       textAlign: TextAlign.center,
@@ -118,7 +118,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Phase',
                       textAlign: TextAlign.center,
@@ -128,7 +128,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Owner',
                       textAlign: TextAlign.center,
@@ -138,7 +138,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Traceability',
                       textAlign: TextAlign.center,
@@ -148,7 +148,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Status',
                       textAlign: TextAlign.center,
@@ -158,7 +158,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
                           color: Color(0xFF374151))),
                 ),
               ),
-              DataColumn(
+              DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: Center(
                   child: Text('Actions',
                       textAlign: TextAlign.center,

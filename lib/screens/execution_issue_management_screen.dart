@@ -66,6 +66,7 @@ class ExecutionIssueManagementScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Issue Management',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_issue_management'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

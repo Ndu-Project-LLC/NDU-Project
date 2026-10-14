@@ -629,6 +629,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Column(
  children: [
  BusinessCaseHeader(
+   walkthroughId: 'Potential Solutions',
  scaffoldKey: _scaffoldKey,
  onExportPdf: _exportPdf,
  ),

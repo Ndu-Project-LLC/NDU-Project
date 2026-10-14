@@ -3977,11 +3977,11 @@ class _FrontEndPlanningProcurementScreenState
               dataRowMinHeight: 56,
               dataRowMaxHeight: 80,
               columns: const [
-                DataColumn(label: Text('Item')),
-                DataColumn(label: Text('Source')),
-                DataColumn(label: Text('Qty')),
-                DataColumn(label: Text('Est. Cost')),
-                DataColumn(label: Text('Priority')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Item')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Source')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Qty')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Est. Cost')),
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
               ],
               rows: needs.map((need) {
                 return DataRow(
@@ -5530,6 +5530,7 @@ class _FrontEndPlanningProcurementScreenState
         Column(
           children: [
             FrontEndPlanningHeader(
+              walkthroughId: 'Front End Procurement',
                 scaffoldKey: isMobile ? _scaffoldKey : null,
                 onExportPdf: _exportPdf),
             Expanded(
@@ -7687,12 +7688,12 @@ class _VendorDataTable extends StatelessWidget {
     // The "Contact" column was removed because the email is already
     // shown inside the Vendor Name cell (name + email stacked).
     List<DataColumn> buildColumns() => const [
-          DataColumn(label: Center(child: SizedBox(width: 24))),
-          DataColumn(label: Text('Vendor Name')),
-          DataColumn(label: Text('Category')),
-          DataColumn(label: Text('Status')),
-          DataColumn(label: Text('Rating')),
-          DataColumn(label: Center(child: Text('Actions'))),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Center(child: SizedBox(width: 24))),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Vendor Name')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Category')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Rating')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Center(child: Text('Actions'))),
         ];
 
     List<DataRow> buildRows() => vendors
@@ -12174,26 +12175,26 @@ class _EvaluationMatrix extends StatelessWidget {
             columnSpacing: 24,
             horizontalMargin: 8,
             columns: [
-              const DataColumn(
+              const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: SizedBox(
                   width: 40,
                   child: Text('#', style: headerStyle),
                 ),
               ),
-              const DataColumn(
+              const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: SizedBox(
                   width: 180,
                   child: Text('Vendor', style: headerStyle),
                 ),
               ),
-              const DataColumn(
+              const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: SizedBox(
                   width: 120,
                   child: Text('Category', style: headerStyle),
                 ),
               ),
               for (final pillar in _EvalPillar.values)
-                DataColumn(
+                DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                   label: SizedBox(
                     width: 180,
                     child: Tooltip(
@@ -12213,7 +12214,7 @@ class _EvaluationMatrix extends StatelessWidget {
                     ),
                   ),
                 ),
-              const DataColumn(
+              const DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                 label: SizedBox(
                   width: 140,
                   child: Text('Weighted Total', style: headerStyle),

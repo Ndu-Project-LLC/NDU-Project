@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/checkpoint_labels.dart';
 import 'package:ndu_project/utils/dashboard_palette.dart';
+import 'package:ndu_project/widgets/integration_dashboard/integration_view_switcher.dart';
 
 import '../models/program_model.dart';
 import '../models/portfolio_model.dart';
@@ -545,6 +546,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                           onAddProject: _handleAddProject,
                           isBasicPlan: widget.isBasicPlan,
                         ),
+                        const SizedBox(height: 20),
+                        const IntegrationViewSwitcherLink(),
                         const SizedBox(height: 20),
                         _StatusStrip(
                           projectsStream: _statusProjects$,

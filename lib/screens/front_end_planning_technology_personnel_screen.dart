@@ -205,7 +205,8 @@ class _FrontEndPlanningTechnologyPersonnelScreenState
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Front End Technology Personnel',onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
  padding:

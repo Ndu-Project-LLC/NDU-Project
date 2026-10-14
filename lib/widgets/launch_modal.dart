@@ -62,6 +62,7 @@ class LaunchModalShell extends StatelessWidget {
     this.accent,
     required this.body,
     this.actions,
+    this.leadingActions,
   });
 
   final IconData icon;
@@ -70,6 +71,8 @@ class LaunchModalShell extends StatelessWidget {
   final Color? accent;
   final Widget body;
   final List<Widget>? actions;
+  /// Optional buttons pinned to the left of the action row (e.g. an AI assist).
+  final List<Widget>? leadingActions;
 
   @override
   Widget build(BuildContext context) {
@@ -107,19 +110,21 @@ class LaunchModalShell extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   body,
-                  if (actions != null && actions!.isNotEmpty) ...[
+                  if ((actions?.isNotEmpty ?? false) ||
+                      (leadingActions?.isNotEmpty ?? false)) ...[
                     const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (int i = 0; i < actions!.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 8),
-                            actions![i],
-                          ],
+                    Row(
+                      children: [
+                        for (final w in leadingActions ?? const <Widget>[]) ...[
+                          w,
+                          const SizedBox(width: 8),
                         ],
-                      ),
+                        const Spacer(),
+                        for (int i = 0; i < (actions?.length ?? 0); i++) ...[
+                          if (i > 0) const SizedBox(width: 8),
+                          actions![i],
+                        ],
+                      ],
                     ),
                   ],
                 ],

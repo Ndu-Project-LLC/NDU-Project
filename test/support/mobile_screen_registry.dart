@@ -173,7 +173,6 @@ import 'package:ndu_project/screens/schedule_management_board_screen.dart';
 import 'package:ndu_project/screens/schedule_screen.dart';
 import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
 import 'package:ndu_project/screens/security_management_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/screens/sign_in_screen.dart';
@@ -380,7 +379,6 @@ final Map<String, Widget Function()> mobileAuditScreens = <String, Widget Functi
   'ScheduleScreen': ScheduleScreen.new,
   'ScopeCompletionScreen': ScopeCompletionScreen.new,
   'ScopeTrackingImplementationScreen': ScopeTrackingImplementationScreen.new,
-  'ScopeTrackingPlanScreen': ScopeTrackingPlanScreen.new,
   'SecurityManagementScreen': SecurityManagementScreen.new,
   'SettingsScreen': SettingsScreen.new,
   'SignInScreen': SignInScreen.new,

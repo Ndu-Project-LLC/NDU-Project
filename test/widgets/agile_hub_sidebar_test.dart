@@ -1,5 +1,5 @@
-// The Agile Project Hub breaks itself into 15 sub-pages
-// ("Module Components"), and those same 15 have to be reachable from the
+// The Agile Project Hub breaks itself into 14 sub-pages
+// ("Module Components"), and those same 14 have to be reachable from the
 // sidebar, nested under **Agile Project Hub**. These tests pin that the
 // breakdown exists once (`utils/agile_hub_sections.dart`), that the sidebar
 // renders it, and that the highlight follows the user into a sub-page —
@@ -45,11 +45,11 @@ BoxDecoration subPageDecoration(WidgetTester tester, String text) {
 
 void main() {
   group('the Agile Project Hub breakdown', () {
-    test('is 15 numbered sections', () {
-      expect(agileHubSections, hasLength(15));
+    test('is 14 numbered sections', () {
+      expect(agileHubSections, hasLength(14));
       expect(
         agileHubSections.map((s) => s.number),
-        [for (var i = 1; i <= 15; i++) i],
+        [for (var i = 1; i <= 14; i++) i],
       );
     });
 
@@ -132,7 +132,7 @@ void main() {
       expect(subPageDecoration(tester, 'Sprint Planning').color,
           isNot(Colors.transparent),
           reason: 'the open sub-page is not highlighted');
-      expect(subPageDecoration(tester, 'Backlog Grooming').color,
+      expect(subPageDecoration(tester, 'Agile Metrics').color,
           Colors.transparent,
           reason: 'an unrelated sub-page should not be highlighted');
     });

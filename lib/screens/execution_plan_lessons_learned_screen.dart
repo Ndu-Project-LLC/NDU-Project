@@ -59,6 +59,7 @@ class ExecutionPlanLessonsLearnedScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Execution Lessons Learned',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_lessons_learned'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

@@ -37,6 +37,7 @@ class ExecutionPlanAgileDeliveryPlanScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ExecutionPlanHeader(
+              walkthroughId: 'Agile Delivery Plan',
                 onBack: () => PlanningPhaseNavigation.goToPrevious(
                     context, 'execution_plan_agile_delivery_plan'),
                 onNext: () => PlanningPhaseNavigation.goToNext(

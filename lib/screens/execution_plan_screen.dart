@@ -60,6 +60,7 @@ class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  ExecutionPlanHeader(
+   walkthroughId: 'Execution Plan Overview',
  onBack: () => PlanningPhaseNavigation.goToPrevious(
  context, 'execution_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(

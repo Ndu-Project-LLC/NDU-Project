@@ -322,7 +322,8 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  ),
  Expanded(
  child: Column(children: [
- BusinessCaseHeader(scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
+ BusinessCaseHeader(
+   walkthroughId: 'Core Stakeholders',scaffoldKey: _scaffoldKey, onExportPdf: _exportPdf),
  Expanded(child: _buildMainContent()),
  ])),
  ]),

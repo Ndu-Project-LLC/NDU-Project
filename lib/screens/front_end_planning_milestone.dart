@@ -1080,7 +1080,8 @@ Consider typical project timelines and ensure end date is after start date.''';
  const AdminEditToggle(),
  Column(
  children: [
- FrontEndPlanningHeader(onExportPdf: _exportPdf),
+ FrontEndPlanningHeader(
+   walkthroughId: 'Milestone',onExportPdf: _exportPdf),
  Expanded(child: _buildContent()),
  ],
  ),

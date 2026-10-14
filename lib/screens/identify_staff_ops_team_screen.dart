@@ -386,22 +386,22 @@ class _IdentifyStaffOpsTeamScreenState
                   headingRowColor:
                       WidgetStateProperty.all(const Color(0xFF1F2937)),
                   columns: const [
-                    DataColumn(
+                    DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                         label: Text('Name',
                             style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(
+                    DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                         label: Text('Role',
                             style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(
+                    DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                         label: Text('Responsibility',
                             style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(
+                    DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                         label: Text('Status',
                             style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(
+                    DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                         label: Text('Readiness',
                             style: TextStyle(fontWeight: FontWeight.w600))),
-                    DataColumn(
+                    DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                         label: Text('Actions',
                             style: TextStyle(fontWeight: FontWeight.w600))),
                   ],
@@ -457,22 +457,22 @@ class _IdentifyStaffOpsTeamScreenState
                 headingRowColor:
                     WidgetStateProperty.all(const Color(0xFF1F2937)),
                 columns: const [
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Name',
                           style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Role',
                           style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Responsibility',
                           style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Status',
                           style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Readiness',
                           style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, 
                       label: Text('Actions',
                           style: TextStyle(fontWeight: FontWeight.w600))),
                 ],

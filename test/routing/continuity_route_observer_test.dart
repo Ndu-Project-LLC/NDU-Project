@@ -15,7 +15,6 @@ void main() {
       expect(checkpointForRouteName('fep-security'), 'fep_security');
       expect(checkpointForRouteName('schedule'), 'schedule');
       expect(checkpointForRouteName('cost-estimate'), 'cost_estimate');
-      expect(checkpointForRouteName('scope-tracking-plan'), 'scope_tracking_plan');
       expect(
         checkpointForRouteName('project-plan-detailed-schedule'),
         'project_plan_detailed_schedule',

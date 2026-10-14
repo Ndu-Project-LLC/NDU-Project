@@ -960,8 +960,8 @@ class _IssueLogCard extends StatelessWidget {
               columnSpacing: 16,
               columns: <DataColumn>[
                 for (final column in issueLogColumns)
-                  DataColumn(label: Text(column.label)),
-                const DataColumn(label: Text('')),
+                  DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text(column.label)),
+                const DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('')),
               ],
               rows: <DataRow>[
                 for (var i = 0; i < rows.length; i++)

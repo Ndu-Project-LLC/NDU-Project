@@ -3498,11 +3498,11 @@ class _InvoicesCard extends StatelessWidget {
                     horizontalMargin: 24,
                     columnSpacing: 48,
                     columns: const [
-                      DataColumn(label: Text('Invoice ID')),
-                      DataColumn(label: Text('Date')),
-                      DataColumn(label: Text('Amount')),
-                      DataColumn(label: Text('Status')),
-                      DataColumn(label: Text('Action')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Invoice ID')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Date')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Amount')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Action')),
                     ],
                     rows: invoices
                         .take(5)
@@ -3559,11 +3559,11 @@ class _InvoicesCard extends StatelessWidget {
                         horizontalMargin: 24,
                         columnSpacing: 48,
                         columns: const [
-                          DataColumn(label: Text('Invoice ID')),
-                          DataColumn(label: Text('Date')),
-                          DataColumn(label: Text('Amount')),
-                          DataColumn(label: Text('Status')),
-                          DataColumn(label: Text('Action')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Invoice ID')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Date')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Amount')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+                          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Action')),
                         ],
                         rows: invoices
                             .take(5)

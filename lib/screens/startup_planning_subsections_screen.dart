@@ -3130,11 +3130,11 @@ class _ChecklistTableCard extends StatelessWidget {
                     columnSpacing: 28,
                     dividerThickness: 0.8,
                     columns: const [
-                      DataColumn(label: Text('Complete')),
-                      DataColumn(label: Text('Register item')),
-                      DataColumn(label: Text('Owner')),
-                      DataColumn(label: Text('Notes / evidence')),
-                      DataColumn(label: Text('Action')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Complete')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Register item')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Notes / evidence')),
+                      DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Action')),
                     ],
                     rows: items.asMap().entries.map((record) {
                       final index = record.key;

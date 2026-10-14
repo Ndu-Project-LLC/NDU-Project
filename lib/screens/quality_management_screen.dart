@@ -3747,25 +3747,25 @@ class _StandardsTable extends StatelessWidget {
         columnSpacing: 24,
         horizontalMargin: 16,
         columns: const [
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Standard',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Source',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Category',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Applicability',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Effective Date',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Review Date',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Actions',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
         ],
@@ -3847,25 +3847,25 @@ class _ObjectivesTable extends StatelessWidget {
         columnSpacing: 24,
         horizontalMargin: 16,
         columns: const [
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Objective',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Metric',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Target',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Current',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Owner',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Status',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Actions',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
         ],
@@ -3944,25 +3944,25 @@ class _WorkflowControlsTable extends StatelessWidget {
         columnSpacing: 24,
         horizontalMargin: 16,
         columns: const [
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Control',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Method',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Tools',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Frequency',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Owner',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Standards',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-          DataColumn(
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, 
               label: Text('Actions',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
         ],
@@ -4063,16 +4063,16 @@ class _TaskLogTable extends StatelessWidget {
       table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         columns: const [
-          DataColumn(label: Text('Task')),
-          DataColumn(label: Text('% Complete')),
-          DataColumn(label: Text('Responsible')),
-          DataColumn(label: Text('Start')),
-          DataColumn(label: Text('End')),
-          DataColumn(label: Text('Duration')),
-          DataColumn(label: Text('Status')),
-          DataColumn(label: Text('Priority')),
-          DataColumn(label: Text('Comments')),
-          DataColumn(label: Text('Actions')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Task')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('% Complete')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Responsible')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Start')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('End')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Duration')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Priority')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Comments')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
         ],
         rows: [
           for (final task in tasks)
@@ -4148,13 +4148,13 @@ class _AuditPlanTable extends StatelessWidget {
       table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         columns: const [
-          DataColumn(label: Text('Audit')),
-          DataColumn(label: Text('Scope')),
-          DataColumn(label: Text('Planned')),
-          DataColumn(label: Text('Completed')),
-          DataColumn(label: Text('Owner')),
-          DataColumn(label: Text('Result')),
-          DataColumn(label: Text('Actions')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Audit')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Scope')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Planned')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Completed')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Result')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
         ],
         rows: [
           for (final audit in audits)
@@ -4232,12 +4232,12 @@ class _CorrectiveActionsTable extends StatelessWidget {
       table: NduResponsiveDataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
         columns: const [
-          DataColumn(label: Text('Action')),
-          DataColumn(label: Text('Root Cause')),
-          DataColumn(label: Text('Owner')),
-          DataColumn(label: Text('Due Date')),
-          DataColumn(label: Text('Status')),
-          DataColumn(label: Text('Actions')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Action')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Root Cause')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Owner')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Due Date')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actions')),
         ],
         rows: [
           for (final entry in actions)
@@ -7289,12 +7289,12 @@ class _CoQEntryTable extends StatelessWidget {
         dataRowMaxHeight: 56,
         columnSpacing: 20,
         columns: const [
-          DataColumn(label: Text('Description')),
-          DataColumn(label: Text('Scope')),
-          DataColumn(label: Text('Estimated')),
-          DataColumn(label: Text('Actual')),
-          DataColumn(label: Text('Status')),
-          DataColumn(label: Text('')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Description')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Scope')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Estimated')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Actual')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('Status')),
+          DataColumn(headingRowAlignment: MainAxisAlignment.center, label: Text('')),
         ],
         rows: [
           for (final e in entries)

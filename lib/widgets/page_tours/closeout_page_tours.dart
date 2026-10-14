@@ -30,6 +30,32 @@ final Map<String, PageTour> closeoutPageTours = {
     intro:
         'Reconcile the project finances: final costs against budget, outstanding '
         'invoices and the variance explanations.',
+    sections: {
+      'Finalize all financial activities':
+          'The goal of this page in one line: finish every financial activity '
+          'and reconcile project costs with accounting before closeout.',
+      'Financial Closeout Snapshot':
+          'A live read-out of the project finances as you close: budget used, '
+          'spend pace and the split by solution. The numbers come straight '
+          'from Cost Analysis and the Cost Estimate — nothing to re-enter.',
+      'Financial Summary':
+          'Finalise the financial summary: approved budget, actual cost, '
+          'variance, forecast accuracy, final cost performance, CPI and the '
+          'cost breakdown by solution and category.',
+      'Accounting Reconciliation':
+          'Reconcile the books: invoice status, purchase orders, '
+          'capitalisation, expense reconciliation, GL coding, accounting '
+          'approval and the audit package. Every line should tie back to a '
+          'source document.',
+      'Financial Analysis':
+          'The final analysis: earned value summary, ROI, cash flow summary, '
+          'budget utilisation and the financial lessons learned to carry into '
+          'the next project.',
+      'Notes':
+          'Anything the numbers cannot say: context for variances, agreements '
+          'with finance, or reminders for the audit. Notes save '
+          'automatically.',
+    },
     outro:
         'Every variance should have a recorded reason. Close the books only when '
         'the totals reconcile.',

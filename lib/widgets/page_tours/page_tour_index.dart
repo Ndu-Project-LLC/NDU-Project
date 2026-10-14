@@ -5,6 +5,7 @@ import 'package:ndu_project/widgets/page_tours/design_page_tours.dart';
 import 'package:ndu_project/widgets/page_tours/execution_page_tours.dart';
 import 'package:ndu_project/widgets/page_tours/front_end_planning_page_tours.dart';
 import 'package:ndu_project/widgets/page_tours/initiation_page_tours.dart';
+import 'package:ndu_project/widgets/page_tours/misc_page_tours.dart';
 import 'package:ndu_project/widgets/page_tours/planning_page_tours.dart';
 
 export 'package:ndu_project/widgets/page_tours/page_tour.dart';
@@ -21,4 +22,5 @@ final Map<String, PageTour> pageTours = {
   ...executionPageTours,
   ...agilePageTours,
   ...closeoutPageTours,
+  ...miscPageTours,
 };

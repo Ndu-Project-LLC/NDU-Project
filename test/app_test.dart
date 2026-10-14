@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/routing/app_router.dart';
+import 'package:ndu_project/utils/agile_hub_sections.dart';
 
 /// Collects every full path registered in a go_router route tree.
 ///
@@ -87,6 +88,20 @@ void main() {
       final missing = expected.difference(registered);
       expect(missing, isEmpty,
           reason: 'Unregistered routes: ${missing.toList()..sort()}');
+    });
+
+    test('every Agile Project Hub sub-page opens a registered route', () {
+      // The hub's cards and its sidebar sub-pages both navigate by path, so a
+      // section whose page has no URL is a dead tap with nothing to catch it.
+      final registered = collectRegisteredPaths(AppRouter.main);
+
+      final dead = agileHubSections
+          .where((section) => !registered.contains(section.path))
+          .map((section) => '${section.title} → ${section.path}')
+          .toList();
+
+      expect(dead, isEmpty,
+          reason: 'Unregistered hub routes: ${dead..sort()}');
     });
   });
 

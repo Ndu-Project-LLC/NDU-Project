@@ -11,10 +11,12 @@ library;
 /// app.
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
@@ -35,7 +37,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       appBarTitle: 'Schedule',
       breadcrumbPhase: 'Planning Phase',
       breadcrumbTitle: 'Schedule Setup',
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 640),
@@ -127,6 +129,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           ),
         ),
       ),
+    bottomBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'schedule_setup',
+          pageTitle: 'SetupWizardScreen',
+          showBorders: false,
+        ),
+      ),
+    ),
     );
   }
 
@@ -137,9 +150,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     if (_step < 1) {
       setState(() => _step++);
     } else {
+      // Bind the schedule to the project the user is working in so it is
+      // stored (and read back) under that project's own key.
       context.read<ScheduleProvider>().setup(
             projectName: _projectName.trim(),
             deliveryModel: _deliveryModel!,
+            projectId: ProjectDataHelper.getData(context).projectId ?? '',
           );
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 /// Reusable page-level "Regenerate All" button widget
 /// Should be placed in the header/top section of AI-enabled pages
@@ -28,10 +29,10 @@ class PageRegenerateAllButton extends StatelessWidget {
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Color(0xFF2563EB),
+                color: Color(0xFFFFC812),
               ),
             )
-          : const Icon(Icons.refresh, size: 20, color: Color(0xFF2563EB)),
+          : const Icon(Icons.refresh, size: 20, color: Color(0xFFFFC812)),
       tooltip: tooltip,
       onPressed: isLoading ? null : () => onRegenerateAll(),
       padding: EdgeInsets.zero,
@@ -42,7 +43,7 @@ class PageRegenerateAllButton extends StatelessWidget {
 
 /// Helper function to show confirmation dialog before regenerating
 Future<bool> showRegenerateAllConfirmation(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('Regenerate All Content'),

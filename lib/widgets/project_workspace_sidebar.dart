@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _kAccentColor = Color(0xFFFFC812);
 const Color _kTextPrimary = Color(0xFF1A1D1F);
@@ -20,7 +21,7 @@ class ProjectWorkspaceSidebar extends StatefulWidget {
 }
 
 class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = SpellCheckTextEditingController();
   String _searchQuery = '';
 
   @override
@@ -79,7 +80,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppLogo(
+          const AppLogo(
             height: 56,
             width: 148,
           ),
@@ -104,7 +105,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           ),
           const SizedBox(height: 14),
           // Brand banner above the "StackOne" label, spanning sidebar width
-          RepaintBoundary(
+          const RepaintBoundary(
             child: SizedBox(
               width: double.infinity,
               height: 96,
@@ -128,7 +129,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           Container(
             height: 42,
             decoration: BoxDecoration(
-              color: Color(0xFFF9FAFB),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _kSurfaceBorder),
             ),
@@ -245,7 +246,7 @@ class _SidebarItem extends StatelessWidget {
     final borderColor =
         isActive ? _kAccentColor.withValues(alpha: 0.35) : Colors.transparent;
     final iconColor = isActive ? _kAccentColor : const Color(0xFF6B7280);
-    final labelColor = _kTextPrimary;
+    const labelColor = _kTextPrimary;
     return Material(
       color: Colors.transparent,
       child: InkWell(

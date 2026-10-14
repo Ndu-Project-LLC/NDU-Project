@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Shared building blocks for world-class Launch Phase pop-up modals.
 ///
@@ -20,7 +22,7 @@ const Color _kModalTextSecondary = Color(0xFF6B7280);
 const Color _kModalBorder = Color(0xFFE4E7EC);
 const Color _kModalAccent = Color(0xFFFFC107);
 
-/// Convenience wrapper around [showDialog] that builds a [LaunchModalShell].
+/// Convenience wrapper around [showAppDialog] that builds a [LaunchModalShell].
 ///
 /// Pass [icon], [title], [subtitle] for the header, [accent] for the icon tile
 /// color (defaults to gold), [body] for the form fields, and [actions] for the
@@ -35,7 +37,7 @@ Future<T?> showLaunchModal<T>({
   List<Widget>? actions,
   T? resultValue,
 }) {
-  return showDialog<T>(
+  return showAppDialog<T>(
     context: context,
     barrierDismissible: true,
     builder: (ctx) => LaunchModalShell(
@@ -49,7 +51,7 @@ Future<T?> showLaunchModal<T>({
   );
 }
 
-/// The world-class modal container. Use directly inside [showDialog] when you
+/// The world-class modal container. Use directly inside [showAppDialog] when you
 /// need full control, or via [showLaunchModal] for the common case.
 class LaunchModalShell extends StatelessWidget {
   const LaunchModalShell({
@@ -60,6 +62,7 @@ class LaunchModalShell extends StatelessWidget {
     this.accent,
     required this.body,
     this.actions,
+    this.leadingActions,
   });
 
   final IconData icon;
@@ -68,19 +71,21 @@ class LaunchModalShell extends StatelessWidget {
   final Color? accent;
   final Widget body;
   final List<Widget>? actions;
+  /// Optional buttons pinned to the left of the action row (e.g. an AI assist).
+  final List<Widget>? leadingActions;
 
   @override
   Widget build(BuildContext context) {
     final Color effectiveAccent = accent ?? _kModalAccent;
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: modalSurface(context),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: modalSurface(context),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -105,19 +110,21 @@ class LaunchModalShell extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   body,
-                  if (actions != null && actions!.isNotEmpty) ...[
+                  if ((actions?.isNotEmpty ?? false) ||
+                      (leadingActions?.isNotEmpty ?? false)) ...[
                     const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (int i = 0; i < actions!.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 8),
-                            actions![i],
-                          ],
+                    Row(
+                      children: [
+                        for (final w in leadingActions ?? const <Widget>[]) ...[
+                          w,
+                          const SizedBox(width: 8),
                         ],
-                      ),
+                        const Spacer(),
+                        for (int i = 0; i < (actions?.length ?? 0); i++) ...[
+                          if (i > 0) const SizedBox(width: 8),
+                          actions![i],
+                        ],
+                      ],
                     ),
                   ],
                 ],
@@ -335,6 +342,7 @@ class LaunchModalDateField extends StatefulWidget {
     required this.label,
     required this.initialDate,
     required this.onPicked,
+    this.initialText,
     this.hint = 'Select date',
     this.firstDate,
     this.lastDate,
@@ -343,6 +351,10 @@ class LaunchModalDateField extends StatefulWidget {
   final String label;
   final DateTime? initialDate;
   final ValueChanged<DateTime?> onPicked;
+
+  /// Pre-filled display text (e.g. an existing value when editing). Takes
+  /// precedence over [initialDate].
+  final String? initialText;
   final String hint;
   final DateTime? firstDate;
   final DateTime? lastDate;
@@ -357,10 +369,11 @@ class _LaunchModalDateFieldState extends State<LaunchModalDateField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: widget.initialDate != null
-          ? _formatDateShort(widget.initialDate!)
-          : '',
+    _controller = SpellCheckTextEditingController(
+      text: widget.initialText ??
+          (widget.initialDate != null
+              ? _formatDateShort(widget.initialDate!)
+              : ''),
     );
   }
 
@@ -439,6 +452,7 @@ class LaunchModalDropdown<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.hint,
+    this.labelBuilder,
   });
 
   final String label;
@@ -446,6 +460,10 @@ class LaunchModalDropdown<T> extends StatelessWidget {
   final List<T> items;
   final ValueChanged<T?> onChanged;
   final String? hint;
+
+  /// Optional display-label override per item (e.g. to render a friendly
+  /// "+ Add New…" label for a sentinel item value).
+  final String Function(T value)? labelBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -468,7 +486,7 @@ class LaunchModalDropdown<T> extends StatelessWidget {
           items: items
               .map((v) => DropdownMenuItem<T>(
                     value: v,
-                    child: Text(v.toString()),
+                    child: Text(labelBuilder?.call(v) ?? v.toString()),
                   ))
               .toList(),
           onChanged: onChanged,
@@ -495,7 +513,7 @@ class LaunchModalCancelButton extends StatelessWidget {
       onPressed: onPressed ?? () => Navigator.of(context).maybePop(),
       style: OutlinedButton.styleFrom(
         foregroundColor: _kModalTextSecondary,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: _kModalBorder),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

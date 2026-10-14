@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class DesignSpecificationsCard extends StatelessWidget {
   const DesignSpecificationsCard({super.key});
@@ -45,7 +47,7 @@ class DesignSpecificationsCard extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline,
-                    color: Color(0xFF6366F1)),
+                    color: Color(0xFFB8860B)),
                 onPressed: () => _showAddSpecificationDialog(context, provider),
               ),
             ],
@@ -92,7 +94,7 @@ class DesignSpecificationsCard extends StatelessWidget {
         color = Colors.green;
         break;
       case 'Implemented':
-        color = Colors.blue;
+        color = const Color(0xFFFFC812);
         break;
       default:
         color = Colors.orange;
@@ -121,8 +123,8 @@ class DesignSpecificationsCard extends StatelessWidget {
 
   void _showAddSpecificationDialog(
       BuildContext context, ProjectDataProvider provider) {
-    final controller = TextEditingController();
-    showDialog(
+    final controller = SpellCheckTextEditingController();
+    showAppDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Specification'),
@@ -162,7 +164,7 @@ class DesignSpecificationsCard extends StatelessWidget {
 
   void _showStatusDialog(BuildContext context, DesignSpecification spec,
       ProjectDataProvider provider) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => SimpleDialog(
         title: const Text('Update Status'),
@@ -218,7 +220,7 @@ class DesignDocumentsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Color(0xFFDCFCE7),
+                  color: const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.description,
@@ -305,7 +307,7 @@ class DesignDocumentsCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Color(0xFFBBF7D0)),
+                        border: Border.all(color: const Color(0xFFBBF7D0)),
                       ),
                       child: Row(
                         children: [
@@ -313,7 +315,7 @@ class DesignDocumentsCard extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: Color(0xFFDCFCE7),
+                              color: const Color(0xFFDCFCE7),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -418,14 +420,14 @@ class DesignDocumentsCard extends StatelessWidget {
 
   void _showAddDocumentDialog(
       BuildContext context, ProjectDataProvider provider) {
-    final titleController = TextEditingController();
+    final titleController = SpellCheckTextEditingController();
     String docType = 'Output';
     String? uploadedFileName;
     String? uploadedFileUrl;
     String? uploadedStoragePath;
     bool isUploading = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -435,7 +437,7 @@ class DesignDocumentsCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Color(0xFFF0FDF4),
+                  color: const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.insert_drive_file_outlined,
@@ -458,7 +460,7 @@ class DesignDocumentsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: docType,
+                  initialValue: docType,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: ['Input', 'Output', 'Reference'].map((t) {
                     return DropdownMenuItem(value: t, child: Text(t));
@@ -649,7 +651,7 @@ class DesignToolsCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFEF3C7),
+                  color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.construction,
@@ -735,7 +737,7 @@ class DesignToolsCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Color(0xFFFDE68A)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Row(
                         children: [
@@ -743,7 +745,7 @@ class DesignToolsCard extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: Color(0xFFFEF3C7),
+                              color: const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -853,15 +855,15 @@ class DesignToolsCard extends StatelessWidget {
   }
 
   void _showAddToolDialog(BuildContext context, ProjectDataProvider provider) {
-    final nameController = TextEditingController();
-    final urlController = TextEditingController();
+    final nameController = SpellCheckTextEditingController();
+    final urlController = SpellCheckTextEditingController();
     bool isInternal = false;
     String? uploadedFileName;
     String? uploadedFileUrl;
     String? uploadedStoragePath;
     bool isUploading = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -871,7 +873,7 @@ class DesignToolsCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Color(0xFFFFFBEB),
+                  color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.build_outlined,

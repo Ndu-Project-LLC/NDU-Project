@@ -2,11 +2,11 @@ import 'package:ndu_project/widgets/expanding_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/change_request_service.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class NewChangeRequestDialog extends StatefulWidget {
   const NewChangeRequestDialog(
@@ -26,11 +26,11 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
   bool _uploading = false;
 
   // Controllers
-  final TextEditingController _titleCtrl = TextEditingController();
-  final TextEditingController _descriptionCtrl = TextEditingController();
-  final TextEditingController _justificationCtrl = TextEditingController();
-  final TextEditingController _dateCtrl = TextEditingController();
-  final TextEditingController _requesterCtrl = TextEditingController(
+  final TextEditingController _titleCtrl = SpellCheckTextEditingController();
+  final TextEditingController _descriptionCtrl = SpellCheckTextEditingController();
+  final TextEditingController _justificationCtrl = SpellCheckTextEditingController();
+  final TextEditingController _dateCtrl = SpellCheckTextEditingController();
+  final TextEditingController _requesterCtrl = SpellCheckTextEditingController(
       text: FirebaseAuthService.displayNameOrEmail(fallback: ''));
 
   // Dropdown states
@@ -109,62 +109,45 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     return '${d.year}-${two(d.month)}-${two(d.day)}';
   }
 
+  /// Uploads the attachment through [FileUploadHelper] — the same code path
+  /// every other "Add file" in the app uses.
+  ///
+  /// This dialog used to carry its own copy of the upload, which read the
+  /// deprecated `PlatformFile.bytes` field and gave up with "Failed to read
+  /// file data" whenever the picker had not buffered the file — so adding a
+  /// document to a change request failed while the rest of the app worked.
+  /// Deferring to the helper fixes that and picks up the size guard and the
+  /// Storage error messages with it.
   Future<void> _pickAndUploadFile() async {
+    if (_uploading) return;
+    setState(() => _uploading = true);
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: [
-          'pdf',
-          'doc',
-          'docx',
-          'xls',
-          'xlsx',
-          'png',
-          'jpg',
-          'jpeg'
-        ],
-        withData: true,
+      final result = await FileUploadHelper.pickAndUpload(
+        // Scoped to the change-request folder of the active project, with
+        // `general` for a request raised before a project is chosen — both
+        // covered by storage.rules.
+        folder: 'change_requests',
+        projectId: (widget.projectId ?? '').trim().isEmpty
+            ? 'general'
+            : widget.projectId!.trim(),
+        allowedExtensions: FileUploadHelper.documentExtensions,
+        context: mounted ? context : null,
       );
-      if (result == null || result.files.isEmpty) return;
-
-      final file = result.files.first;
-      if (file.bytes == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to read file data')),
-          );
-        }
-        return;
-      }
-
-      setState(() => _uploading = true);
-
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final storagePath =
-          'change_requests/${widget.projectId ?? 'general'}/${timestamp}_${file.name}';
-      final ref = FirebaseStorage.instance.ref(storagePath);
-
-      await ref.putData(file.bytes!);
-      final downloadUrl = await ref.getDownloadURL();
+      if (!mounted) return;
+      if (result == null) return;
 
       setState(() {
-        _attachmentUrl = downloadUrl;
-        _attachmentName = file.name;
-        _uploading = false;
+        _attachmentUrl = result.downloadUrl;
+        _attachmentName = result.fileName;
       });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File "${file.name}" uploaded successfully')),
-        );
-      }
-    } catch (e) {
-      setState(() => _uploading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File "${result.fileName}" uploaded successfully'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _uploading = false);
     }
   }
 
@@ -300,7 +283,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                           ? Row(
                               children: [
                                 const Icon(Icons.insert_drive_file,
-                                    size: 18, color: Colors.blue),
+                                    size: 18, color: Color(0xFFFFC812)),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -313,7 +296,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                                 IconButton(
                                   tooltip: 'Download',
                                   icon: const Icon(Icons.download,
-                                      size: 18, color: Colors.blue),
+                                      size: 18, color: Color(0xFFFFC812)),
                                   onPressed: _downloadAttachment,
                                 ),
                                 IconButton(
@@ -521,7 +504,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
           borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.6)),
+          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.6)),
       suffixIcon: suffixIcon,
     );
   }
@@ -537,8 +520,9 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
         minLines: maxLines,
         decoration: _decoration(label, hint: hint),
         validator: (v) {
-          if (label == 'Description' || label == 'Justification / Reason')
+          if (label == 'Description' || label == 'Justification / Reason') {
             return null; // optional
+          }
           if (v == null || v.trim().isEmpty) return 'Required';
           return null;
         },
@@ -547,8 +531,9 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     return VoiceTextFormField(
       controller: controller,
       validator: (v) {
-        if (label == 'Description' || label == 'Justification / Reason')
+        if (label == 'Description' || label == 'Justification / Reason') {
           return null; // optional
+        }
         if (v == null || v.trim().isEmpty) return 'Required';
         return null;
       },

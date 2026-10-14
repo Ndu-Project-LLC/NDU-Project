@@ -26,12 +26,12 @@ class TotalsPanel extends StatelessWidget {
 
   // Category colors for the breakdown chart
   static const _categoryColors = <String, Color>{
-    'Direct costs': Color(0xFF6366F1),
-    'Indirect costs': Color(0xFF8B5CF6),
-    'SSHER & Quality': Color(0xFFEC4899),
+    'Direct costs': Color(0xFFB8860B),
+    'Indirect costs': Color(0xFFB8860B),
+    'SSHER & Quality': Color(0xFFD97706),
     'Risk allowances': Color(0xFFF59E0B),
     'Contingency': Color(0xFF10B981),
-    'Escalation': Color(0xFF06B6D4),
+    'Escalation': Color(0xFFD97706),
     'Taxes & duties': Color(0xFF64748B),
   };
 
@@ -124,7 +124,7 @@ class TotalsPanel extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _KpiCard(
-                        label: 'Cost Baseline',
+                        label: 'Total Estimated Cost',
                         value: '$currencySymbol${_formatCompact(t.costBaseline)}',
                         icon: Icons.shield_outlined,
                         color: const Color(0xFFD97706),
@@ -133,10 +133,10 @@ class TotalsPanel extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _KpiCard(
-                        label: 'Total Authorized',
+                        label: 'Incl. Mgmt Reserve',
                         value: '$currencySymbol${_formatCompact(t.totalAuthorizedBudget)}',
                         icon: Icons.account_balance_wallet_outlined,
-                        color: const Color(0xFF6366F1),
+                        color: const Color(0xFFB8860B),
                       ),
                     ),
                   ],
@@ -158,7 +158,7 @@ class TotalsPanel extends StatelessWidget {
                         label: 'Avg / Line',
                         value: '$currencySymbol${_formatCompact(avgPerLine)}',
                         icon: Icons.analytics_outlined,
-                        color: const Color(0xFF8B5CF6),
+                        color: const Color(0xFFB8860B),
                       ),
                     ),
                   ],

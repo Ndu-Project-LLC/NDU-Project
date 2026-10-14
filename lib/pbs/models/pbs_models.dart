@@ -26,10 +26,10 @@ enum ProductType {
       };
 
   Color get color => switch (this) {
-        ProductType.system => const Color(0xFF2563EB),
+        ProductType.system => const Color(0xFFFFC812),
         ProductType.subsystem => const Color(0xFF059669),
         ProductType.component => const Color(0xFFD97706),
-        ProductType.subcomponent => const Color(0xFF7C3AED),
+        ProductType.subcomponent => const Color(0xFFB8860B),
         ProductType.part => const Color(0xFF6B7280),
       };
 }
@@ -53,8 +53,8 @@ enum PBSStatus {
 
   Color get color => switch (this) {
         PBSStatus.planned => const Color(0xFF9CA3AF),
-        PBSStatus.inProgress => const Color(0xFF3B82F6),
-        PBSStatus.fabricated => const Color(0xFF8B5CF6),
+        PBSStatus.inProgress => const Color(0xFFFFC812),
+        PBSStatus.fabricated => const Color(0xFFB8860B),
         PBSStatus.delivered => const Color(0xFFF59E0B),
         PBSStatus.installed => const Color(0xFF059669),
         PBSStatus.complete => const Color(0xFF10B981),

@@ -1,18 +1,447 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// Responsive wrapper for data tables with horizontal scroll support
+/// Width a table falls back to when its parent gives it no width at all
+/// (an unbounded parent and no `minWidth`), so its columns still have
+/// something to divide up.
+const double _kFallbackTableWidth = 720;
+
+/// Mobile presentation for a [DataTable]: each row becomes a labeled card,
+/// while preserving selection, row callbacks, cell callbacks and native cell
+/// controls. Use it directly where a caller owns its own table construction.
+class NduDataTableCards extends StatelessWidget {
+  const NduDataTableCards({
+    super.key,
+    required this.columns,
+    required this.rows,
+    this.showCheckboxColumn = false,
+    this.dataTextStyle,
+    this.border,
+    this.decoration,
+    this.headingRowColor,
+    this.dataRowColor,
+    this.headingTextStyle,
+    this.numericTextAlign = TextAlign.start,
+    this.headingRowHeight,
+    this.dataRowMinHeight,
+    this.dataRowMaxHeight,
+    this.dividerThickness,
+    this.sortColumnIndex,
+    this.sortAscending = true,
+    this.onSelectAll,
+  });
+
+  final List<DataColumn> columns;
+  final List<DataRow> rows;
+  final bool showCheckboxColumn;
+  final TextStyle? dataTextStyle;
+  final TableBorder? border;
+  final Decoration? decoration;
+  final WidgetStateProperty<Color?>? headingRowColor;
+  final WidgetStateProperty<Color?>? dataRowColor;
+  final TextStyle? headingTextStyle;
+  final TextAlign numericTextAlign;
+  final double? headingRowHeight;
+  final double? dataRowMinHeight;
+  final double? dataRowMaxHeight;
+  final double? dividerThickness;
+  final int? sortColumnIndex;
+  final bool sortAscending;
+  final ValueSetter<bool?>? onSelectAll;
+
+  Widget _buildSelectAllControl() {
+    final selectableRows = rows
+        .where((row) => row.onSelectChanged != null)
+        .toList(growable: false);
+    final selectedCount = selectableRows.where((row) => row.selected).length;
+    final allSelected = selectedCount == selectableRows.length;
+    final someSelected = selectedCount > 0 && !allSelected;
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Select all'),
+          Checkbox(
+            tristate: true,
+            value: someSelected ? null : allSelected,
+            onChanged: (value) {
+              final selected = someSelected || (value ?? false);
+              if (onSelectAll != null) {
+                onSelectAll!(selected);
+              } else {
+                for (final row in selectableRows) {
+                  if (row.selected != selected) {
+                    row.onSelectChanged!(selected);
+                  }
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (rows.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final style = dataTextStyle ?? theme.textTheme.bodyMedium;
+    final defaultBorder = BorderSide(
+      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : (MediaQuery.sizeOf(context).width - 32)
+                .clamp(0.0, double.infinity);
+        return SizedBox(
+          width: width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showCheckboxColumn &&
+                  rows.any((row) => row.onSelectChanged != null))
+                _buildSelectAllControl(),
+              for (var index = 0; index < rows.length; index++) ...[
+                _NduDataTableCard(
+                  key: rows[index].key ??
+                      ValueKey<String>('ndu-mobile-table-card-$index'),
+                  columns: columns,
+                  row: rows[index],
+                  showCheckboxColumn: showCheckboxColumn,
+                  dataTextStyle: style,
+                  headingRowHeight: headingRowHeight,
+                  dataRowMinHeight: dataRowMinHeight,
+                  dataRowMaxHeight: dataRowMaxHeight,
+                  dividerThickness: dividerThickness,
+                  headingRowColor: headingRowColor,
+                  dataRowColor: dataRowColor,
+                  headingTextStyle: headingTextStyle,
+                  numericTextAlign: numericTextAlign,
+                  sortColumnIndex: sortColumnIndex,
+                  sortAscending: sortAscending,
+                  border: border?.top ?? defaultBorder,
+                ),
+                if (index < rows.length - 1) const SizedBox(height: 10),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NduDataTableCard extends StatelessWidget {
+  const _NduDataTableCard({
+    super.key,
+    required this.columns,
+    required this.row,
+    required this.showCheckboxColumn,
+    required this.dataTextStyle,
+    required this.headingRowHeight,
+    required this.dataRowMinHeight,
+    required this.dataRowMaxHeight,
+    required this.dividerThickness,
+    required this.headingRowColor,
+    required this.dataRowColor,
+    required this.headingTextStyle,
+    required this.numericTextAlign,
+    required this.sortColumnIndex,
+    required this.sortAscending,
+    required this.border,
+  });
+
+  final List<DataColumn> columns;
+  final DataRow row;
+  final bool showCheckboxColumn;
+  final TextStyle? dataTextStyle;
+  final double? headingRowHeight;
+  final double? dataRowMinHeight;
+  final double? dataRowMaxHeight;
+  final double? dividerThickness;
+  final WidgetStateProperty<Color?>? headingRowColor;
+  final WidgetStateProperty<Color?>? dataRowColor;
+  final TextStyle? headingTextStyle;
+  final TextAlign numericTextAlign;
+  final int? sortColumnIndex;
+  final bool sortAscending;
+  final BorderSide border;
+
+  Widget _cell(DataCell cell) {
+    Widget child = DefaultTextStyle.merge(
+      style: dataTextStyle,
+      child: cell.child,
+    );
+    if (cell.placeholder) child = Opacity(opacity: 0.6, child: child);
+    if (cell.showEditIcon) {
+      child = Row(
+        children: [
+          Expanded(child: child),
+          const SizedBox(width: 6),
+          const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)),
+        ],
+      );
+    }
+    if (cell.onTap != null || cell.onLongPress != null) {
+      child = InkWell(
+        onTap: cell.onTap,
+        onLongPress: cell.onLongPress,
+        onDoubleTap: cell.onDoubleTap,
+        onTapDown: cell.onTapDown,
+        onTapCancel: cell.onTapCancel,
+        child: child,
+      );
+    }
+    return child;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final count =
+        columns.length < row.cells.length ? columns.length : row.cells.length;
+    final selectionStates = <WidgetState>{
+      if (row.selected) WidgetState.selected,
+    };
+    final rowColor = row.color?.resolve(selectionStates) ??
+        dataRowColor?.resolve(selectionStates) ??
+        theme.cardColor;
+
+    return Material(
+      color: rowColor,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: row.onSelectChanged == null
+            ? null
+            : () => row.onSelectChanged!(!row.selected),
+        onLongPress: row.onLongPress,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            border: Border.fromBorderSide(border),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showCheckboxColumn && row.onSelectChanged != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Checkbox(
+                    value: row.selected,
+                    onChanged: row.onSelectChanged,
+                  ),
+                ),
+              for (var cellIndex = 0; cellIndex < count; cellIndex++) ...[
+                if (cellIndex > 0)
+                  Divider(
+                    height: 16,
+                    thickness: dividerThickness ?? 0.6,
+                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 104,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color:
+                              headingRowColor?.resolve(const <WidgetState>{}),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: InkWell(
+                                  onTap: columns[cellIndex].onSort == null
+                                      ? null
+                                      : () => columns[cellIndex].onSort!(
+                                            cellIndex,
+                                            sortColumnIndex != cellIndex ||
+                                                !sortAscending,
+                                          ),
+                                  child: DefaultTextStyle.merge(
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ).merge(headingTextStyle),
+                                    child: columns[cellIndex].label,
+                                  ),
+                                ),
+                              ),
+                              if (sortColumnIndex == cellIndex) ...[
+                                const SizedBox(width: 3),
+                                Icon(
+                                  sortAscending
+                                      ? Icons.arrow_upward
+                                      : Icons.arrow_downward,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Align(
+                        alignment: columns[cellIndex].numeric
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: DefaultTextStyle.merge(
+                          textAlign: columns[cellIndex].numeric
+                              ? numericTextAlign
+                              : TextAlign.start,
+                          child: _cell(row.cells[cellIndex]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Drop-in responsive alternative to Flutter's [DataTable].
+///
+/// Desktop/tablet retain Flutter's native table. On phones every row is a
+/// labeled card, so screens do not have to maintain separate hand-built mobile
+/// and desktop renderers. The constructor mirrors the table settings used
+/// throughout this app so callers can migrate with a one-word change.
+class NduResponsiveDataTable extends StatelessWidget {
+  const NduResponsiveDataTable({
+    super.key,
+    required this.columns,
+    required this.rows,
+    this.sortColumnIndex,
+    this.sortAscending = true,
+    this.onSelectAll,
+    this.decoration,
+    this.dataRowColor,
+    this.dataRowMinHeight,
+    this.dataRowMaxHeight,
+    this.dataTextStyle,
+    this.headingRowColor,
+    this.headingRowHeight,
+    this.headingTextStyle,
+    this.horizontalMargin,
+    this.columnSpacing,
+    this.showCheckboxColumn = true,
+    this.showBottomBorder = false,
+    this.dividerThickness,
+    this.checkboxHorizontalMargin,
+    this.border,
+    this.clipBehavior = Clip.none,
+  });
+
+  final List<DataColumn> columns;
+  final List<DataRow> rows;
+  final int? sortColumnIndex;
+  final bool sortAscending;
+  final ValueSetter<bool?>? onSelectAll;
+  final Decoration? decoration;
+  final WidgetStateProperty<Color?>? dataRowColor;
+  final double? dataRowMinHeight;
+  final double? dataRowMaxHeight;
+  final TextStyle? dataTextStyle;
+  final WidgetStateProperty<Color?>? headingRowColor;
+  final double? headingRowHeight;
+  final TextStyle? headingTextStyle;
+  final double? horizontalMargin;
+  final double? columnSpacing;
+  final bool showCheckboxColumn;
+  final bool showBottomBorder;
+  final double? dividerThickness;
+  final double? checkboxHorizontalMargin;
+  final TableBorder? border;
+  final Clip clipBehavior;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!AppBreakpoints.isMobile(context)) {
+      return DataTable(
+        columns: columns,
+        rows: rows,
+        sortColumnIndex: sortColumnIndex,
+        sortAscending: sortAscending,
+        onSelectAll: onSelectAll,
+        decoration: decoration,
+        dataRowColor: dataRowColor,
+        dataRowMinHeight: dataRowMinHeight,
+        dataRowMaxHeight: dataRowMaxHeight,
+        dataTextStyle: dataTextStyle,
+        headingRowColor: headingRowColor,
+        headingRowHeight: headingRowHeight,
+        headingTextStyle: headingTextStyle,
+        horizontalMargin: horizontalMargin,
+        columnSpacing: columnSpacing,
+        showCheckboxColumn: showCheckboxColumn,
+        showBottomBorder: showBottomBorder,
+        dividerThickness: dividerThickness,
+        checkboxHorizontalMargin: checkboxHorizontalMargin,
+        border: border,
+        clipBehavior: clipBehavior,
+      );
+    }
+
+    return NduDataTableCards(
+      columns: columns,
+      rows: rows,
+      showCheckboxColumn: showCheckboxColumn,
+      dataTextStyle: dataTextStyle,
+      headingRowColor: headingRowColor,
+      dataRowColor: dataRowColor,
+      headingTextStyle: headingTextStyle,
+      headingRowHeight: headingRowHeight,
+      dataRowMinHeight: dataRowMinHeight,
+      dataRowMaxHeight: dataRowMaxHeight,
+      dividerThickness: dividerThickness,
+      border: border,
+      decoration: decoration,
+      sortColumnIndex: sortColumnIndex,
+      sortAscending: sortAscending,
+      onSelectAll: onSelectAll,
+    );
+  }
+}
+
 class ResponsiveDataTableWrapper extends StatefulWidget {
   final Widget child;
   final double? minWidth;
   final double? maxHeight;
+  final bool mobileCards;
 
   const ResponsiveDataTableWrapper({
     super.key,
     required this.child,
     this.minWidth,
     this.maxHeight,
+    this.mobileCards = true,
   });
 
   @override
@@ -82,6 +511,44 @@ class _ResponsiveDataTableWrapperState
 
   @override
   Widget build(BuildContext context) {
+    if (AppBreakpoints.isMobile(context) && widget.child is NduDataTableCards) {
+      if (widget.maxHeight == null) return widget.child;
+      return SizedBox(
+        height: widget.maxHeight,
+        child: SingleChildScrollView(child: widget.child),
+      );
+    }
+
+    if (widget.mobileCards &&
+        AppBreakpoints.isMobile(context) &&
+        widget.child is DataTable) {
+      final table = widget.child as DataTable;
+      final cards = NduDataTableCards(
+        columns: table.columns,
+        rows: table.rows,
+        showCheckboxColumn: table.showCheckboxColumn,
+        dataTextStyle: table.dataTextStyle,
+        border: table.border,
+        headingRowColor: table.headingRowColor,
+        sortColumnIndex: table.sortColumnIndex,
+        sortAscending: table.sortAscending,
+        onSelectAll: table.onSelectAll,
+        dataRowColor: table.dataRowColor,
+        headingTextStyle: table.headingTextStyle,
+        headingRowHeight: table.headingRowHeight,
+        dataRowMinHeight: table.dataRowMinHeight,
+        dataRowMaxHeight: table.dataRowMaxHeight,
+        dividerThickness: table.dividerThickness,
+        numericTextAlign: TextAlign.end,
+        decoration: table.decoration,
+      );
+      if (widget.maxHeight == null) return cards;
+      return SizedBox(
+        height: widget.maxHeight,
+        child: SingleChildScrollView(child: cards),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Guard against unbounded constraints — if the parent gives us
@@ -91,14 +558,36 @@ class _ResponsiveDataTableWrapperState
         final hasBoundedHeight =
             widget.maxHeight != null || constraints.maxHeight.isFinite;
 
+        // A horizontally scrolling viewport hands its child an *unbounded*
+        // width. Some of these tables divide their columns with `Expanded`, and
+        // a flexed child cannot resolve against infinity: layout throws
+        // `RenderFlex children have non-zero flex but incoming width
+        // constraints are unbounded`, which poisons the whole page's render
+        // subtree — the sidebar and header still draw, the body comes up
+        // empty, and nothing on screen explains why.
+        //
+        // `IntrinsicWidth` supplies the missing definite width without
+        // capping it: the child is laid out at its own intrinsic width (so a
+        // genuinely wide table still overflows and scrolls, never squashes or
+        // clips), lifted to the viewport width — or [minWidth], when the table
+        // must not shrink below it — by the ConstrainedBox around it.
+        final double minTableWidth;
+        if (constraints.maxWidth.isFinite) {
+          minTableWidth = math.max(widget.minWidth ?? 0, constraints.maxWidth);
+        } else if ((widget.minWidth ?? 0) > 0) {
+          minTableWidth = widget.minWidth!;
+        } else {
+          // Unbounded parent and no minimum: a table with nothing to divide
+          // between its columns would collapse, so give it a readable floor.
+          minTableWidth = _kFallbackTableWidth;
+        }
+
         final horizontalChild = SingleChildScrollView(
           controller: _horizontalController,
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: widget.minWidth ?? constraints.maxWidth,
-            ),
-            child: widget.child,
+            constraints: BoxConstraints(minWidth: minTableWidth),
+            child: IntrinsicWidth(child: widget.child),
           ),
         );
 
@@ -294,7 +783,7 @@ List<DataRow> nduZebraRows(
       color: row.color ??
           WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return isDark ? const Color(0xFF1F2937) : const Color(0xFFEFF6FF);
+              return isDark ? const Color(0xFF1F2937) : const Color(0xFFFFF8E1);
             }
             return index.isOdd ? resolvedOdd : resolvedEven;
           }),
@@ -303,15 +792,15 @@ List<DataRow> nduZebraRows(
   }).toList(growable: false);
 }
 
-DataTable buildNduDataTable({
+Widget buildNduDataTable({
   required BuildContext context,
   required List<DataColumn> columns,
   required List<DataRow> rows,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   Color? headingRowColor,
@@ -328,7 +817,8 @@ DataTable buildNduDataTable({
   // instead of overflowing the screen. This is a no-op for cells that
   // already use WrappedText or non-text children.
   final processedRows = autoWrapCells ? _wrapRowsCells(rows) : rows;
-  final normalizedRows = zebra ? nduZebraRows(context, processedRows) : processedRows;
+  final normalizedRows =
+      zebra ? nduZebraRows(context, processedRows) : processedRows;
 
   final resolvedHeadingTextStyle = headingTextStyle ??
       TextStyle(
@@ -343,6 +833,18 @@ DataTable buildNduDataTable({
         height: 1.45,
         color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A),
       );
+
+  if (AppBreakpoints.isMobile(context)) {
+    return NduDataTableCards(
+      columns: columns,
+      rows: normalizedRows,
+      showCheckboxColumn: showCheckboxColumn,
+      dataTextStyle: resolvedDataTextStyle,
+      headingRowColor: WidgetStatePropertyAll(resolvedHeadingColor),
+      headingTextStyle: resolvedHeadingTextStyle,
+      dividerThickness: 0.8,
+    );
+  }
 
   return DataTable(
     showCheckboxColumn: showCheckboxColumn,
@@ -444,9 +946,9 @@ Widget buildNduTableWithExpand({
   String? title,
   double columnSpacing = 18,
   double horizontalMargin = 14,
-  double headingRowHeight = 52,
-  double dataRowMinHeight = 60,
-  double dataRowMaxHeight = 220,
+  double headingRowHeight = 44,
+  double dataRowMinHeight = 48,
+  double dataRowMaxHeight = 120,
   TableBorder? border,
   bool zebra = true,
   bool showCheckboxColumn = false,
@@ -487,9 +989,9 @@ Widget buildNduTableWithExpand({
       rows: rows,
       columnSpacing: columnSpacing + 6,
       horizontalMargin: horizontalMargin + 6,
-      headingRowHeight: headingRowHeight + 8,
-      dataRowMinHeight: dataRowMinHeight + 8,
-      dataRowMaxHeight: dataRowMaxHeight + 80,
+      headingRowHeight: headingRowHeight + 4,
+      dataRowMinHeight: dataRowMinHeight + 4,
+      dataRowMaxHeight: dataRowMaxHeight + 40,
       border: border,
       zebra: zebra,
       showCheckboxColumn: showCheckboxColumn,

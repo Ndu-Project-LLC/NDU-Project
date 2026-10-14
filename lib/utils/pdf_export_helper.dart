@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/screen_capture.dart';
 import 'download_helper_stub.dart'
     if (dart.library.html) 'download_helper_web.dart' as loader;
 
@@ -91,46 +94,45 @@ class PdfExportHelper {
   /// [sections] is an ordered list of content sections to render.
   /// [filenamePrefix] overrides the default filename prefix (derived from
   ///   [screenTitle] if null).
+  /// [includeScreenCapture] appends a rasterised copy of everything visible on
+  ///   the screen to the end of the document. Screens hand-pick a handful of
+  ///   data fields for [sections], so without this the PDF omits most of what
+  ///   the user can actually see. Set to false for a data-only export.
   static Future<void> exportScreenPdf({
     required BuildContext context,
     required String screenTitle,
     required List<PdfSection> sections,
     String? filenamePrefix,
+    bool includeScreenCapture = true,
   }) async {
     try {
+      // Capture first, while the screen is still showing the content the user
+      // asked for. This scrolls the screen as it captures and restores the
+      // original scroll position before returning.
+      final screenPages = includeScreenCapture
+          ? await ScreenCapture.captureVisibleScreen()
+          : const <Uint8List>[];
+
+      // Capture awaits frames, so the screen can be torn down underneath us.
+      if (!context.mounted) return;
+
       final projectData = ProjectDataHelper.getData(context);
       final projectName = projectData.projectName;
       final now = DateTime.now();
       final stamp =
           '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-      final prefix =
-          filenamePrefix ?? screenTitle.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
-      final filename = '${prefix}_${projectName.replaceAll(' ', '_')}_$stamp.pdf';
+      final prefix = filenamePrefix ??
+          screenTitle.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+      final filename =
+          '${prefix}_${projectName.replaceAll(' ', '_')}_$stamp.pdf';
 
-      final doc = pw.Document();
-
-      doc.addPage(
-        pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(32),
-          build: (_) => [
-            // Title
-            pw.Text(screenTitle,
-                style: pw.TextStyle(
-                    fontSize: 20, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 4),
-            pw.Text(
-              '$projectName \u2014 Generated ${now.toLocal().toIso8601String()}',
-              style: const pw.TextStyle(fontSize: 9, color: _grey600),
-            ),
-            pw.SizedBox(height: 16),
-            // Sections
-            ...sections.expand(_buildSection),
-          ],
-        ),
+      final bytes = await buildDocumentBytes(
+        screenTitle: screenTitle,
+        projectName: projectName,
+        generatedAt: now,
+        sections: sections,
+        screenPages: screenPages,
       );
-
-      final bytes = await doc.save();
       loader.downloadFile(bytes, filename, mimeType: 'application/pdf');
 
       // Show success snackbar if context is still mounted
@@ -152,6 +154,89 @@ class PdfExportHelper {
         );
       }
     }
+  }
+
+  // ── Low-level: document assembly ───────────────────────────────────────
+
+  /// Builds the PDF bytes for a screen export.
+  ///
+  /// Split out from [exportScreenPdf] so the page layout can be tested without
+  /// a live rendering surface: one page carries the title plus [sections], and
+  /// every entry in [screenPages] becomes its own full-page image after it.
+  static Future<Uint8List> buildDocumentBytes({
+    required String screenTitle,
+    required String projectName,
+    required DateTime generatedAt,
+    required List<PdfSection> sections,
+    List<Uint8List> screenPages = const [],
+  }) async {
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (_) => <pw.Widget>[
+          // Title
+          pw.Text(screenTitle,
+              style:
+                  pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            '$projectName \u2014 Generated ${generatedAt.toLocal().toIso8601String()}',
+            style: const pw.TextStyle(fontSize: 9, color: _grey600),
+          ),
+          pw.SizedBox(height: 16),
+          // Sections
+          ...sections.expand(_buildSection),
+          if (screenPages.isNotEmpty) ...[
+            pw.SizedBox(height: 8),
+            pw.Text(
+              screenPages.length > 1
+                  ? 'Screen capture (${screenPages.length} pages)'
+                  : 'Screen capture',
+              style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 6),
+            pw.Text(
+              'The pages that follow show this screen exactly as it appears '
+              'in the app, including any content below the fold.',
+              style: const pw.TextStyle(fontSize: 9, color: _grey600),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    for (final png in screenPages) {
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          build: (_) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                screenTitle,
+                style: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                    color: _grey600),
+              ),
+              pw.SizedBox(height: 6),
+              pw.Expanded(
+                child: pw.Image(
+                  pw.MemoryImage(png),
+                  fit: pw.BoxFit.contain,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return doc.save();
   }
 
   // ── Low-level: build section widgets ───────────────────────────────────
@@ -213,9 +298,7 @@ class PdfExportHelper {
           else
             _TH.fromTextArray(
               headers: ['Field', 'Value'],
-              data: pairs
-                  .map((p) => [p.keys.first, p.values.first])
-                  .toList(),
+              data: pairs.map((p) => [p.keys.first, p.values.first]).toList(),
               headerStyle:
                   pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
               cellStyle: const pw.TextStyle(fontSize: 9),

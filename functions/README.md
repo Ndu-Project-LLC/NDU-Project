@@ -1,6 +1,6 @@
-# Firebase Cloud Functions - OpenAI Secure Proxy
+# Firebase Cloud Functions - Secure AI Proxy
 
-This directory contains Firebase Cloud Functions that act as a secure proxy for OpenAI API calls, ensuring your API key is never exposed in client code or version control.
+This directory contains Firebase Cloud Functions that act as a secure proxy for the app's AI completions. Requests are served by a **self-hosted LLM** (see `../llm-server/`) at near-zero cost and only fall back to OpenAI when that server is unreachable. Credentials stay server-side and are never exposed in client code or version control.
 
 ## 🔐 Security Benefits
 
@@ -65,18 +65,62 @@ const allowedOrigins = [
 ];
 ```
 
+## 🤖 Self-hosted LLM routing (cost-free AI)
+
+The `openaiProxy` function routes each completion through
+`functions/llm-router.js`:
+
+```
+Flutter App → Cloud Function (openaiProxy)
+            ├─→ Self-hosted LLM  (llm-server/ on the Oracle Always-Free VM) ← primary, ~$0
+            └─→ OpenAI API       (only when the VM is unreachable)           ← fallback
+```
+
+Configure the self-hosted upstream:
+
+1. Deploy the stack on your VM (see `../llm-server/README.md`) and note its
+   public address, e.g. `http://203.0.113.10:8080`.
+2. Add the non-secret URL to `functions/.env` (loaded at deploy time):
+   ```
+   LLM_SERVER_URL=http://203.0.113.10:8080
+   LLM_MODEL_NAME=qwen2.5:7b-instruct
+   ```
+3. Store the gate token as a Firebase secret (paste at the hidden prompt):
+   ```bash
+   firebase functions:secrets:set LLM_SERVER_API_TOKEN
+   ```
+4. Redeploy:
+   ```bash
+   firebase deploy --only functions:openaiProxy
+   ```
+
+There is **no client change** — the app still calls the same Cloud Function
+with the same OpenAI-format payloads. When `LLM_SERVER_URL` is unset, the
+proxy behaves exactly as before (OpenAI only).
+
+Environment variables (all optional):
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `LLM_SERVER_URL` | Base URL of the self-hosted server (enables local routing) | *(unset — OpenAI only)* |
+| `LLM_SERVER_API_TOKEN` | Bearer token required by the gate (Firebase secret) | *(none)* |
+| `LLM_MODEL_NAME` | Model requested on the self-hosted server | `qwen2.5:7b-instruct` |
+| `LLM_SERVER_TIMEOUT_MS` | Per-request timeout for the local server | `60000` |
+
 ## 🔄 How It Works
 
-1. **Client Request**: Your Flutter app sends OpenAI requests to your Cloud Function
-2. **Authentication** (optional): The function verifies the user's Firebase Auth token
-3. **Key Injection**: The function adds your secure API key from Firebase secrets
-4. **Proxy**: The function forwards the request to OpenAI
-5. **Response**: OpenAI's response is returned to your Flutter app
+1. **Client Request**: Your Flutter app sends OpenAI-format requests to your Cloud Function
+2. **Authentication**: The function verifies the user's Firebase Auth token
+3. **Routing** (`llm-router.js`): The function tries the self-hosted LLM first and falls back to OpenAI only when it is unreachable
+4. **Key Injection**: Credentials are added server-side from Firebase secrets
+5. **Response**: The upstream's response is returned to your Flutter app
 
-```
-Flutter App → Cloud Function → OpenAI API
-            ↑ (API key added here, never exposed to client)
-```
+The local-LLM attempt is bounded by `LLM_SERVER_TIMEOUT_MS` (default `60000`)
+and network failures (connection refused, DNS, timeout) are treated as a
+failed attempt rather than an error — the request then falls back to OpenAI
+so AI features stay available while the VM is down. The OpenAI fallback itself
+is bounded to 55s so a hung upstream can never outlive the client's request
+timeout.
 
 ## 🚀 Usage in Flutter App
 
@@ -135,7 +179,18 @@ Firebase Cloud Functions pricing:
 - Free tier: 2 million invocations/month
 - After free tier: $0.40 per million invocations
 
-Your OpenAI API costs remain the same.
+With the self-hosted LLM configured, **OpenAI API costs drop to ~$0** because
+OpenAI is only called when the VM is down. The Oracle Always-Free VM that
+runs the model has no monthly cost.
+
+## 🧪 Tests
+
+Router unit tests (no external services, `node` built-ins only):
+
+```bash
+cd functions
+npm test
+```
 
 ## 🔧 Troubleshooting
 

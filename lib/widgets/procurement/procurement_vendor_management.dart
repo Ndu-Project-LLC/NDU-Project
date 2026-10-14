@@ -99,7 +99,7 @@ extension RiskSeverityX on RiskSeverity {
       case RiskSeverity.medium:
         return const Color(0xFFFFF7ED);
       case RiskSeverity.high:
-        return const Color(0xFFFFF1F2);
+        return const Color(0xFFFFF8E1);
     }
   }
 
@@ -245,7 +245,7 @@ class VendorManagementView extends StatelessWidget {
     final metricCards = [
       ProcurementSummaryCard(
         icon: Icons.inventory_2_outlined,
-        iconBackground: const Color(0xFFEFF6FF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: '$totalVendors',
         label: 'Active Vendors',
       ),
@@ -264,7 +264,7 @@ class VendorManagementView extends StatelessWidget {
       ),
       ProcurementSummaryCard(
         icon: Icons.shield_outlined,
-        iconBackground: const Color(0xFFFFF1F2),
+        iconBackground: const Color(0xFFFFF8E1),
         value: '${riskItems.length}',
         label: 'Compliance Actions',
         valueColor: const Color(0xFFDC2626),
@@ -307,7 +307,7 @@ class VendorManagementView extends StatelessWidget {
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text('Add Vendor'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFFFFC812),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -401,7 +401,7 @@ class _VendorHealthCard extends StatelessWidget {
 
   Color _scoreColor(double score) {
     if (score >= 0.85) return const Color(0xFF10B981);
-    if (score >= 0.7) return const Color(0xFF2563EB);
+    if (score >= 0.7) return const Color(0xFFFFC812);
     return const Color(0xFFF97316);
   }
 
@@ -421,7 +421,7 @@ class _VendorHealthCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -500,7 +500,7 @@ class _VendorOnboardingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -570,7 +570,7 @@ class _VendorRiskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -765,11 +765,11 @@ class _VendorsSection extends StatelessWidget {
               label: const Text('Approved Only'),
               selected: approvedOnly,
               onSelected: onApprovedChanged,
-              selectedColor: const Color(0xFFEFF6FF),
+              selectedColor: const Color(0xFFFFF8E1),
               showCheckmark: false,
               labelStyle: TextStyle(
                 color: approvedOnly
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFF475569),
                 fontWeight: FontWeight.w600,
               ),
@@ -782,7 +782,7 @@ class _VendorsSection extends StatelessWidget {
               showCheckmark: false,
               labelStyle: TextStyle(
                 color: preferredOnly
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFF475569),
                 fontWeight: FontWeight.w600,
               ),
@@ -792,7 +792,7 @@ class _VendorsSection extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -913,7 +913,7 @@ class _ApprovedVendorsSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: ListView.builder(
               shrinkWrap: true,
@@ -1007,7 +1007,7 @@ class _VendorDataTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: ListView.builder(
         shrinkWrap: true,
@@ -1188,7 +1188,7 @@ class _VendorNameCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -1323,7 +1323,7 @@ class _VendorStatusPill extends StatelessWidget {
         fg = const Color(0xFFF97316);
       case 'inactive':
       case 'suspended':
-        bg = const Color(0xFFFFF1F2);
+        bg = const Color(0xFFFFF8E1);
         fg = const Color(0xFFDC2626);
       default:
         bg = const Color(0xFFF1F5F9);

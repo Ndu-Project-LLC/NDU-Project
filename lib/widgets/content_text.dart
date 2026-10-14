@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/models/app_content_model.dart';
 import 'package:ndu_project/services/app_content_service.dart';
@@ -6,6 +7,7 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Widget that displays content from Firestore with real-time updates
 /// Usage:
@@ -135,7 +137,7 @@ class EditableContentText extends StatelessWidget {
     }
 
     // In edit mode, make it clickable with visual indicator
-    final accent = isStaticEditMode ? const Color(0xFFB45309) : Colors.blue;
+    final accent = isStaticEditMode ? const Color(0xFFB45309) : const Color(0xFFFFC812);
     return InkWell(
       onTap: () => _showEditDialog(context, isStaticEditMode: isStaticEditMode),
       borderRadius: BorderRadius.circular(4),
@@ -168,7 +170,7 @@ class EditableContentText extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, {required bool isStaticEditMode}) {
     final provider = context.read<AppContentProvider>();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => _ContentEditDialog(
         contentKey: contentKey,
@@ -215,7 +217,7 @@ class _ContentEditDialogState extends State<_ContentEditDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.currentValue);
+    _controller = SpellCheckTextEditingController(text: widget.currentValue);
   }
 
   @override

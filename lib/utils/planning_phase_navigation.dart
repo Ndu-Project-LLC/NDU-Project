@@ -2,70 +2,66 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ndu_project/screens/project_framework_screen.dart';
-import 'package:ndu_project/screens/project_framework_next_screen.dart';
+import 'package:ndu_project/screens/project/project_framework_screen.dart';
+import 'package:ndu_project/screens/project/project_framework_next_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
-import 'package:ndu_project/screens/planning_requirements_screen.dart';
-import 'package:ndu_project/screens/organization_plan_subsections_screen.dart';
-import 'package:ndu_project/screens/team_training_building_screen.dart';
-import 'package:ndu_project/screens/stakeholder_management_screen.dart';
-import 'package:ndu_project/screens/team_management_screen.dart';
-import 'package:ndu_project/screens/ssher_stacked_screen.dart';
-import 'package:ndu_project/screens/quality_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
-import 'package:ndu_project/screens/execution_plan_details_screen.dart';
-import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
-import 'package:ndu_project/screens/execution_issue_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
-import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
-import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_stakeholder_identification_screen.dart';
-import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
-import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
-import 'package:ndu_project/screens/design_planning_screen.dart';
-import 'package:ndu_project/screens/planning_technology_screen.dart';
-import 'package:ndu_project/screens/interface_management_screen.dart';
-import 'package:ndu_project/screens/risk_assessment_screen.dart';
-import 'package:ndu_project/screens/planning_contracting_screen.dart';
-import 'package:ndu_project/screens/planning_procurement_screen.dart';
+import 'package:ndu_project/screens/planning/planning_requirements_screen.dart';
+import 'package:ndu_project/screens/team/organization_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/team/team_training_building_screen.dart';
+import 'package:ndu_project/screens/stakeholders/stakeholder_management_screen.dart';
+import 'package:ndu_project/screens/team/team_management_screen.dart';
+import 'package:ndu_project/screens/ssher/ssher_stacked_screen.dart';
+import 'package:ndu_project/screens/execution/quality_management_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_solutions_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_details_screen.dart';
+import 'package:ndu_project/screens/execution/execution_enabling_work_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_best_practices_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_construction_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_infrastructure_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_agile_delivery_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_interface_management_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_communication_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_interface_management_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_interface_management_overview_screen.dart';
+import 'package:ndu_project/screens/execution/execution_quality_tracking_screen.dart';
+import 'package:ndu_project/screens/design/design_planning_screen.dart';
+import 'package:ndu_project/screens/planning/planning_technology_screen.dart';
+import 'package:ndu_project/screens/execution/interface_management_screen.dart';
+import 'package:ndu_project/screens/risk/risk_assessment_screen.dart';
+import 'package:ndu_project/screens/planning/planning_contracting_screen.dart';
+import 'package:ndu_project/screens/planning/planning_procurement_screen.dart';
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
-import 'package:ndu_project/screens/cost_estimate_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
+import 'package:ndu_project/screens/commercial/cost_estimate_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
-import 'package:ndu_project/screens/issue_management_screen.dart';
-import 'package:ndu_project/screens/lessons_learned_screen.dart';
-import 'package:ndu_project/screens/startup_planning_screen.dart';
+import 'package:ndu_project/screens/risk/issue_management_screen.dart';
+import 'package:ndu_project/screens/closeout/lessons_learned_screen.dart';
+import 'package:ndu_project/screens/startup_planning/startup_planning_screen.dart';
 import 'package:ndu_project/screens/startup_planning_subsections_screen.dart';
-import 'package:ndu_project/screens/deliverables_roadmap_screen.dart';
-import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart';
-import 'package:ndu_project/screens/deliverables_roadmap_overview_screen.dart';
-import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
-import 'package:ndu_project/screens/document_review_matrix_screen.dart';
-import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
-import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
-import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
-import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
-import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
-import 'package:ndu_project/screens/agile_team_structure_screen.dart';
-import 'package:ndu_project/screens/agile_epics_features_screen.dart';
-import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
-import 'package:ndu_project/screens/agile_release_plan_screen.dart';
-import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
-import 'package:ndu_project/screens/project_plan_screen.dart';
-import 'package:ndu_project/screens/project_plan_subsections_screen.dart';
-import 'package:ndu_project/screens/project_baseline_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverables_roadmap_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverable_roadmap_subsections_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverables_roadmap_overview_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverables_roadmap_detailed_screen.dart';
+import 'package:ndu_project/screens/deliverables/document_review_matrix_screen.dart';
+import 'package:ndu_project/screens/agile/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile/agile_metrics_planning_screen.dart';
+import 'package:ndu_project/screens/agile/agile_delivery_model_screen.dart';
+import 'package:ndu_project/screens/agile/agile_scrum_config_screen.dart';
+import 'package:ndu_project/screens/agile/agile_capacity_planning_screen.dart';
+import 'package:ndu_project/screens/agile/agile_team_structure_screen.dart';
+import 'package:ndu_project/screens/agile/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile/agile_stories_backlog_screen.dart';
+import 'package:ndu_project/screens/agile/agile_sprint_calendar_screen.dart';
+import 'package:ndu_project/screens/agile/agile_release_plan_screen.dart';
+import 'package:ndu_project/screens/agile/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/project/project_plan_screen.dart';
+import 'package:ndu_project/screens/project/project_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/project/project_baseline_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
-import 'package:ndu_project/utils/phase_transition_helper.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 class PlanningPhaseNavigation {
   static final List<PlanningPage> pages = [
@@ -166,14 +162,16 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileTeamStructureScreen(),
     ),
     PlanningPage(
-      id: 'agile_kanban_config',
-      title: 'Kanban Configuration',
-      builder: (_) => const AgileKanbanConfigScreen(),
-    ),
-    PlanningPage(
       id: 'agile_epics_features',
       title: 'Epics & Features',
       builder: (_) => const AgileEpicsFeaturesScreen(),
+    ),
+    // Kanban Configuration configures the board that the Epics & Features
+    // breakdown feeds, so it follows that breakdown in the flow.
+    PlanningPage(
+      id: 'agile_kanban_config',
+      title: 'Kanban Configuration',
+      builder: (_) => const AgileKanbanConfigScreen(),
     ),
     PlanningPage(
       id: 'agile_stories_backlog',
@@ -191,19 +189,20 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileSprintCalendarScreen(),
     ),
     PlanningPage(
-      id: 'agile_map_out',
-      title: 'Agile Map Out',
-      builder: (_) => const DeliverableRoadmapAgileMapOutScreen(),
-    ),
-    PlanningPage(
       id: 'agile_release_plan',
       title: 'Release Plan',
       builder: (_) => const AgileReleasePlanScreen(),
     ),
+    // Define the metrics before the Agile Map Out/dashboard that reports them.
     PlanningPage(
       id: 'agile_metrics_planning',
       title: 'Agile Metrics Planning',
       builder: (_) => const AgileMetricsPlanningScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_map_out',
+      title: 'Agile Map Out',
+      builder: (_) => const DeliverableRoadmapAgileMapOutScreen(),
     ),
     // Execution Plan — full flow matching sidebar order
     PlanningPage(
@@ -239,16 +238,9 @@ class PlanningPhaseNavigation {
       title: 'Enabling Work Plan',
       builder: (_) => const ExecutionEnablingWorkPlanScreen(),
     ),
-    PlanningPage(
-      id: 'execution_issue_management',
-      title: 'Execution Issue Management',
-      builder: (_) => const ExecutionIssueManagementScreen(),
-    ),
-    PlanningPage(
-      id: 'execution_plan_stakeholder_identification',
-      title: 'Execution Stakeholder Identification',
-      builder: (_) => const ExecutionPlanStakeholderIdentificationScreen(),
-    ),
+    // Issue Management, Lessons Learned and Stakeholder Identification are
+    // project-wide sections already in this flow, so there is no
+    // Execution-specific copy of any of them (Lusaka 27).
     PlanningPage(
       id: 'execution_plan_construction_plan',
       title: 'Construction Plan',
@@ -263,11 +255,6 @@ class PlanningPhaseNavigation {
       id: 'execution_plan_agile_delivery_plan',
       title: 'Agile Delivery Plan',
       builder: (_) => const ExecutionPlanAgileDeliveryPlanScreen(),
-    ),
-    PlanningPage(
-      id: 'execution_plan_lessons_learned',
-      title: 'Execution Lessons Learned',
-      builder: (_) => const ExecutionPlanLessonsLearnedScreen(),
     ),
     PlanningPage(
       id: 'execution_plan_best_practices',
@@ -344,11 +331,6 @@ class PlanningPhaseNavigation {
       id: 'cost_estimate',
       title: 'Cost Estimate',
       builder: (_) => const CostEstimateScreen(),
-    ),
-    PlanningPage(
-      id: 'scope_tracking_plan',
-      title: 'Scope Tracking Plan',
-      builder: (_) => const ScopeTrackingPlanScreen(),
     ),
     PlanningPage(
       id: 'change_management',
@@ -430,22 +412,34 @@ class PlanningPhaseNavigation {
     return SidebarNavigationService.instance.findItemByCheckpoint(id) != null;
   }
 
+  /// The project's delivery model, or null when it has not picked one. The
+  /// same source the sidebar gates on (Lusaka 27).
+  static String? deliveryModelOf(BuildContext context) {
+    final data = ProjectDataInherited.maybeOf(context)?.projectData;
+    return data == null ? null : ProjectDataHelper.deliveryModelOrNull(data);
+  }
+
   static SidebarItem? _nextSidebarItem(BuildContext context, String currentId) {
     final isBasicPlan =
         ProjectDataInherited.maybeOf(context)?.projectData.isBasicPlanProject ??
             false;
-    return SidebarNavigationService.instance
-        .getNextAccessibleItem(currentId, isBasicPlan);
+    return SidebarNavigationService.instance.getNextAccessibleItem(
+      currentId,
+      isBasicPlan,
+      deliveryModel: deliveryModelOf(context),
+    );
   }
 
-  static SidebarItem? _previousSidebarItem(String currentId) {
+  static SidebarItem? _previousSidebarItem(String currentId,
+      {String? deliveryModel}) {
     return SidebarNavigationService.instance
-        .getPreviousAccessibleItem(currentId);
+        .getPreviousAccessibleItem(currentId, deliveryModel: deliveryModel);
   }
 
   static Widget? resolvePreviousScreen(BuildContext context, String currentId) {
     if (_usesSidebarOrder(currentId)) {
-      final prev = _previousSidebarItem(currentId);
+      final prev = _previousSidebarItem(currentId,
+          deliveryModel: deliveryModelOf(context));
       if (prev == null) return null;
       return NavigationRouteResolver.resolveCheckpointToScreen(
         prev.checkpoint,
@@ -485,22 +479,98 @@ class PlanningPhaseNavigation {
     return null;
   }
 
-  static String backLabel(String currentId) {
+  /// [deliveryModel], when supplied, is the model the flow is gated on, so the
+  /// label matches the screen [goToPrevious] would actually open (e.g. on the
+  /// Waterfall side of the Agile Delivery section).
+  static String backLabel(String currentId, {String? deliveryModel}) {
     if (_usesSidebarOrder(currentId)) {
-      final prev = _previousSidebarItem(currentId);
+      final prev =
+          _previousSidebarItem(currentId, deliveryModel: deliveryModel);
       return prev == null ? 'Back' : 'Back: ${prev.label}';
     }
     final prev = previousPage(currentId);
     return prev == null ? 'Back' : 'Back: ${prev.title}';
   }
 
-  static String nextLabel(String currentId) {
+  /// [deliveryModel] behaves as in [backLabel].
+  static String nextLabel(String currentId, {String? deliveryModel}) {
     if (_usesSidebarOrder(currentId)) {
-      final next = SidebarNavigationService.instance.getNextItem(currentId);
+      final next = SidebarNavigationService.instance
+          .getNextItem(currentId, deliveryModel: deliveryModel);
       return next == null ? 'Next' : 'Next: ${next.label}';
     }
     final next = nextPage(currentId);
     return next == null ? 'Next' : 'Next: ${next.title}';
+  }
+
+  /// Whether [goToPrevious] would actually open another screen.
+  ///
+  /// Shared with the page navigation footer so the Previous button can be
+  /// disabled on the first page of a flow instead of silently doing nothing.
+  static bool hasPrevious(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _previousSidebarItem(currentId,
+              deliveryModel: deliveryModelOf(context)) !=
+          null;
+    }
+    return previousPage(currentId) != null;
+  }
+
+  /// Whether [goToNext] would actually open another screen.
+  static bool hasNext(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _nextSidebarItem(context, currentId) != null;
+    }
+    return nextPage(currentId) != null;
+  }
+
+  /// The label of the screen [goToPrevious] would open, or null when this is
+  /// the first page of the flow. Used as the Previous button's tooltip.
+  static String? previousTitle(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _previousSidebarItem(currentId,
+              deliveryModel: deliveryModelOf(context))
+          ?.label;
+    }
+    return previousPage(currentId)?.title;
+  }
+
+  /// The label of the screen [goToNext] would open, or null when this is the
+  /// last page of the flow. Drives the `Continue to X` button label.
+  static String? nextTitle(BuildContext context, String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      return _nextSidebarItem(context, currentId)?.label;
+    }
+    return nextPage(currentId)?.title;
+  }
+
+  /// The Agile Delivery screen flow, in sidebar-selector order.
+  ///
+  /// Shared by the on-page screen navigator so it always reflects the
+  /// selector's screens overall — including Scrum Configuration and Capacity
+  /// Planning, which have no sidebar entry of their own. The range ends on
+  /// [agile_map_out], which is now the last Agile Delivery screen (Metrics
+  /// Planning moved ahead of it), so the navigator never clips the tail.
+  static List<SidebarItem> get agileDeliverySteps => SidebarNavigationService
+      .instance
+      .itemsBetween('agile_delivery_model', 'agile_map_out');
+
+  /// Navigate directly to [checkpoint] (used by the screen navigator's step
+  /// chips). Flushes any pending auto-save first, like the Back/Next flow.
+  static void goToCheckpoint(BuildContext context, String checkpoint) {
+    final provider = ProjectDataInherited.maybeOf(context);
+    if (provider != null) {
+      unawaited(provider.flushAutoSave());
+    }
+    final screen = NavigationRouteResolver.resolveCheckpointToScreen(
+      checkpoint,
+      context,
+    );
+    if (screen == null) return;
+    context.push(
+      NavigationRouteResolver.resolveCheckpointToUrl(checkpoint),
+      extra: screen,
+    );
   }
 
   static void goToPrevious(BuildContext context, String currentId) {
@@ -511,7 +581,8 @@ class PlanningPhaseNavigation {
     }
 
     if (_usesSidebarOrder(currentId)) {
-      final prev = _previousSidebarItem(currentId);
+      final prev = _previousSidebarItem(currentId,
+          deliveryModel: deliveryModelOf(context));
       if (prev != null) {
         final screen = resolvePreviousScreen(context, currentId);
         if (screen != null) {

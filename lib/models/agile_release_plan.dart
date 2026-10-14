@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class AgileReleasePlan {
   AgileReleasePlan({
     String? id,
@@ -33,7 +35,7 @@ class AgileReleasePlan {
     this.monitoringPlan = '',
     this.feedbackCollection = '',
     this.continuousImprovement = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   final String id;
   String releaseLabel;
@@ -190,7 +192,7 @@ class AgileReleasePlan {
     }
 
     return AgileReleasePlan(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ?? newId(),
       releaseLabel: json['releaseLabel']?.toString() ?? '',
       releaseDate: parseDate(json['releaseDate']),
       releaseGoal: json['releaseGoal']?.toString() ?? '',

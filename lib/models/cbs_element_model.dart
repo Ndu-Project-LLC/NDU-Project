@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class CbsElement {
   final String id;
   String code;
@@ -70,7 +72,7 @@ class CbsElement {
     this.path = '',
     this.isActive = true,
     this.isBaselined = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   /// Computed: remaining budget = budgetAmount - spentAmount.
   double get remainingBudget => budgetAmount - spentAmount;
@@ -165,7 +167,7 @@ class CbsElement {
 
     return CbsElement(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       code: json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       parentCbsId: json['parentCbsId']?.toString() ?? '',

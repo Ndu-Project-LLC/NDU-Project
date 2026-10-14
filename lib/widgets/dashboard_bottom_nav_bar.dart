@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../routing/app_router.dart';
-import '../screens/portfolio_dashboard_screen.dart';
-import '../screens/program_dashboard_mobile_screen.dart';
 
 class _Tokens {
   static const surfaceContainerLowest = Color(0xFFFFFFFF);
   static const outlineVariant = Color(0xFFC0C6D6);
-  static const primary = Color(0xFF005BB3);
+  static const primary = Color(0xFFFFC812);
   static const primaryContainer = Color(0xFF0073DF);
 }
 
@@ -48,10 +46,6 @@ class DashboardBottomNavBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: _Tokens.surfaceContainerLowest,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
-        ),
         border: const Border(
           top: BorderSide(color: _Tokens.outlineVariant, width: 1),
         ),
@@ -69,11 +63,13 @@ class DashboardBottomNavBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
+            // Expanded, so the four tabs divide the viewport instead of each
+            // demanding its own intrinsic width — which overflowed a phone.
             children: [
-              _navItem(Icons.folder, 'Projects', 0),
-              _navItem(Icons.layers, 'Programs', 1),
-              _navItem(Icons.account_tree, 'Portfolios', 2),
-              _navItem(Icons.settings, 'Settings', 3),
+              Expanded(child: _navItem(Icons.folder, 'Projects', 0)),
+              Expanded(child: _navItem(Icons.layers, 'Programs', 1)),
+              Expanded(child: _navItem(Icons.account_tree, 'Portfolios', 2)),
+              Expanded(child: _navItem(Icons.settings, 'Settings', 3)),
             ],
           ),
         ),
@@ -100,13 +96,18 @@ class DashboardBottomNavBar extends StatelessWidget {
             children: [
               Icon(icon, size: 22, color: color),
               const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.05,
-                  color: color,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.05,
+                    color: color,
+                  ),
                 ),
               ),
             ],

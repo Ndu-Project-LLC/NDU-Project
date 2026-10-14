@@ -334,7 +334,16 @@ class HintContentService {
     required String fallbackMessage,
   }) async {
     final remote = await getHint(pageId);
-    if (remote != null) return remote;
+    // Only honour a stored hint when it actually carries content. An admin
+    // draft saved with an empty title/message (or a partially-written
+    // document) would otherwise render a modal with no body — just the
+    // dismiss button — which reads like a broken app. Fall back to the
+    // page's own copy in that case.
+    if (remote != null &&
+        remote.title.trim().isNotEmpty &&
+        remote.message.trim().isNotEmpty) {
+      return remote;
+    }
     return defaultForPage(
           pageId,
           fallbackTitle: fallbackTitle,

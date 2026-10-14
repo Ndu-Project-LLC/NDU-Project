@@ -1,0 +1,2132 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
+import 'package:flutter/services.dart';
+import 'package:ndu_project/utils/unique_id.dart';
+import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
+
+import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+import 'package:ndu_project/widgets/execution_section_tabs.dart';
+import 'package:ndu_project/widgets/editable_table.dart';
+class LongLeadEquipmentOrderingScreen extends StatefulWidget {
+ const LongLeadEquipmentOrderingScreen({super.key});
+
+/// The canonical long-lead equipment taxonomy (Lusaka 28).
+///
+/// The category field used to be free text, so every project invented its own
+/// labels ("pumps", "Pumps", "Water pumps") and the register could not be
+/// grouped or reported on. Offering the full set keeps procurement classes
+/// consistent across projects while still covering the disciplines that
+/// actually drive long-lead schedules on site.
+static const List<String> equipmentCategoryOptions = [
+'Earthmoving & Heavy Plant',
+'Construction Equipment',
+'Material Handling',
+'Power Generation & Backup',
+'Transformers & Switchgear',
+'Solar & Renewable Energy',
+'Water Supply & Treatment',
+'Sanitation & Sewerage',
+'HVAC & Ventilation',
+'Telecom & Network Infrastructure',
+'IT, Server & Data Centre Hardware',
+'Security & Access Systems',
+'Medical & Laboratory Equipment',
+'Agricultural Machinery',
+'Vehicle Fleet & Transport',
+'Marine & Coastal Equipment',
+'Elevators & Vertical Transport',
+'Specialist Process Plant',
+];
+
+ @override
+ State<LongLeadEquipmentOrderingScreen> createState() =>
+ _LongLeadEquipmentOrderingScreenState();
+}
+
+class _LongLeadEquipmentOrderingScreenState
+ extends State<LongLeadEquipmentOrderingScreen> {
+ final TextEditingController _notesController = SpellCheckTextEditingController();
+ final _Debouncer _saveDebounce = _Debouncer();
+ bool _isLoading = false;
+ bool _suspendNotesSave = false;
+
+ final List<_EquipmentCategory> _categories = [];
+ final List<_EquipmentItem> _equipmentItems = [];
+ final List<_ProcurementAction> _actions = [];
+
+ final List<String> _criticalityOptions = const ['High', 'Medium', 'Low'];
+ final List<String> _equipmentStatusOptions = const [
+ 'Planned',
+ 'Ordered',
+ 'In production',
+ 'In transit',
+ 'Delivered',
+ 'On hold'
+ ];
+ final List<String> _actionStatusOptions = const [
+ 'Planned',
+ 'Active',
+ 'Blocked',
+ 'Completed'
+ ];
+
+ /// Units a lead-time threshold can be expressed in. The stored value keeps
+ /// its unit ("6 weeks") so existing free-text records stay readable.
+ static const List<String> _leadTimeUnits = ['Days', 'Weeks', 'Months'];
+
+ /// Categories an equipment item may be filed under: the ones this project
+ /// has actually defined, falling back to the canonical taxonomy.
+ List<String> get _equipmentItemCategoryOptions => _categories.isEmpty
+     ? LongLeadEquipmentOrderingScreen.equipmentCategoryOptions
+     : _categories.map((entry) => entry.title).toList();
+
+ /// Registered users on the project, for the Owner dropdowns.
+ ///
+ /// Mirrors the convention already used by the Requirements Implementation
+ /// screen: team members plus the charter roles, falling back to sensible
+ /// placeholders when the project has nobody registered yet.
+ List<String> _ownerOptions() {
+ final projectData = ProjectDataHelper.getData(context);
+ final names = <String>{
+ ...projectData.teamMembers
+ .map((member) => member.name.trim())
+ .where((name) => name.isNotEmpty),
+ };
+ if (projectData.charterProjectManagerName.trim().isNotEmpty) {
+ names.add(projectData.charterProjectManagerName.trim());
+ }
+ if (projectData.charterProjectSponsorName.trim().isNotEmpty) {
+ names.add(projectData.charterProjectSponsorName.trim());
+ }
+ if (names.isEmpty) {
+ names.addAll(const [
+ 'Unassigned',
+ 'Procurement Lead',
+ 'Design Lead',
+ 'Technical Lead',
+ 'Site Manager',
+ ]);
+ }
+ final options = names.toList()..sort();
+ return options;
+ }
+
+ /// Splits a stored threshold such as "6 weeks" into its amount and unit so the
+ /// numeric field and the unit dropdown can be prefilled. Free-text values that
+ /// do not parse fall back to a blank amount and the default unit, keeping the
+ /// user's words rather than silently discarding them.
+ ({String amount, String unit}) _splitLeadTime(String raw) {
+ final text = raw.trim();
+ if (text.isEmpty) return (amount: '', unit: _leadTimeUnits.first);
+ final match = RegExp(r'^(\d+(?:\.\d+)?)\s*([A-Za-z]+)?').firstMatch(text);
+ if (match == null) return (amount: '', unit: _leadTimeUnits.first);
+ final unit = match.group(2);
+ final matchedUnit = _leadTimeUnits.firstWhere(
+ (candidate) => candidate.toLowerCase().startsWith((unit ?? '').toLowerCase()),
+ orElse: () => _leadTimeUnits.first,
+ );
+ return (amount: match.group(1) ?? '', unit: matchedUnit);
+ }
+
+ /// Rebuilds the stored "amount unit" string from the two inputs.
+ String _joinLeadTime(String amount, String unit) {
+ final trimmed = amount.trim();
+ if (trimmed.isEmpty) return '';
+ return '$trimmed $unit';
+ }
+
+ /// Digits-only so the amount field cannot accept free text — a lead time is a
+ /// quantity, and the unit is chosen separately.
+ List<TextInputFormatter> get _leadTimeAmountFormatters => [
+ FilteringTextInputFormatter.digitsOnly,
+ LengthLimitingTextInputFormatter(4),
+ ];
+
+ void _showExportFeedback() {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Equipment schedule export will use the latest saved register data.',
+ ),
+ ),
+ );
+ }
+
+ @override
+ void initState() {
+ super.initState();
+ _notesController.addListener(() {
+ if (_suspendNotesSave) return;
+ _scheduleSave();
+ });
+ WidgetsBinding.instance.addPostFrameCallback((_) => _loadFromFirestore());
+ }
+
+ @override
+ void dispose() {
+ _notesController.dispose();
+ _saveDebounce.dispose();
+ super.dispose();
+ }
+
+ String? _projectId() => ProjectDataHelper.getData(context).projectId;
+
+ Future<void> _loadFromFirestore() async {
+ final projectId = _projectId();
+ if (projectId == null || projectId.isEmpty) return;
+ setState(() => _isLoading = true);
+ try {
+ final doc = await FirebaseFirestore.instance
+ .collection('projects')
+ .doc(projectId)
+ .collection('design_phase_sections')
+ .doc('long_lead_equipment_ordering')
+ .get();
+ final data = doc.data() ?? {};
+ _suspendNotesSave = true;
+ _notesController.text = data['notes']?.toString() ?? '';
+ _suspendNotesSave = false;
+ final categories = _EquipmentCategory.fromList(data['categories']);
+ final equipmentItems = _EquipmentItem.fromList(data['equipmentItems']);
+ final actions = _ProcurementAction.fromList(data['actions']);
+ if (!mounted) return;
+ setState(() {
+ _categories
+ ..clear()
+ ..addAll(categories);
+ _equipmentItems
+ ..clear()
+ ..addAll(equipmentItems);
+ _actions
+ ..clear()
+ ..addAll(actions);
+ });
+ } catch (error) {
+ debugPrint('Failed to load long lead equipment ordering data: $error');
+ } finally {
+ if (mounted) setState(() => _isLoading = false);
+ }
+ }
+
+ void _scheduleSave() {
+ _saveDebounce.run(_saveToFirestore);
+ }
+
+ Future<void> _saveToFirestore() async {
+ final projectId = _projectId();
+ if (projectId == null || projectId.isEmpty) return;
+ final payload = {
+ 'notes': _notesController.text.trim(),
+ 'categories': _categories.map((entry) => entry.toJson()).toList(),
+ 'equipmentItems': _equipmentItems.map((entry) => entry.toJson()).toList(),
+ 'actions': _actions.map((entry) => entry.toJson()).toList(),
+ 'updatedAt': FieldValue.serverTimestamp(),
+ };
+ await FirebaseFirestore.instance
+ .collection('projects')
+ .doc(projectId)
+ .collection('design_phase_sections')
+ .doc('long_lead_equipment_ordering')
+ .set(payload, SetOptions(merge: true));
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ final isMobile = AppBreakpoints.isMobile(context);
+ final padding = AppBreakpoints.pagePadding(context);
+
+ return ResponsiveScaffold(
+ activeItemLabel: 'Long Lead Equipment Ordering',
+ floatingActionButton: const KazAiChatBubble(positioned: false),
+ body: Column(
+ children: [
+ PlanningPhaseHeader(
+ title: 'Long Lead Equipment Ordering', onExportPdf: _exportPdf),
+ Expanded(
+ child: SingleChildScrollView(
+ padding: EdgeInsets.all(padding),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ if (_isLoading) const LinearProgressIndicator(minHeight: 2),
+ if (_isLoading) const SizedBox(height: 16),
+ // Page Title
+ Text(
+ 'Long Lead Equipment Ordering',
+ style: TextStyle(
+ fontSize: isMobile ? 20 : 24,
+ fontWeight: FontWeight.bold,
+ color: LightModeColors.accent,
+ ),
+ ),
+ const SizedBox(height: 8),
+ Text(
+ 'Plan and track equipment with extended procurement timelines',
+ style: TextStyle(
+ fontSize: isMobile ? 16 : 18,
+ fontWeight: FontWeight.w600,
+ color: Colors.black87,
+ ),
+ ),
+ const SizedBox(height: 8),
+ Text(
+ 'Identify and manage equipment that requires early ordering to avoid schedule delays and ensure timely project delivery.',
+ style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+ ),
+ const SizedBox(height: 24),
+
+ _buildNotesCard(),
+ const SizedBox(height: 16),
+
+ // Helper Text
+ Text(
+ 'Focus on items where procurement timing directly impacts project milestones or critical path activities.',
+ style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+ ),
+ const SizedBox(height: 24),
+
+ // Three Cards - stacked layout
+ Column(
+ children: [
+  ExecutionSectionTabs(
+   tabs: [
+     SectionTab(
+       label: 'Categories',
+       builder: (_) => _buildCategoriesCard(),
+     ),
+     SectionTab(
+       label: 'Equipment tracking',
+       builder: (_) => _buildEquipmentTrackingCard(),
+     ),
+     SectionTab(
+       label: 'Procurement actions',
+       builder: (_) => _buildProcurementActionsCard(),
+     ),
+   ],
+ ),
+ ],
+ ),
+ const SizedBox(height: 32),
+
+ // Bottom Navigation
+ _buildBottomNavigation(isMobile),
+ ],
+ ),
+ ),
+ ),
+ ],
+ ),
+ bottomBar: const SafeArea(
+   top: false,
+   child: Padding(
+     padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+     child: PageNavigationFooter(
+       checkpoint: 'long_lead_equipment_ordering',
+       pageTitle: 'Long Lead Equipment Ordering',
+       showBorders: false,
+     ),
+   ),
+ ),
+ );
+ }  Widget _buildCategoriesCard() {
+    return _SectionCard(
+      title: 'Equipment categories',
+      subtitle: 'Types of items requiring early procurement.',
+      actionLabel: 'Create item',
+      onAction: _addCategory,
+      child: SearchableTableSection(
+        title: '',
+        searchHint: 'Search categories...',
+        items: _categories,
+        searchFilter: (item, query) {
+          if (item is! _EquipmentCategory) return false;
+          final q = query.toLowerCase();
+          return item.title.toLowerCase().contains(q) ||
+              item.description.toLowerCase().contains(q) ||
+              item.owner.toLowerCase().contains(q);
+        },
+        tableBuilder: (context, query) => _buildCategoriesTable(),
+        cardBuilder: (context, query) => _buildCategoryCards(query),
+      ),
+    );
+  }
+
+  Widget _buildCategoryCards(String query) {
+    final items = query.isEmpty
+        ? _categories
+        : _categories.where((c) {
+            final q = query.toLowerCase();
+            return c.title.toLowerCase().contains(q) ||
+                c.description.toLowerCase().contains(q) ||
+                c.owner.toLowerCase().contains(q);
+          }).toList();
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No categories match your search.')),
+      );
+    }
+    return Column(
+      children: items.map((cat) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text(cat.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+              _buildMiniBadge(cat.criticality),
+            ]),
+            if (cat.description.isNotEmpty) ...[const SizedBox(height: 6), Text(cat.description, style: TextStyle(fontSize: 12, color: Colors.grey[600]))],
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildEquipmentTrackingCard() {
+    return _SectionCard(
+      title: 'Equipment tracking',
+      subtitle: 'Current status of long-lead items.',
+      actionLabel: 'Create item',
+      onAction: _addEquipmentItem,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SearchableTableSection(
+            title: '',
+            searchHint: 'Search equipment...',
+            items: _equipmentItems,
+            searchFilter: (item, query) {
+              if (item is! _EquipmentItem) return false;
+              final q = query.toLowerCase();
+              return item.name.toLowerCase().contains(q) ||
+                  item.category.toLowerCase().contains(q) ||
+                  item.vendor.toLowerCase().contains(q) ||
+                  item.owner.toLowerCase().contains(q);
+            },
+            tableBuilder: (context, query) => _buildEquipmentTable(),
+            cardBuilder: (context, query) => _buildEquipmentCards(query),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Track all equipment with lead times exceeding 4 weeks to ensure timely delivery.',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEquipmentCards(String query) {
+    final items = query.isEmpty
+        ? _equipmentItems
+        : _equipmentItems.where((e) {
+            final q = query.toLowerCase();
+            return e.name.toLowerCase().contains(q) ||
+                e.category.toLowerCase().contains(q) ||
+                e.vendor.toLowerCase().contains(q);
+          }).toList();
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No equipment matches your search.')),
+      );
+    }
+    return Column(
+      children: items.map((eq) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text(eq.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+              _buildMiniBadge(eq.status),
+            ]),
+            const SizedBox(height: 6),
+            Text('${eq.category} • ${eq.vendor}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            Text('Lead time: ${eq.leadTime}', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildProcurementActionsCard() {
+    return _SectionCard(
+      title: 'Procurement actions',
+      subtitle: 'Steps to manage long-lead procurement.',
+      actionLabel: 'Create item',
+      onAction: _addAction,
+      child: Column(
+        children: [
+          SearchableTableSection(
+            title: '',
+            searchHint: 'Search actions...',
+            items: _actions,
+            searchFilter: (item, query) {
+              if (item is! _ProcurementAction) return false;
+              final q = query.toLowerCase();
+              return item.title.toLowerCase().contains(q) ||
+                  item.owner.toLowerCase().contains(q) ||
+                  item.notes.toLowerCase().contains(q);
+            },
+            tableBuilder: (context, query) => _buildActionsTable(),
+            cardBuilder: (context, query) => _buildActionCards(query),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _showExportFeedback,
+              icon: const Icon(Icons.download, size: 18),
+              label: const Text('Export equipment schedule'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: LightModeColors.accent,
+                foregroundColor: Colors.black87,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCards(String query) {
+    final items = query.isEmpty
+        ? _actions
+        : _actions.where((a) {
+            final q = query.toLowerCase();
+            return a.title.toLowerCase().contains(q) ||
+                a.owner.toLowerCase().contains(q);
+          }).toList();
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No actions match your search.')),
+      );
+    }
+    return Column(
+      children: items.map((action) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text(action.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+              _buildMiniBadge(action.status),
+            ]),
+            if (action.owner.isNotEmpty) ...[const SizedBox(height: 6), Text('Owner: ${action.owner}', style: TextStyle(fontSize: 12, color: Colors.grey[600]))],
+            if (action.dueDate.isNotEmpty) Text('Due: ${action.dueDate}', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildMiniBadge(String label) {
+    Color bgColor;
+    Color fgColor;
+    switch (label.toLowerCase()) {
+      case 'high': case 'active': case 'ordered': case 'in production': case 'delivered':
+        bgColor = const Color(0xFFECFDF5); fgColor = const Color(0xFF059669); break;
+      case 'medium': case 'planned': case 'in transit':
+        bgColor = const Color(0xFFFEF3C7); fgColor = const Color(0xFFD97706); break;
+      case 'low': case 'on hold': case 'blocked':
+        bgColor = const Color(0xFFFEF2F2); fgColor = const Color(0xFFEF4444); break;
+      default:
+        bgColor = const Color(0xFFF3F4F6); fgColor = const Color(0xFF6B7280);
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
+      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fgColor)),
+    );
+  }
+
+ Widget _buildBottomNavigation(bool isMobile) {
+ return Column(
+ children: [
+ const Divider(),
+ const SizedBox(height: 16),
+ if (isMobile)
+ Column(
+ crossAxisAlignment: CrossAxisAlignment.stretch,
+ children: [
+ Text('Design phase • Long lead equipment ordering',
+ style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+ textAlign: TextAlign.center),
+ const SizedBox(height: 12),
+ OutlinedButton.icon(
+ onPressed: () => Navigator.pop(context),
+ icon: const Icon(Icons.arrow_back, size: 18),
+ label: const Text('Back: Tools integration'),
+ style: OutlinedButton.styleFrom(
+ padding:
+ const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ side: BorderSide(color: Colors.grey[300]!),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(8)),
+ foregroundColor: Colors.black87,
+ ),
+ ),
+ const SizedBox(height: 12),
+ ElevatedButton.icon(
+ onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
+ label: const Text('Next: Specialized design'),
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: Colors.black87,
+ padding:
+ const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(20)),
+ ),
+ ),
+ ],
+ )
+ else
+ Row(
+ children: [
+ OutlinedButton.icon(
+ onPressed: () => Navigator.pop(context),
+ icon: const Icon(Icons.arrow_back, size: 18),
+ label: const Text('Back: Tools integration'),
+ style: OutlinedButton.styleFrom(
+ padding:
+ const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ side: BorderSide(color: Colors.grey[300]!),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(8)),
+ foregroundColor: Colors.black87,
+ ),
+ ),
+ const SizedBox(width: 16),
+ Text('Design phase • Long lead equipment ordering',
+ style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+ const Spacer(),
+ ElevatedButton.icon(
+ onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
+ label: const Text('Next: Specialized design'),
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: Colors.black87,
+ padding:
+ const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(20)),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ // Footer hint
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Icon(Icons.lightbulb_outline,
+ size: 18, color: LightModeColors.accent),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Text(
+ 'Start procurement activities for long-lead items as early as possible to maintain schedule flexibility and reduce project risk.',
+ style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+ ),
+ ),
+ ],
+ ),
+ ],
+ );
+ }
+
+ Widget _buildNotesCard() {
+ return _SectionCard(
+ title: 'Notes',
+ subtitle: 'Capture lead times, vendor constraints, and critical dates.',      child: VoiceTextField(
+        controller: _notesController,
+        maxLines: 3,
+        enableVoice: false,
+        enableDocxImport: false,
+        enableKazAi: false,
+        decoration: InputDecoration(
+          hintText:
+              'Document key ordering considerations, vendor contacts, and escalation triggers.',
+ hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+ filled: true,
+ fillColor: Colors.white,
+ border: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: BorderSide.none),
+ contentPadding:
+ const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+ ),
+ ),
+ );
+ }
+
+ void _addCategory() {
+ _openCategoryDialog();
+ }
+
+ void _updateCategory(_EquipmentCategory updated) {
+ final index = _categories.indexWhere((entry) => entry.id == updated.id);
+ if (index == -1) return;
+ setState(() => _categories[index] = updated);
+ _scheduleSave();
+ }
+
+ void _deleteCategory(String id) {
+ setState(() => _categories.removeWhere((entry) => entry.id == id));
+ _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Category');
+ }
+
+ void _addEquipmentItem() {
+ _openEquipmentDialog();
+ }
+
+ void _updateEquipmentItem(_EquipmentItem updated) {
+ final index = _equipmentItems.indexWhere((entry) => entry.id == updated.id);
+ if (index == -1) return;
+ setState(() => _equipmentItems[index] = updated);
+ _scheduleSave();
+ }
+
+ void _deleteEquipmentItem(String id) {
+ setState(() => _equipmentItems.removeWhere((entry) => entry.id == id));
+ _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Equipment Item');
+ }
+
+ void _addAction() {
+ _openActionDialog();
+ }
+
+ void _updateAction(_ProcurementAction updated) {
+ final index = _actions.indexWhere((entry) => entry.id == updated.id);
+ if (index == -1) return;
+ setState(() => _actions[index] = updated);
+ _scheduleSave();
+ }
+
+ void _deleteAction(String id) {
+ setState(() => _actions.removeWhere((entry) => entry.id == id));
+ _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Action');
+ }  Future<void> _openCategoryDialog() async {
+    final draft = _EquipmentCategory.empty();
+    final descriptionController = SpellCheckTextEditingController();
+    final thresholdController = SpellCheckTextEditingController();
+    String title = LongLeadEquipmentOrderingScreen.equipmentCategoryOptions.first;
+    String criticality = _criticalityOptions[1];
+    String thresholdUnit = _leadTimeUnits[1];
+    final ownerOptions = _ownerOptions();
+    String owner = ownerOptions.first;
+
+    final saved = await showAppDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Add equipment category'),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: title,
+                  isExpanded: true,
+                  items: LongLeadEquipmentOrderingScreen.equipmentCategoryOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => title = value);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: criticality,
+ items: _criticalityOptions
+ .map((option) => DropdownMenuItem(
+ value: option,
+ child: Text(option),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setModalState(() => criticality = value);
+ },
+ decoration: const InputDecoration(
+ labelText: 'Criticality',
+ border: OutlineInputBorder(),
+ ),
+ ),                const SizedBox(height: 12),
+                // Lead time is a quantity plus a unit, so it is a numeric
+                // field paired with a unit selector rather than free text.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: thresholdController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: _leadTimeAmountFormatters,
+                        decoration: const InputDecoration(
+                          labelText: 'Lead time threshold',
+                          hintText: 'e.g., 6',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 140,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: thresholdUnit,
+                        isExpanded: true,
+                        items: _leadTimeUnits
+                            .map((unit) => DropdownMenuItem(
+                                  value: unit,
+                                  child: Text(unit),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setModalState(() => thresholdUnit = value);
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Unit',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: owner,
+                  isExpanded: true,
+                  items: ownerOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => owner = value);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(false),
+ child: const Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () => Navigator.of(dialogContext).pop(true),
+ child: const Text('Add category'),
+ ),
+ ],
+ ),
+ ),
+ );
+ if (saved != true) return;
+ setState(() {     _categories.add(
+      draft.copyWith(
+ title: title,
+ description: descriptionController.text.trim(),
+ criticality: criticality,
+ leadTimeThreshold:
+     _joinLeadTime(thresholdController.text, thresholdUnit),
+ owner: owner,
+      ),
+     );
+ });
+ _scheduleSave();
+ }  Future<void> _openEquipmentDialog() async {
+    final draft = _EquipmentItem.empty();
+    final nameController = SpellCheckTextEditingController();
+    final vendorController = SpellCheckTextEditingController();
+    final leadTimeController = SpellCheckTextEditingController();
+    final deliveryController = SpellCheckTextEditingController();
+    String status = _equipmentStatusOptions.first;
+
+    // An item is filed under a category the project actually defined; fall
+    // back to the canonical taxonomy until the first category is added.
+    final categoryOptions = _categories.isEmpty
+        ? LongLeadEquipmentOrderingScreen.equipmentCategoryOptions
+        : _categories.map((entry) => entry.title).toList();
+    String category = categoryOptions.first;
+    String leadTimeUnit = _leadTimeUnits[1];
+    final ownerOptions = _ownerOptions();
+    String owner = ownerOptions.first;
+
+    final saved = await showAppDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Add equipment item'),
+          content: SizedBox(
+            width: 560,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Item',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: category,
+                  isExpanded: true,
+                  items: categoryOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => category = value);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: vendorController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vendor',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: leadTimeController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: _leadTimeAmountFormatters,
+                        decoration: const InputDecoration(
+                          labelText: 'Lead time',
+                          hintText: 'e.g., 12',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 140,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: leadTimeUnit,
+                        isExpanded: true,
+                        items: _leadTimeUnits
+                            .map((unit) => DropdownMenuItem(
+                                  value: unit,
+                                  child: Text(unit),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setModalState(() => leadTimeUnit = value);
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Unit',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: deliveryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Expected delivery',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+ const SizedBox(height: 12),
+ DropdownButtonFormField<String>(
+ initialValue: status,
+ items: _equipmentStatusOptions
+ .map((option) => DropdownMenuItem(
+ value: option,
+ child: Text(option),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setModalState(() => status = value);
+ },
+ decoration: const InputDecoration(
+ labelText: 'Status',
+ border: OutlineInputBorder(),
+ ),
+ ),                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: owner,
+                  isExpanded: true,
+                  items: ownerOptions
+                      .map((option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(option,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setModalState(() => owner = value);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Add item'),
+ ),
+ ],
+ ),
+ ),
+ );
+ if (saved != true) return;
+ setState(() {
+ _equipmentItems.add(
+ draft.copyWith(
+ name: nameController.text.trim(),
+ category: category,
+ vendor: vendorController.text.trim(),
+ leadTime: _joinLeadTime(leadTimeController.text, leadTimeUnit),
+ expectedDelivery: deliveryController.text.trim(),
+ status: status,
+ owner: owner,
+ ),
+ );
+ });
+ _scheduleSave();
+ }  Future<void> _openActionDialog() async {
+    final draft = _ProcurementAction.empty();
+    final titleController = SpellCheckTextEditingController();
+    final ownerController = SpellCheckTextEditingController();
+    final dueDateController = SpellCheckTextEditingController();
+    final notesController = SpellCheckTextEditingController();
+    String status = _actionStatusOptions.first;
+
+    final saved = await showAppDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Add procurement action'),
+          content: SizedBox(
+            width: 540,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Action',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: ownerController,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dueDateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Due date',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+ const SizedBox(height: 12),
+ DropdownButtonFormField<String>(
+ initialValue: status,
+ items: _actionStatusOptions
+ .map((option) => DropdownMenuItem(
+ value: option,
+ child: Text(option),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setModalState(() => status = value);
+ },
+ decoration: const InputDecoration(
+ labelText: 'Status',
+ border: OutlineInputBorder(),
+ ),
+ ),                const SizedBox(height: 12),
+                TextField(
+                  controller: notesController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(false),
+ child: const Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () => Navigator.of(dialogContext).pop(true),
+ child: const Text('Add action'),
+ ),
+ ],
+ ),
+ ),
+ );
+ if (saved != true) return;
+ setState(() {
+ _actions.add(
+ draft.copyWith(
+ title: titleController.text.trim(),
+ owner: ownerController.text.trim(),
+ dueDate: dueDateController.text.trim(),
+ status: status,
+ notes: notesController.text.trim(),
+ ),
+ );
+ });
+ _scheduleSave();
+ }
+
+ Widget _buildCategoriesTable() {
+ final columns = [
+ const EditableTableColumn('Category', 200),
+ const EditableTableColumn('Description', 260),
+ const EditableTableColumn('Criticality', 140),
+ const EditableTableColumn('Lead time threshold', 180),
+ const EditableTableColumn('Owner', 160),
+ const EditableTableColumn('', 60),
+ ];
+
+ if (_categories.isEmpty) {
+ return const _InlineEmptyState(
+ title: 'No categories yet',
+ message: 'Add categories to classify long-lead items.',
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Equipment Categories',
+ child: EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _categories)
+ EditableTableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _DropdownCell(
+ value: entry.title,
+ fieldKey: '${entry.id}_title',
+ options: LongLeadEquipmentOrderingScreen.equipmentCategoryOptions,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(title: value)),
+ ),
+ _TextCell(
+ value: entry.description,
+ fieldKey: '${entry.id}_desc',
+ hintText: 'Description',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(description: value)),
+ ),
+ _DropdownCell(
+ value: entry.criticality,
+ fieldKey: '${entry.id}_criticality',
+ options: _criticalityOptions,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(criticality: value)),
+ ),
+ _LeadTimeCell(
+ value: entry.leadTimeThreshold,
+ fieldKey: '${entry.id}_threshold',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(leadTimeThreshold: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(),
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(owner: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteCategory(entry.id)),
+ ],
+ ),
+ ],
+ ),
+ tableBuilder: (fsContext) => EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _categories)
+ EditableTableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _DropdownCell(
+ value: entry.title,
+ fieldKey: '${entry.id}_title',
+ options: LongLeadEquipmentOrderingScreen.equipmentCategoryOptions,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(title: value)),
+ ),
+ _TextCell(
+ value: entry.description,
+ fieldKey: '${entry.id}_desc',
+ hintText: 'Description',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(description: value)),
+ ),
+ _DropdownCell(
+ value: entry.criticality,
+ fieldKey: '${entry.id}_criticality',
+ options: _criticalityOptions,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(criticality: value)),
+ ),
+ _LeadTimeCell(
+ value: entry.leadTimeThreshold,
+ fieldKey: '${entry.id}_threshold',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(leadTimeThreshold: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(),
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(owner: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteCategory(entry.id)),
+ ],
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildEquipmentTable() {
+ final columns = [
+ const EditableTableColumn('Item', 220),
+ const EditableTableColumn('Category', 180),
+ const EditableTableColumn('Vendor', 180),
+ const EditableTableColumn('Lead time', 140),
+ const EditableTableColumn('Expected delivery', 160),
+ const EditableTableColumn('Status', 160),
+ const EditableTableColumn('Owner', 160),
+ const EditableTableColumn('', 60),
+ ];
+
+ if (_equipmentItems.isEmpty) {
+ return const _InlineEmptyState(
+ title: 'No equipment items yet',
+ message: 'Add equipment to track procurement status.',
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Long-Lead Equipment',
+ child: EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _equipmentItems)
+ EditableTableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.name,
+ fieldKey: '${entry.id}_name',
+ hintText: 'Item',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(name: value)),
+ ),
+ _DropdownCell(
+ value: entry.category,
+ fieldKey: '${entry.id}_category',
+ options: _equipmentItemCategoryOptions,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(category: value)),
+ ),
+ _TextCell(
+ value: entry.vendor,
+ fieldKey: '${entry.id}_vendor',
+ hintText: 'Vendor',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(vendor: value)),
+ ),
+ _LeadTimeCell(
+ value: entry.leadTime,
+ fieldKey: '${entry.id}_lead',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(leadTime: value)),
+ ),
+ _TextCell(
+ value: entry.expectedDelivery,
+ fieldKey: '${entry.id}_delivery',
+ hintText: 'YYYY-MM-DD',
+ onChanged: (value) => _updateEquipmentItem(
+ entry.copyWith(expectedDelivery: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _equipmentStatusOptions,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(status: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(),
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(owner: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteEquipmentItem(entry.id)),
+ ],
+ ),
+ ],
+ ),
+ tableBuilder: (fsContext) => EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _equipmentItems)
+ EditableTableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.name,
+ fieldKey: '${entry.id}_name',
+ hintText: 'Item',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(name: value)),
+ ),
+ _DropdownCell(
+ value: entry.category,
+ fieldKey: '${entry.id}_category',
+ options: _equipmentItemCategoryOptions,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(category: value)),
+ ),
+ _TextCell(
+ value: entry.vendor,
+ fieldKey: '${entry.id}_vendor',
+ hintText: 'Vendor',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(vendor: value)),
+ ),
+ _LeadTimeCell(
+ value: entry.leadTime,
+ fieldKey: '${entry.id}_lead',
+ split: _splitLeadTime,
+ join: _joinLeadTime,
+ units: _leadTimeUnits,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(leadTime: value)),
+ ),
+ _TextCell(
+ value: entry.expectedDelivery,
+ fieldKey: '${entry.id}_delivery',
+ hintText: 'YYYY-MM-DD',
+ onChanged: (value) => _updateEquipmentItem(
+ entry.copyWith(expectedDelivery: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _equipmentStatusOptions,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(status: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(),
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(owner: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteEquipmentItem(entry.id)),
+ ],
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildActionsTable() {
+ final columns = [
+ const EditableTableColumn('Action', 240),
+ const EditableTableColumn('Owner', 180),
+ const EditableTableColumn('Due date', 140),
+ const EditableTableColumn('Status', 160),
+ const EditableTableColumn('Notes', 240),
+ const EditableTableColumn('', 60),
+ ];
+
+ if (_actions.isEmpty) {
+ return const _InlineEmptyState(
+ title: 'No actions yet',
+ message: 'Add procurement actions and owners.',
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Procurement Actions',
+ child: EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _actions)
+ EditableTableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.title,
+ fieldKey: '${entry.id}_title',
+ hintText: 'Action',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(title: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(),
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(owner: value)),
+ ),
+ _TextCell(
+ value: entry.dueDate,
+ fieldKey: '${entry.id}_due',
+ hintText: 'YYYY-MM-DD',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(dueDate: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _actionStatusOptions,
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(status: value)),
+ ),
+ _TextCell(
+ value: entry.notes,
+ fieldKey: '${entry.id}_notes',
+ hintText: 'Notes',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(notes: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteAction(entry.id)),
+ ],
+ ),
+ ],
+ ),
+ tableBuilder: (fsContext) => EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _actions)
+ EditableTableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.title,
+ fieldKey: '${entry.id}_title',
+ hintText: 'Action',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(title: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(),
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(owner: value)),
+ ),
+ _TextCell(
+ value: entry.dueDate,
+ fieldKey: '${entry.id}_due',
+ hintText: 'YYYY-MM-DD',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(dueDate: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _actionStatusOptions,
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(status: value)),
+ ),
+ _TextCell(
+ value: entry.notes,
+ fieldKey: '${entry.id}_notes',
+ hintText: 'Notes',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(notes: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteAction(entry.id)),
+ ],
+ ),
+ ],
+ ),
+ );
+ }
+
+ Future<void> _exportPdf() async {
+ final projectData = ProjectDataHelper.getData(context);
+ await PdfExportHelper.exportScreenPdf(
+ context: context,
+ screenTitle: 'Long Lead Equipment Ordering',
+ sections: [
+ PdfSection.keyValue('Project Info', [
+ {'Project Name': projectData.projectName.isEmpty ? 'N/A' : projectData.projectName},
+ {'Solution Title': projectData.solutionTitle.isEmpty ? 'N/A' : projectData.solutionTitle},
+ ]),
+ PdfSection.text('Notes', projectData.planningNotes['planning_long_lead_equipment_ordering_notes'] ?? 'No data recorded.'),
+ ],
+ );
+ }
+}
+
+class _SectionCard extends StatelessWidget {
+ const _SectionCard({
+ required this.title,
+ required this.subtitle,
+ required this.child,
+ this.actionLabel,
+ this.onAction,
+ });
+
+ final String title;
+ final String subtitle;
+ final Widget child;
+ final String? actionLabel;
+ final VoidCallback? onAction;
+
+ @override
+ Widget build(BuildContext context) {
+ return Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: AppSemanticColors.border),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(title,
+ style: const TextStyle(
+ fontSize: 16, fontWeight: FontWeight.w600)),
+ const SizedBox(height: 4),
+ Text(subtitle,
+ style:
+ TextStyle(fontSize: 12, color: Colors.grey[600])),
+ ],
+ ),
+ ),
+ if (actionLabel != null && onAction != null)
+ TextButton.icon(
+ onPressed: onAction,
+ icon: const Icon(Icons.add, size: 16),
+ label: Text(actionLabel!),
+ style: TextButton.styleFrom(
+ foregroundColor: LightModeColors.accent,
+ padding: EdgeInsets.zero,
+ tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+ minimumSize: const Size(0, 32),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ child,
+ ],
+ ),
+ );
+ }
+}
+
+/// Inline lead-time cell: a digits-only amount paired with a unit selector.
+///
+/// Stored values keep their unit ("6 weeks"), so the cell splits on display
+/// and rejoins on edit — existing free-text rows keep whatever they said while
+/// new edits are forced into the amount/unit shape.
+class _LeadTimeCell extends StatelessWidget {
+  const _LeadTimeCell({
+    required this.value,
+    required this.fieldKey,
+    required this.onChanged,
+    required this.split,
+    required this.join,
+    required this.units,
+  });
+
+  final String value;
+  final String fieldKey;
+  final ValueChanged<String> onChanged;
+  final ({String amount, String unit}) Function(String raw) split;
+  final String Function(String amount, String unit) join;
+  final List<String> units;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = split(value);
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            key: ValueKey('${fieldKey}_amount'),
+            initialValue: parts.amount,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(4),
+            ],
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: 'e.g., 6',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF111827)),
+            onChanged: (amount) => onChanged(join(amount, parts.unit)),
+          ),
+        ),
+        const SizedBox(width: 6),
+        SizedBox(
+          width: 86,
+          child: DropdownButtonFormField<String>(
+            key: ValueKey('${fieldKey}_unit'),
+            initialValue: parts.unit,
+            isExpanded: true,
+            items: units
+                .map((unit) => DropdownMenuItem(
+                      value: unit,
+                      child: Text(unit,
+                          style: const TextStyle(
+                              fontSize: 11, color: Color(0xFF111827)),
+                          overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: (unit) {
+              if (unit == null) return;
+              onChanged(join(parts.amount, unit));
+            },
+            decoration: InputDecoration(
+              isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TextCell extends StatelessWidget {
+ const _TextCell({
+ required this.value,
+ required this.fieldKey,
+ required this.onChanged,
+ this.hintText,
+ this.maxLines = 1,
+ });
+
+ final String value;
+ final String fieldKey;
+ final ValueChanged<String> onChanged;
+ final String? hintText;
+ final int maxLines;
+
+ @override
+ Widget build(BuildContext context) {
+ return VoiceTextFormField(
+ key: ValueKey(fieldKey),
+ initialValue: value,
+ maxLines: maxLines,
+ decoration: InputDecoration(
+ hintText: hintText,
+ isDense: true,
+ border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+ filled: true,
+ fillColor: Colors.white,
+ contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+ ),
+ style: const TextStyle(fontSize: 12, color: Color(0xFF111827)),
+ onChanged: onChanged,
+ );
+ }
+}
+
+class _DropdownCell extends StatelessWidget {
+ const _DropdownCell({
+ required this.value,
+ required this.fieldKey,
+ required this.options,
+ required this.onChanged,
+ });
+
+ final String value;
+ final String fieldKey;
+ final List<String> options;
+ final ValueChanged<String> onChanged;
+
+ @override
+ Widget build(BuildContext context) {
+ final resolvedValue = options.contains(value) ? value : options.first;
+ return DropdownButtonFormField<String>(
+ key: ValueKey(fieldKey),
+ initialValue: resolvedValue,
+ items: options
+ .map((option) => DropdownMenuItem(value: option, child: Text(option)))
+ .toList(),
+ onChanged: (value) {
+ if (value != null) onChanged(value);
+ },
+ decoration: InputDecoration(
+ isDense: true,
+ border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+ filled: true,
+ fillColor: Colors.white,
+ contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+ ),
+ style: const TextStyle(fontSize: 12, color: Color(0xFF111827)),
+ );
+ }
+}
+
+class _DeleteCell extends StatelessWidget {
+ const _DeleteCell({required this.onPressed});
+
+ final VoidCallback onPressed;
+
+ @override
+ Widget build(BuildContext context) {
+ return IconButton(
+ onPressed: onPressed,
+ icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+ tooltip: 'Delete',
+ );
+ }
+}
+
+class _InlineEmptyState extends StatelessWidget {
+ const _InlineEmptyState({required this.title, required this.message});
+
+ final String title;
+ final String message;
+
+ @override
+ Widget build(BuildContext context) {
+ return Container(
+ padding: const EdgeInsets.all(16),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(10),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Row(
+ children: [
+ Container(
+ width: 32,
+ height: 32,
+ decoration: BoxDecoration(
+ color: const Color(0xFFFFF7ED),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: const Icon(Icons.info_outline,
+ size: 18, color: Color(0xFFF59E0B)),
+ ),
+ const SizedBox(width: 10),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(title,
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827))),
+ const SizedBox(height: 4),
+ Text(message,
+ style: const TextStyle(
+ fontSize: 12, color: Color(0xFF6B7280))),
+ ],
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+}
+
+class _EquipmentCategory {
+ const _EquipmentCategory({
+ required this.id,
+ required this.title,
+ required this.description,
+ required this.criticality,
+ required this.leadTimeThreshold,
+ required this.owner,
+ });
+
+ final String id;
+ final String title;
+ final String description;
+ final String criticality;
+ final String leadTimeThreshold;
+ final String owner;
+
+ factory _EquipmentCategory.empty() {
+ return _EquipmentCategory(
+ id: newId(),
+ title: '',
+ description: '',
+ criticality: 'Medium',
+ leadTimeThreshold: '',
+ owner: '',
+ );
+ }
+
+ _EquipmentCategory copyWith({
+ String? title,
+ String? description,
+ String? criticality,
+ String? leadTimeThreshold,
+ String? owner,
+ }) {
+ return _EquipmentCategory(
+ id: id,
+ title: title ?? this.title,
+ description: description ?? this.description,
+ criticality: criticality ?? this.criticality,
+ leadTimeThreshold: leadTimeThreshold ?? this.leadTimeThreshold,
+ owner: owner ?? this.owner,
+ );
+ }
+
+ Map<String, dynamic> toJson() {
+ return {
+ 'id': id,
+ 'title': title,
+ 'description': description,
+ 'criticality': criticality,
+ 'leadTimeThreshold': leadTimeThreshold,
+ 'owner': owner,
+ };
+ }
+
+ static List<_EquipmentCategory> fromList(dynamic raw) {
+ if (raw is! List) return [];
+ return raw.whereType<Map>().map((item) {
+ final data = Map<String, dynamic>.from(item);
+ return _EquipmentCategory(
+ id: data['id']?.toString() ??
+ newId(),
+ title: data['title']?.toString() ?? '',
+ description: data['description']?.toString() ?? '',
+ criticality: data['criticality']?.toString() ?? 'Medium',
+ leadTimeThreshold: data['leadTimeThreshold']?.toString() ?? '',
+ owner: data['owner']?.toString() ?? '',
+ );
+ }).toList();
+ }
+}
+
+class _EquipmentItem {
+ const _EquipmentItem({
+ required this.id,
+ required this.name,
+ required this.category,
+ required this.vendor,
+ required this.leadTime,
+ required this.expectedDelivery,
+ required this.status,
+ required this.owner,
+ });
+
+ final String id;
+ final String name;
+ final String category;
+ final String vendor;
+ final String leadTime;
+ final String expectedDelivery;
+ final String status;
+ final String owner;
+
+ factory _EquipmentItem.empty() {
+ return _EquipmentItem(
+ id: newId(),
+ name: '',
+ category: '',
+ vendor: '',
+ leadTime: '',
+ expectedDelivery: '',
+ status: 'Planned',
+ owner: '',
+ );
+ }
+
+ _EquipmentItem copyWith({
+ String? name,
+ String? category,
+ String? vendor,
+ String? leadTime,
+ String? expectedDelivery,
+ String? status,
+ String? owner,
+ }) {
+ return _EquipmentItem(
+ id: id,
+ name: name ?? this.name,
+ category: category ?? this.category,
+ vendor: vendor ?? this.vendor,
+ leadTime: leadTime ?? this.leadTime,
+ expectedDelivery: expectedDelivery ?? this.expectedDelivery,
+ status: status ?? this.status,
+ owner: owner ?? this.owner,
+ );
+ }
+
+ Map<String, dynamic> toJson() {
+ return {
+ 'id': id,
+ 'name': name,
+ 'category': category,
+ 'vendor': vendor,
+ 'leadTime': leadTime,
+ 'expectedDelivery': expectedDelivery,
+ 'status': status,
+ 'owner': owner,
+ };
+ }
+
+ static List<_EquipmentItem> fromList(dynamic raw) {
+ if (raw is! List) return [];
+ return raw.whereType<Map>().map((item) {
+ final data = Map<String, dynamic>.from(item);
+ return _EquipmentItem(
+ id: data['id']?.toString() ??
+ newId(),
+ name: data['name']?.toString() ?? '',
+ category: data['category']?.toString() ?? '',
+ vendor: data['vendor']?.toString() ?? '',
+ leadTime: data['leadTime']?.toString() ?? '',
+ expectedDelivery: data['expectedDelivery']?.toString() ?? '',
+ status: data['status']?.toString() ?? 'Planned',
+ owner: data['owner']?.toString() ?? '',
+ );
+ }).toList();
+ }
+}
+
+class _ProcurementAction {
+ const _ProcurementAction({
+ required this.id,
+ required this.title,
+ required this.owner,
+ required this.dueDate,
+ required this.status,
+ required this.notes,
+ });
+
+ final String id;
+ final String title;
+ final String owner;
+ final String dueDate;
+ final String status;
+ final String notes;
+
+ factory _ProcurementAction.empty() {
+ return _ProcurementAction(
+ id: newId(),
+ title: '',
+ owner: '',
+ dueDate: '',
+ status: 'Planned',
+ notes: '',
+ );
+ }
+
+ _ProcurementAction copyWith({
+ String? title,
+ String? owner,
+ String? dueDate,
+ String? status,
+ String? notes,
+ }) {
+ return _ProcurementAction(
+ id: id,
+ title: title ?? this.title,
+ owner: owner ?? this.owner,
+ dueDate: dueDate ?? this.dueDate,
+ status: status ?? this.status,
+ notes: notes ?? this.notes,
+ );
+ }
+
+ Map<String, dynamic> toJson() {
+ return {
+ 'id': id,
+ 'title': title,
+ 'owner': owner,
+ 'dueDate': dueDate,
+ 'status': status,
+ 'notes': notes,
+ };
+ }
+
+ static List<_ProcurementAction> fromList(dynamic raw) {
+ if (raw is! List) return [];
+ return raw.whereType<Map>().map((item) {
+ final data = Map<String, dynamic>.from(item);
+ return _ProcurementAction(
+ id: data['id']?.toString() ??
+ newId(),
+ title: data['title']?.toString() ?? '',
+ owner: data['owner']?.toString() ?? '',
+ dueDate: data['dueDate']?.toString() ?? '',
+ status: data['status']?.toString() ?? 'Planned',
+ notes: data['notes']?.toString() ?? '',
+ );
+ }).toList();
+ }
+}
+
+class _Debouncer {
+ _Debouncer({Duration? delay})
+ : delay = delay ?? const Duration(milliseconds: 600);
+
+ final Duration delay;
+ Timer? _timer;
+
+ void run(void Function() action) {
+ _timer?.cancel();
+ _timer = Timer(delay, action);
+ }
+
+ void dispose() {
+ _timer?.cancel();
+ }
+}

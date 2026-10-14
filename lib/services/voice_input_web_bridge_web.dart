@@ -107,7 +107,22 @@ bool webVoiceInit(VoiceInputService service) {
 }
 
 /// Starts listening on the web SpeechRecognition object.
-bool webVoiceStart(dynamic recognition, String? localeId) {
+///
+/// The Web Speech API throws `InvalidStateError` when `start()` is called
+/// while a previous session is still winding down (e.g. the user taps Stop
+/// then immediately dictates again — faster than the engine's `onend`)
+/// without ever reaching the result stage. Waiting out that shutdown and
+/// retrying once keeps the second tap working instead of failing with a
+/// misleading "not available".
+Future<bool> webVoiceStart(dynamic recognition, String? localeId) async {
+  return _webVoiceStartAttempt(recognition, localeId, attemptsLeft: 2);
+}
+
+Future<bool> _webVoiceStartAttempt(
+  dynamic recognition,
+  String? localeId, {
+  required int attemptsLeft,
+}) async {
   try {
     if (recognition == null) return false;
     final rec = recognition as JSObject;
@@ -117,6 +132,18 @@ bool webVoiceStart(dynamic recognition, String? localeId) {
     rec.callMethod('start'.toJS);
     return true;
   } catch (e) {
+    final transient = '$e'.contains('InvalidStateError');
+    if (transient && attemptsLeft > 0) {
+      debugPrint('[VoiceInputWeb] start() while stopping — waiting out shutdown');
+      // The engine's `onend` fires on the event loop, so only an async wait
+      // lets it run; one shutdown cycle completes within a few frames.
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      return _webVoiceStartAttempt(
+        recognition,
+        localeId,
+        attemptsLeft: attemptsLeft - 1,
+      );
+    }
     debugPrint('[VoiceInputWeb] startListening failed: $e');
     return false;
   }

@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class ControlAccount {
   final String id;
   String wbsId;
@@ -83,7 +85,7 @@ class ControlAccount {
     DateTime? createdAt,
     this.updatedAt,
     this.baselineVersionId = '',
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         plannedValueByPeriod = plannedValueByPeriod ?? {},
         earnedValueByPeriod = earnedValueByPeriod ?? {},
         actualCostByPeriod = actualCostByPeriod ?? {},
@@ -217,7 +219,7 @@ class ControlAccount {
 
     return ControlAccount(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       wbsId: json['wbsId']?.toString() ?? '',
       obsId: json['obsId']?.toString() ?? '',
       title: json['title']?.toString() ?? '',

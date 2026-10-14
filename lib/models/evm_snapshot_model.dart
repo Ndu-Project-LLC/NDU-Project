@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class EvmSnapshot {
   final String id;
   final DateTime snapshotDate;
@@ -41,7 +43,7 @@ class EvmSnapshot {
     this.completedActivities = 0,
     this.totalActivities = 0,
     this.source = 'manual',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -79,7 +81,7 @@ class EvmSnapshot {
 
     return EvmSnapshot(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       snapshotDate: parseDate(json['snapshotDate']) ?? DateTime.now(),
       projectId: json['projectId']?.toString() ?? '',
       budgetAtCompletion: toDouble(json['budgetAtCompletion']),

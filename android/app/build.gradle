@@ -14,17 +14,21 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.mycompany.CounterApp"
+    namespace = "com.mycompany.nduprojectprogram"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Pinned to the NDK actually installed on this machine. Flutter's default
+    // (28.2.13676358) is present only as an aborted-download stub in the SDK,
+    // which AGP rejects with CXX1101. Re-install it via sdkmanager and restore
+    // `flutter.ndkVersion` when convenient.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     signingConfigs {
@@ -37,20 +41,28 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.mycompany.CounterApp"
+        // The application ID is permanent once the app is uploaded to Google Play.
+        applicationId = "com.mycompany.nduprojectprogram"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // flutter_appauth pulls in net.openid:appauth, whose manifest declares its
+        // redirect receiver as <data android:scheme="${appAuthRedirectScheme}" />.
+        // The merged manifest fails without a value here (the release build stops
+        // at :app:processReleaseMainManifest). The scheme must match the redirect
+        // URI the Dart side uses: IntegrationOAuthService.redirectUri.
+        manifestPlaceholders["appAuthRedirectScheme"] = "nduproject"
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Signed with the upload key from android/key.properties, which points
+            // at android/keys/ndu-upload.jks. Without that file the release signing
+            // config is empty and the build fails in validateSigningRelease.
             signingConfig = signingConfigs.release
         }
     }

@@ -4,15 +4,14 @@
 //
 // The sidebar pages in the Launch/Execution module are visited top-to-bottom:
 //   1. Cost Estimate Overview
-//   2. Scope Tracking Plan
-//   3. Change Management
-//   4. Issue Management
-//   5. Lessons Learned
-//   6. Security Management
-//   7. Start-Up Planning (Operations / Hypercare / DevOps / Close Out)
-//   8. Deliverables Roadmap
-//   9. Project Plan (Overview / Level 1 / Detailed / Condensed)
-//  10. Project Baseline
+//   2. Change Management
+//   3. Issue Management
+//   4. Lessons Learned
+//   5. Security Management
+//   6. Start-Up Planning (Operations / Hypercare / DevOps / Close Out)
+//   7. Deliverables Roadmap
+//   8. Project Plan (Overview / Level 1 / Detailed / Condensed)
+//   9. Project Baseline
 //
 // Each screen, on first load, should:
 //   1. Load its own existing entries from Firestore.
@@ -60,8 +59,6 @@ String labelForCheckpoint(String checkpoint) {
   switch (checkpoint) {
     case 'cost_estimate':
       return 'Cost Estimate Overview';
-    case 'scope_tracking_plan':
-      return 'Scope Tracking Plan';
     case 'change_management':
       return 'Change Management';
     case 'issue_management':
@@ -150,17 +147,6 @@ Future<String> _sectionForCheckpoint(
           return '- $title ($amount)';
         });
         return 'Cost Estimate Items:\n${lines.join('\n')}';
-
-      case 'scope_tracking_plan':
-        final items = data.planningRequirementItems;
-        if (items.isEmpty) return '';
-        final lines = items.take(8).map((r) {
-          final t = r.plannedText.trim();
-          return t.isEmpty ? null : '- $t';
-        }).whereType<String>();
-        final list = lines.toList();
-        if (list.isEmpty) return '';
-        return 'Planning Requirements:\n${list.join('\n')}';
 
       case 'change_management':
         if (projectId == null || projectId.isEmpty) return '';

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 /// Dialog for approving or rejecting a Purchase Order
 class PoApprovalDialog extends StatefulWidget {
@@ -21,7 +23,7 @@ class PoApprovalDialog extends StatefulWidget {
 }
 
 class _PoApprovalDialogState extends State<PoApprovalDialog> {
-  final _commentsController = TextEditingController();
+  final _commentsController = SpellCheckTextEditingController();
   String _selectedAction = 'approve'; // 'approve' or 'reject'
   bool _isSubmitting = false;
 
@@ -87,6 +89,27 @@ class _PoApprovalDialogState extends State<PoApprovalDialog> {
               onSelectionChanged: (Set<String> selected) {
                 setState(() => _selectedAction = selected.first);
               },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const Color(0xFFFFC812); // Yellow theme
+                  }
+                  return Colors.white;
+                }),
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const Color(0xFF111827);
+                  }
+                  return const Color(0xFF374151);
+                }),
+                side: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return const BorderSide(color: Color(0xFFFFC812));
+                  }
+                  return const BorderSide(color: Color(0xFFD1D5DB));
+                }),
+              ),
             ),
             const SizedBox(height: 16),
             VoiceTextField(
@@ -207,7 +230,7 @@ Future<PoApprovalResult?> showPoApprovalDialog(
   required String projectOwnerId,
   required String projectOwnerName,
 }) {
-  return showDialog<PoApprovalResult>(
+  return showAppDialog<PoApprovalResult>(
     context: context,
     builder: (context) => PoApprovalDialog(
       po: po,
@@ -293,11 +316,11 @@ class _EscalationTargetTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFEFF6FF) : Colors.white,
+            color: selected ? const Color(0xFFFFF8E1) : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color:
-                  selected ? const Color(0xFF93C5FD) : const Color(0xFFE5E7EB),
+                  selected ? const Color(0xFFFFC812) : const Color(0xFFE5E7EB),
             ),
           ),
           child: Row(
@@ -305,7 +328,7 @@ class _EscalationTargetTile extends StatelessWidget {
               Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
                 color: selected
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFF94A3B8),
               ),
               const SizedBox(width: 10),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
 /// Renders lightweight markdown-like tokens inline inside `TextField`/`TextFormField`.
 /// Supported markers:
 /// - `**bold**`
@@ -9,15 +11,20 @@ import 'package:flutter/material.dart';
 ///
 /// The controller keeps the original tokenized text for persistence while
 /// replacing formatting markers with zero-width characters during painting.
-class RichTextEditingController extends TextEditingController {
-  RichTextEditingController({super.text});
+///
+/// It extends [SpellCheckTextEditingController], so these fields also get the
+/// wavy spelling/grammar underlines. The markdown parser swaps each formatting
+/// marker for the same number of zero-width characters, which keeps the
+/// character offsets aligned so the spell spans land on the right words.
+class RichTextEditingController extends SpellCheckTextEditingController {
+  RichTextEditingController({super.text, super.spellCheckEnabled});
 
   @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
+  TextSpan buildSourceSpan(
+    BuildContext context,
     TextStyle? style,
-    required bool withComposing,
-  }) {
+    bool withComposing,
+  ) {
     return buildInlineFormattedTextSpan(
       text: text,
       baseStyle: style ?? DefaultTextStyle.of(context).style,

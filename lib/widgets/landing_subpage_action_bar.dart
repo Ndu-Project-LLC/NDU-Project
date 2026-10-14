@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/sign_in_screen.dart';
-import 'package:ndu_project/screens/create_account_screen.dart';
+import 'package:ndu_project/screens/auth/sign_in_screen.dart';
+import 'package:ndu_project/screens/auth/create_account_screen.dart';
 
 /// Compact "Sign In" + "Start Your Project" buttons for the top-right
 /// corner of landing page subpages. Rendered as a small Row — NOT a

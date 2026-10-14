@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ndu_project/screens/sign_in_screen.dart';
+import 'package:ndu_project/screens/auth/sign_in_screen.dart';
 import 'package:ndu_project/screens/admin/admin_home_screen.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/access_policy.dart';

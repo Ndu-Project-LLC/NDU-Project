@@ -249,7 +249,7 @@ class BaselineManagementService {
     final scheduleSnapshots = projectData.scheduleActivities.map((a) => {
       'id': a.id,
       'title': a.title,
-      'startDate': a.startDate.toString() ?? '',
+      'startDate': a.startDate.toString(),
       'dueDate': a.dueDate,
       'status': a.status,
       'isCriticalPath': a.isCriticalPath,

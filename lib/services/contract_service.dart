@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ndu_project/models/contract_rfp_cycle.dart';
 import 'package:ndu_project/models/planning_contracting_models.dart';
 
 String _normalizeStatusForStorage(String status) {
@@ -123,6 +124,17 @@ class ContractModel {
   /// be confirmed after the bid process.
   final String? contractStartPhase;
 
+  /// The per-contract RFP cycle (Lusaka 27): scope out → RFP issued → bidder
+  /// response → clarification → evaluation → documentation → award.
+  final ContractRfpCycle? rfpCycle;
+
+  /// Pre-award warranty terms, captured in Admin Controls before award.
+  final int? warrantyMonths;
+  final DateTime? warrantyExpiryDate;
+
+  /// Free-text key dates recorded alongside the warranty before award.
+  final String? keyDatesNotes;
+
   const ContractModel({
     required this.id,
     required this.projectId,
@@ -190,6 +202,10 @@ class ContractModel {
     this.procurementIssuedAt,
     this.procurementRfqId,
     this.contractStartPhase,
+    this.rfpCycle,
+    this.warrantyMonths,
+    this.warrantyExpiryDate,
+    this.keyDatesNotes,
   });
 
   Map<String, dynamic> toMap() {
@@ -285,6 +301,11 @@ class ContractModel {
       if (procurementRfqId != null) 'procurementRfqId': procurementRfqId,
       if (contractStartPhase != null)
         'contractStartPhase': contractStartPhase,
+      if (rfpCycle != null) 'rfpCycle': rfpCycle!.toMap(),
+      if (warrantyMonths != null) 'warrantyMonths': warrantyMonths,
+      if (warrantyExpiryDate != null)
+        'warrantyExpiryDate': Timestamp.fromDate(warrantyExpiryDate!),
+      if (keyDatesNotes != null) 'keyDatesNotes': keyDatesNotes,
     };
   }
 
@@ -435,6 +456,12 @@ class ContractModel {
       procurementIssuedAt: parseTs(data['procurementIssuedAt']),
       procurementRfqId: ns(data['procurementRfqId']),
       contractStartPhase: ns(data['contractStartPhase']),
+      rfpCycle: ContractRfpCycle.fromMap(data['rfpCycle']),
+      warrantyMonths: data['warrantyMonths'] is num
+          ? (data['warrantyMonths'] as num).toInt()
+          : int.tryParse((data['warrantyMonths'] ?? '').toString()),
+      warrantyExpiryDate: parseTs(data['warrantyExpiryDate']),
+      keyDatesNotes: ns(data['keyDatesNotes']),
     );
   }
 }
@@ -623,6 +650,10 @@ class ContractService {
     String? procurementHandoffStatus,
     DateTime? procurementIssuedAt,
     String? procurementRfqId,
+    ContractRfpCycle? rfpCycle,
+    int? warrantyMonths,
+    DateTime? warrantyExpiryDate,
+    String? keyDatesNotes,
   }) async {
     final updateData = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
@@ -767,6 +798,18 @@ class ContractService {
     }
     if (procurementRfqId != null) {
       updateData['procurementRfqId'] = procurementRfqId;
+    }
+    if (rfpCycle != null) {
+      updateData['rfpCycle'] = rfpCycle.toMap();
+    }
+    if (warrantyMonths != null) {
+      updateData['warrantyMonths'] = warrantyMonths;
+    }
+    if (warrantyExpiryDate != null) {
+      updateData['warrantyExpiryDate'] = Timestamp.fromDate(warrantyExpiryDate);
+    }
+    if (keyDatesNotes != null) {
+      updateData['keyDatesNotes'] = keyDatesNotes;
     }
     await _contractsCol(projectId).doc(contractId).update(updateData);
   }

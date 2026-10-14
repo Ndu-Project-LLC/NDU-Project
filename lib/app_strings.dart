@@ -4,7 +4,9 @@
 class AppStrings {
   AppStrings._();
 
-  static const String appName = 'Ndu Project';
+  /// The app's installed name, so it matches the store listing and the
+  /// launcher label (`android:label`, `CFBundleDisplayName`).
+  static const String appName = 'NDU Project';
   
   // Default fallback values for content that can be managed via Admin Content
   static const String welcomeMessage = 'Welcome to your project management workspace';

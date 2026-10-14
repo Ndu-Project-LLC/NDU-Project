@@ -14,6 +14,8 @@ class PlanningPhaseHeader extends StatelessWidget {
     this.showActivityLogAction = true,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
+    this.walkthroughId,
+    this.showWalkthrough = true,
     this.showExportPdf = true,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -27,6 +29,12 @@ class PlanningPhaseHeader extends StatelessWidget {
   final bool showActivityLogAction;
   final String? breadcrumbPhase;
   final String? breadcrumbTitle;
+  /// Walkthrough page id; see UnifiedPhaseHeader.walkthroughId.
+  final String? walkthroughId;
+
+  /// Whether the generic header Walkthrough chip is shown; see
+  /// UnifiedPhaseHeader.showWalkthrough.
+  final bool showWalkthrough;
   final bool showExportPdf;
   final bool showAiAssist;
   final VoidCallback? onExportPdf;
@@ -43,6 +51,8 @@ class PlanningPhaseHeader extends StatelessWidget {
           title: title,
           breadcrumbPhase: breadcrumbPhase,
           breadcrumbTitle: breadcrumbTitle,
+          walkthroughId: walkthroughId,
+          showWalkthrough: showWalkthrough,
           showDrawerButton: true,
           onBackPressed: showNavigationButtons
               ? onBack ?? () => Navigator.maybePop(context)
@@ -85,9 +95,9 @@ class PlanningPhaseHeader extends StatelessWidget {
     PdfExportHelper.exportScreenPdf(
       context: context,
       screenTitle: title,
-      sections: [
-        PdfSection.text(title, 'Project section export from Ndu Project.'),
-      ],
+      // No structured sections: the export captures the screen itself so the
+      // PDF contains everything actually on screen.
+      sections: const <PdfSection>[],
     );
   }
 
@@ -108,7 +118,7 @@ class _WhiteButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),

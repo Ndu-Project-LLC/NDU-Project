@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 enum ProjectProgressHealth {
@@ -646,6 +648,7 @@ class ProjectService {
     String status = 'Initiation',
     String milestone = 'Initiation',
     List<String> tags = const [],
+    bool isBasicPlanProject = false,
     String checkpointRoute = 'project_decision_summary',
   }) async {
     final now = FieldValue.serverTimestamp();
@@ -679,6 +682,9 @@ class ProjectService {
       'progress': progress,
       'investmentMillions': investmentMillions,
       'milestone': milestone,
+      // Persist the plan so the project is listed under the surface it was
+      // created from (Regular Projects filters on this flag).
+      'isBasicPlanProject': isBasicPlanProject,
       'tags': normalizedTags,
       'createdAt': now,
       'updatedAt': now,
@@ -703,21 +709,39 @@ class ProjectService {
     }
     return query.snapshots().map((snapshot) {
       final projects = snapshot.docs.map(ProjectRecord.fromDoc).toList();
-      debugPrint(
-          '📊 StreamProjects: Found ${projects.length} projects for ownerId: $ownerId');
+      // kDebugMode guard: this fired on EVERY snapshot in release builds,
+      // spamming the browser console (E2E finding).
+      if (kDebugMode) {
+        debugPrint(
+            '📊 StreamProjects: Found ${projects.length} projects for ownerId: $ownerId');
+      }
       return projects;
     });
   }
 
   /// Stream projects by a list of project IDs (for program dashboard)
+  ///
+  /// Scoped to the signed-in owner via `where('ownerId', ...)` so the query
+  /// provably satisfies the Firestore list rule (resource-only predicates).
+  /// A bare documentId `whereIn` cannot be authorized by any list rule that
+  /// (transitively) requires document access checks, and would fail with
+  /// permission-denied. It also prevents reading another owner's project id.
   static Stream<List<ProjectRecord>> streamProjectsByIds(
       List<String> projectIds) {
     if (projectIds.isEmpty) {
       return Stream.value([]);
     }
 
-    // Firestore 'in' queries support up to 10 items, programs have max 3 projects so we're safe
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return Stream.value([]);
+    }
+
+    // Firestore 'in' queries support up to 10 items; programs have max 3
+    // projects so combining the owner filter with the id list stays within
+    // the limit.
     return _projectsCol
+        .where('ownerId', isEqualTo: user.uid)
         .where(FieldPath.documentId, whereIn: projectIds)
         .snapshots()
         .handleError((error) {
@@ -784,11 +808,28 @@ class ProjectService {
   }
 
   /// Watch all projects (admin only)
+  ///
+  /// Implemented as a callable-backed single-emit stream: an unfiltered
+  /// Firestore list query cannot be authorized by security rules (admin
+  /// status lives in a Firestore document, which list rules cannot
+  /// evaluate), so the admin panel reads through the `listAllProjectsAdmin`
+  /// Cloud Function where the Admin SDK bypasses rules. Timestamps arrive
+  /// as ISO-8601 strings, matching the other admin callables.
   static Stream<List<Map<String, dynamic>>> watchAllProjects() {
-    return _projectsCol.orderBy('createdAt', descending: true).snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => {'projectId': doc.id, ...doc.data()})
-              .toList(),
-        );
+    return FirebaseFunctions.instance
+        .httpsCallable(
+          'listAllProjectsAdmin',
+          options: HttpsCallableOptions(timeout: const Duration(seconds: 60)),
+        )
+        .call<Map<String, dynamic>>(<String, dynamic>{})
+        .then((result) {
+          final data = result.data;
+          final projects = (data['projects'] as List<dynamic>? ?? const [])
+              .whereType<Map>()
+              .map((m) => Map<String, dynamic>.from(m))
+              .toList();
+          return projects;
+        })
+        .asStream();
   }
 }

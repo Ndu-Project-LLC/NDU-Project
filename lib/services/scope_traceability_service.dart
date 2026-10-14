@@ -36,7 +36,6 @@ class ScopeTraceabilityService {
   }) {
     // Build lookup maps
     final activityById = {for (final a in activities) a.id: a};
-    final workPackageById = {for (final wp in workPackages) wp.id: wp};
     final caByWbsId = <String, ControlAccount>{};
     for (final ca in controlAccounts) {
       if (ca.wbsId.isNotEmpty) {

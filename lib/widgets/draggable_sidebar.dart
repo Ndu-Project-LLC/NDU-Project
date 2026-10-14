@@ -83,26 +83,6 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
     });
   }
 
-  void _openMobileMenu() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final height = MediaQuery.sizeOf(context).height * 0.92;
-        return SafeArea(
-          child: SizedBox(
-            height: height,
-            child: widget.child,
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // On mobile: take zero horizontal space so content extends full-width.
@@ -155,7 +135,7 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
                   width: 28,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
@@ -169,7 +149,10 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
                     child: Icon(
                       collapsed ? Icons.chevron_right : Icons.chevron_left,
                       size: 20,
-                      color: const Color(0xFF6B7280),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -182,8 +165,8 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
   }
 }
 
-/// A floating hamburger button for mobile screens that opens a bottom sheet
-/// with the sidebar content. Place this as a positioned overlay in a Stack.
+/// A floating hamburger button for mobile screens that opens a full-height
+/// navigation drawer from the left. Place this as a positioned overlay in a Stack.
 ///
 /// Example:
 /// ```dart
@@ -203,7 +186,7 @@ class MobileSidebarHamburger extends StatelessWidget {
     required this.sidebar,
   });
 
-  /// The sidebar widget to show in the bottom sheet.
+  /// The sidebar widget to show in the mobile drawer.
   final Widget sidebar;
 
   @override
@@ -213,12 +196,13 @@ class MobileSidebarHamburger extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final cs = Theme.of(context).colorScheme;
     return Positioned(
       top: 8,
       left: 8,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -233,27 +217,49 @@ class MobileSidebarHamburger extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-              showModalBottomSheet<void>(
+              showGeneralDialog<void>(
                 context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.white,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                builder: (context) {
-                  final height = MediaQuery.sizeOf(context).height * 0.92;
-                  return SafeArea(
+                barrierDismissible: true,
+                barrierLabel:
+                    MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                barrierColor: Colors.black54,
+                transitionDuration: const Duration(milliseconds: 220),
+                pageBuilder: (dialogContext, animation, secondaryAnimation) {
+                  final screen = MediaQuery.sizeOf(dialogContext);
+                  final drawerWidth = AppBreakpoints.sidebarWidth(dialogContext)
+                      .clamp(0.0, screen.width)
+                      .toDouble();
+                  return Align(
+                    alignment: Alignment.centerLeft,
                     child: SizedBox(
-                      height: height,
-                      child: sidebar,
+                      width: drawerWidth,
+                      height: screen.height,
+                      child: Material(
+                        color: cs.surface,
+                        elevation: 16,
+                        child: SafeArea(
+                          child: SizedBox.expand(child: sidebar),
+                        ),
+                      ),
                     ),
+                  );
+                },
+                transitionBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  final slide = Tween<Offset>(
+                    begin: const Offset(-1, 0),
+                    end: Offset.zero,
+                  ).chain(CurveTween(curve: Curves.easeOutCubic));
+                  return SlideTransition(
+                    position: animation.drive(slide),
+                    child: child,
                   );
                 },
               );
             },
-            child: const Padding(
-              padding: EdgeInsets.all(10),
-              child: Icon(Icons.menu, color: Color(0xFF374151), size: 24),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Icon(Icons.menu, color: cs.onSurface, size: 24),
             ),
           ),
         ),

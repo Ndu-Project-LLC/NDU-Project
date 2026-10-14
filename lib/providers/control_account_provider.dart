@@ -53,7 +53,7 @@ class ControlAccountProvider extends ChangeNotifier {
 
   ControlAccount? getAccount(String id) {
     try {
-      return _accounts.firstWhere((a) => a.id == id);
+      return _accounts.where((a) => a.id == id).firstOrNull;
     } catch (_) {
       return null;
     }

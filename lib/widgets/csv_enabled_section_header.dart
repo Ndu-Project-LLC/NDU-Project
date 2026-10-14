@@ -109,16 +109,18 @@ class CsvEnabledSectionHeader extends StatelessWidget {
         columns: columns,
         onImport: onImport,
       ),
-      
       // Optional Add button
-      if (onAdd != null) ...[
-        SizedBox(width: spacing),
-        _buildAddButton(),
-      ],
+      if (onAdd != null) _buildAddButton(),
     ];
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    // A Wrap, not a Row: the CSV import button plus an Add button is wider than
+    // a phone viewport (measured 187px of overflow), and no column in this
+    // header can shrink, so wrapping moves the Add button to its own line
+    // instead. `spacing` used to be an explicit SizedBox separator.
+    return Wrap(
+      spacing: spacing,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: children,
     );
   }
@@ -131,7 +133,7 @@ class CsvEnabledSectionHeader extends StatelessWidget {
         icon: Icon(addIcon, size: 18),
         style: IconButton.styleFrom(
           foregroundColor: const Color(0xFF4154F1),
-          side: const BorderSide(color: Color(0xFFC7D2FE)),
+          side: const BorderSide(color: Color(0xFFFEF3C7)),
           padding: const EdgeInsets.all(8),
           minimumSize: const Size(36, 36),
         ),
@@ -142,7 +144,7 @@ class CsvEnabledSectionHeader extends StatelessWidget {
     // Full mode: Outlined button matching standalone header style
     final defaultStyle = OutlinedButton.styleFrom(
       foregroundColor: const Color(0xFF4154F1),
-      side: const BorderSide(color: Color(0xFFC7D2FE)),
+      side: const BorderSide(color: Color(0xFFFEF3C7)),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );

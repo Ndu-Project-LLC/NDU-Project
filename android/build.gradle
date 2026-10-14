@@ -4,9 +4,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22'
-        classpath 'com.google.gms:google-services:4.4.0'
+        classpath 'com.android.tools.build:gradle:8.11.1'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20'
+        classpath 'com.google.gms:google-services:4.4.4'
     }
 }
 
@@ -23,7 +23,7 @@ subprojects {
         if (project.hasProperty("kotlin")) {
             project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
                 kotlinOptions {
-                    jvmTarget = "1.8"
+                    jvmTarget = "17"
                 }
             }
         }
@@ -35,7 +35,22 @@ subprojects {
         if (project.plugins.hasPlugin("com.android.application") ||
                 project.plugins.hasPlugin("com.android.library")) {
             project.android {
-                compileSdkVersion 34
+                compileSdkVersion 36
+                // Pin every Android module, plugins included, to the NDK that is
+                // actually installed. Flutter's default NDK (28.2.13676358) is
+                // present in the SDK as an aborted-download stub, so modules with
+                // native code (e.g. :jni) fail configuration with CXX1101.
+                ndkVersion "27.0.12077973"
+                // Kotlin 2.x fails the build when a module's Java and Kotlin JVM
+                // targets disagree, and the plugins ship mixed pairs: several
+                // compile Java 11 with no Kotlin target, speech_to_text sets
+                // 11/11, flutter_secure_storage sets Java 17 only. Pin both to 17
+                // for every module so each module is internally consistent (the
+                // jvmTarget for Kotlin is pinned in the block above).
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
             }
         }
         if (project.hasProperty('android')) {

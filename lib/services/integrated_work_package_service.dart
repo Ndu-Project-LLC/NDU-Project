@@ -14,6 +14,193 @@ class IntegratedWorkPackageService {
   static const String preCommissioningPackage = 'preCommissioningPackage';
 
   // ------------------------------------------------------------------
+  // Package naming
+  //
+  // A schedule row used to read
+  // "engineering Ewp: 1.1 Authentication & Security Engineering Engineering
+  // Work Package": the classification was prefixed in raw camelCase *while*
+  // the title already ends with its own package type — the same information
+  // stated twice — and the leaf title's last word collided with the first word
+  // of the appended type ("…Engineering Engineering Work Package"). These
+  // helpers are the one place that decides what a package is called on screen,
+  // so no view has to re-invent (and re-double) the label.
+  // ------------------------------------------------------------------
+
+  /// Human-readable name of a package classification.
+  static String packageTypeLabel(String classification) {
+    switch (classification.trim()) {
+      case engineeringEwp:
+        return 'Engineering Work Package';
+      case procurementPackage:
+        return 'Procurement Package';
+      case constructionCwp:
+        return 'Construction Work Package';
+      case implementationWorkPackage:
+        return 'Implementation Work Package';
+      case agileIterationPackage:
+        return 'Agile Iteration Package';
+      case preCommissioningPackage:
+        return 'Pre-Commissioning Package';
+      case commissioningPackage:
+        return 'Commissioning Package';
+      case deliveryPackage:
+        return 'Delivery Work Package';
+      default:
+        return _titleCase(classification.trim());
+    }
+  }
+
+  /// Short form of a classification — used only when a title says nothing
+  /// about its own type.
+  static String packageTypeShortLabel(String classification) {
+    switch (classification.trim()) {
+      case engineeringEwp:
+        return 'EWP';
+      case procurementPackage:
+        return 'Procurement';
+      case constructionCwp:
+        return 'CWP';
+      case implementationWorkPackage:
+        return 'IWP';
+      case agileIterationPackage:
+        return 'AIP';
+      case preCommissioningPackage:
+        return 'Pre-commissioning';
+      case commissioningPackage:
+        return 'Commissioning';
+      case deliveryPackage:
+        return 'Delivery';
+      default:
+        return '';
+    }
+  }
+
+  /// The name a work package carries on the schedule.
+  ///
+  /// The package's own title is used as it stands whenever it already names its
+  /// type (`"… Engineering Work Package"`) — prefixing the classification would
+  /// state the same thing a second time. Only a title that does not say what it
+  /// is gets a short prefix (`"EWP · …"`). Doubled words inside a stored title
+  /// are collapsed on the way out, so a project already holding the old
+  /// `"… Engineering Engineering Work Package"` names reads correctly after
+  /// the next planning sync.
+  static String packageActivityName(WorkPackage package) {
+    final title = collapseRepeatedWords(package.title);
+    if (title.isEmpty) {
+      final type = packageTypeLabel(package.packageClassification);
+      return type.isEmpty ? 'Untitled package' : type;
+    }
+    final type = packageTypeLabel(package.packageClassification);
+    if (type.isNotEmpty && title.toLowerCase().contains(type.toLowerCase())) {
+      return title;
+    }
+    final short = packageTypeShortLabel(package.packageClassification);
+    return short.isEmpty ? title : '$short · $title';
+  }
+
+  /// Append a package type to a leaf title without stuttering the join.
+  ///
+  /// `"1.1 Authentication & Security Engineering"` + `"Engineering Work
+  /// Package"` joins naively as `"… Engineering Engineering Work Package"`;
+  /// the shared word is kept once, so multi-word types read
+  /// `"… Security Engineering Work Package"`. Single-word suffixes
+  /// ("Commissioning") are appended unchanged — they distinguish sibling
+  /// packages, so dropping them would merge two real rows.
+  static String packageTitleWithType(String leafTitle, String typeLabel) {
+    final base = collapseRepeatedWords(leafTitle);
+    final type = typeLabel.trim();
+    if (base.isEmpty) return type;
+    final typeWords = type
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+    if (typeWords.length < 2) return '$base $type';
+
+    final lastWord = base.split(RegExp(r'\s+')).last.toLowerCase();
+    final rest = typeWords.skip(1).join(' ');
+    return lastWord == typeWords.first.toLowerCase()
+        ? '$base $rest'
+        : '$base $type';
+  }
+
+  /// Collapse words repeated back-to-back, keeping the first spelling.
+  static String collapseRepeatedWords(String value) {
+    final out = <String>[];
+    for (final word in value.split(RegExp(r'\s+')).where((w) => w.isNotEmpty)) {
+      if (out.isNotEmpty && out.last.toLowerCase() == word.toLowerCase()) {
+        continue;
+      }
+      out.add(word);
+    }
+    return out.join(' ');
+  }
+
+  static String _titleCase(String value) {
+    return value
+        .split(RegExp(r'[^A-Za-z0-9]+'))
+        .where((word) => word.isNotEmpty)
+        .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
+  }
+
+  // ------------------------------------------------------------------
+  // Package identity
+  //
+  // A package's identity is what its title says, not the id it was minted
+  // with: `generatePackageChainsFromWbs` derives ids from the WBS leaf node
+  // (`_stableId(leaf.id)…`), so regenerating after the WBS is rebuilt — new
+  // node ids, same names — mints a full second chain whose ids match nothing
+  // already saved. Every call site that appends generated packages must
+  // therefore dedupe by identity (title + classification), or the Schedule
+  // ends up with the same "… Engineering Work Package" row once per
+  // generation run.
+  // ------------------------------------------------------------------
+
+  /// The identity key of a package: its collapsed title plus classification.
+  ///
+  /// Titles are collapsed through [collapseRepeatedWords] so a project that
+  /// stored the old doubled form ("… Engineering Engineering Work Package")
+  /// still matches its regenerated, single-word twin.
+  static String packageIdentityKey(WorkPackage package) {
+    final title = collapseRepeatedWords(package.title)
+        .trim()
+        .toLowerCase();
+    final classification = package.packageClassification.trim().toLowerCase();
+    return '$classification\u001F$title';
+  }
+
+  /// The first of [candidates] for each identity already present in
+  /// [existing] — new packages that merely restate a package the project
+  /// already holds are dropped, so regenerating chains from a rebuilt WBS
+  /// cannot stack a second copy of every package.
+  static List<WorkPackage> dedupePackagesAgainst(
+    List<WorkPackage> candidates,
+    List<WorkPackage> existing,
+  ) {
+    final seen = {
+      for (final package in existing) packageIdentityKey(package),
+    };
+    final out = <WorkPackage>[];
+    for (final package in candidates) {
+      if (seen.add(packageIdentityKey(package))) out.add(package);
+    }
+    return out;
+  }
+
+  /// [candidates] with repeats of the same identity collapsed to the first.
+  ///
+  /// Used on a single generated batch: a malformed WBS (the same node pasted
+  /// twice) would otherwise produce sibling chains that differ only by id.
+  static List<WorkPackage> dedupePackages(List<WorkPackage> candidates) {
+    final seen = <String>{};
+    final out = <WorkPackage>[];
+    for (final package in candidates) {
+      if (seen.add(packageIdentityKey(package))) out.add(package);
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------------
   // Guide Step 1–5: Generate EWP → Procurement → Execution chains
   // Now uses recursive traversal to support WBS depths of 1–5 levels.
   // Leaf nodes (deepest children) get EWP→Proc→Exec chains.
@@ -79,7 +266,10 @@ class IntegratedWorkPackageService {
       }
     }
 
-    return packages
+    // Collapse repeats of the same identity within one batch (a malformed WBS
+    // holding the same node twice would otherwise emit sibling chains that
+    // differ only by id), then stamp readiness warnings.
+    return dedupePackages(packages)
         .map((package) =>
             package.copyWith(readinessWarnings: validateReadiness(package)))
         .toList();
@@ -170,7 +360,8 @@ class IntegratedWorkPackageService {
         linkedProcurementPackageIds: [procurementId],
         linkedExecutionPackageIds: [executionId],
         linkedDesignSpecificationIds: linkedSpecIds,
-        title: '${leaf.title} Engineering Work Package',
+        title: packageTitleWithType(
+            leaf.title, packageTypeLabel(engineeringEwp)),
         description: leaf.description,
         type: 'design',
         phase: 'design',
@@ -211,7 +402,8 @@ class IntegratedWorkPackageService {
         linkedEngineeringPackageIds: [engineeringId],
         linkedExecutionPackageIds: [executionId],
         linkedDesignSpecificationIds: linkedSpecIds,
-        title: '${leaf.title} Procurement Package',
+        title: packageTitleWithType(
+            leaf.title, packageTypeLabel(procurementPackage)),
         description: leaf.description,
         type: 'procurement',
         phase: 'execution',
@@ -252,7 +444,7 @@ class IntegratedWorkPackageService {
         linkedEngineeringPackageIds: [engineeringId],
         linkedProcurementPackageIds: [procurementId],
         linkedDesignSpecificationIds: linkedSpecIds,
-        title: '${leaf.title} $executionLabel',
+        title: packageTitleWithType(leaf.title, executionLabel),
         description: leaf.description,
         type: executionType,
         phase: 'execution',
@@ -341,61 +533,6 @@ class IntegratedWorkPackageService {
   // Fix 1.2: Match design specification rows to WBS nodes
   // Supports any WBS depth — matches against leaf node and all ancestors.
   // ------------------------------------------------------------------
-
-  /// Matches design specification rows to a WBS leaf node and its
-  /// ancestors. A spec row matches if its `wbsWorkPackageId` equals any
-  /// ancestor or leaf WBS ID, OR if its title/discipline/area keywords
-  /// overlap with the leaf or ancestor titles.
-  static List<DesignSpecificationPlanRow> _matchSpecificationsToWbs(
-    List<DesignSpecificationPlanRow> specs, {
-    required String level2WbsId,
-    required String level3WbsId,
-    required String level3Title,
-    required String level2Title,
-  }) {
-    if (specs.isEmpty) return [];
-
-    // Build a combined set of all ancestor + leaf IDs and titles
-    // for matching. The old API only passed level2/level3 but
-    // we also accept them for backward compatibility.
-    final allWbsIds = <String>{level2WbsId, level3WbsId};
-    final allTitlesLower = <String>{
-      level2Title.toLowerCase(),
-      level3Title.toLowerCase(),
-    };
-    final allTokens = <String>{
-      ..._tokenize(level2Title.toLowerCase()),
-      ..._tokenize(level3Title.toLowerCase()),
-    };
-
-    return specs.where((spec) {
-      // Direct WBS ID match (strongest signal)
-      if (allWbsIds.contains(spec.wbsWorkPackageId)) {
-        return true;
-      }
-
-      // Title keyword overlap
-      final specTitle = spec.title.toLowerCase();
-      final specTokens = _tokenize(specTitle);
-      if (allTokens.any((t) => specTokens.contains(t))) {
-        return true;
-      }
-
-      // Discipline/area keyword match against all ancestor titles
-      final specDiscipline = spec.discipline.toLowerCase();
-      final specArea = spec.area.toLowerCase();
-      if (specDiscipline.isNotEmpty &&
-          allTitlesLower.any((t) => t.contains(specDiscipline))) {
-        return true;
-      }
-      if (specArea.isNotEmpty &&
-          allTitlesLower.any((t) => t.contains(specArea))) {
-        return true;
-      }
-
-      return false;
-    }).toList();
-  }
 
   /// Deep-aware spec matching for arbitrary WBS depth.
   /// Matches against the leaf node ID/title AND all ancestor IDs/titles.
@@ -818,10 +955,6 @@ class IntegratedWorkPackageService {
         }
         // Fix 1.1: Warn if procurement has no EWP deliverable traceability
         if (package.linkedEngineeringPackageIds.isNotEmpty) {
-          final hasDeliverableLink = _packageHasDeliverableLink(
-            package,
-            package.linkedEngineeringPackageIds,
-          );
           // This is informational — not all procurement needs design deliverables
         }
       case constructionCwp:
@@ -911,18 +1044,6 @@ class IntegratedWorkPackageService {
     return warnings;
   }
 
-  /// Checks if any deliverable on the linked EWP packages feeds this
-  /// procurement package. Returns true if at least one deliverable is
-  /// traced.
-  static bool _packageHasDeliverableLink(
-    WorkPackage package,
-    List<String> engineeringPackageIds,
-  ) {
-    // This is a placeholder for cross-package checking which requires
-    // access to the full package list — done in schedule_screen validation
-    return false;
-  }
-
   // ------------------------------------------------------------------
   // Schedule activity generation from packages
   // ------------------------------------------------------------------
@@ -931,6 +1052,10 @@ class IntegratedWorkPackageService {
     required List<WorkPackage> packages,
     Iterable<ScheduleActivity> existingActivities = const [],
   }) {
+    // Identity dedupe first: a package list that already holds the same
+    // package twice under different ids (the historical no-dedupe appends)
+    // would otherwise become one duplicate activity per copy here.
+    packages = dedupePackages(packages);
     final existingPackageIds = existingActivities
         .map((activity) => activity.workPackageId.trim())
         .where((id) => id.isNotEmpty)
@@ -1309,7 +1434,6 @@ class IntegratedWorkPackageService {
     required String methodology,
     required String procurementCategory,
   }) {
-    final isAgile = methodology.trim().toLowerCase() == 'agile';
 
     switch (packageClassification) {
       case engineeringEwp:
@@ -1419,15 +1543,6 @@ class IntegratedWorkPackageService {
         return _defaultEstimateBasis(methodology);
     }
   }
-
-  static List<PackageDeliverable> _defaultEngineeringDeliverables() => [
-        PackageDeliverable(title: 'Drawings', type: 'drawing'),
-        PackageDeliverable(title: 'Specifications', type: 'specification'),
-        PackageDeliverable(title: 'Calculations', type: 'calculation'),
-        PackageDeliverable(title: 'Bill of materials', type: 'bom'),
-        PackageDeliverable(
-            title: 'Codes and requirements', type: 'requirement'),
-      ];
 
   static String _packageCode(String level2Title, String level3Title) {
     final left = _codeToken(level2Title);

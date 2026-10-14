@@ -1,0 +1,51 @@
+appId: com.nduproject.desktop
+productName: NDU Project
+copyright: Copyright © NDU Project
+
+directories:
+  output: release
+  buildResources: resources
+
+# Only the compiled shell is packaged; the app itself ships as a resource.
+files:
+  - out/**
+  - package.json
+
+# The Flutter web build is copied verbatim next to the app resources, where
+# src/main/config.ts looks for it (`<resources>/web`). It is not bundled into
+# the asar because the static server reads it from disk.
+extraResources:
+  - from: ../build/web
+    to: web
+    filter:
+      - '**/*'
+
+# Registering the scheme makes `nduproject://` links reach the running app,
+# which the web build uses as its OAuth redirect target.
+protocols:
+  - name: NDU Project
+    schemes:
+      - nduproject
+
+mac:
+  category: public.app-category.productivity
+  icon: resources/icon.png
+  target:
+    - dmg
+    - zip
+
+win:
+  icon: resources/icon.png
+  target:
+    - nsis
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+linux:
+  icon: resources/icon.png
+  category: Office
+  target:
+    - AppImage
+    - deb

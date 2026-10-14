@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class LaunchScopeItem {
   final String id;
   String deliverable;
@@ -13,7 +15,7 @@ class LaunchScopeItem {
     this.status = 'Pending',
     this.acceptanceDate = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchScopeItem copyWith({
     String? deliverable,
@@ -75,7 +77,7 @@ class LaunchMilestone {
     this.actualDate = '',
     this.status = 'Pending',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchMilestone copyWith({
     String? title,
@@ -135,7 +137,7 @@ class LaunchFollowUpItem {
     this.details = '',
     this.owner = '',
     this.status = 'Open',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchFollowUpItem copyWith({
     String? title,
@@ -193,7 +195,7 @@ class LaunchTeamMember {
     this.contact = '',
     this.startDate = '',
     this.releaseStatus = 'Active',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchTeamMember copyWith({
     String? name,
@@ -255,7 +257,7 @@ class LaunchHandoverItem {
     this.owner = '',
     this.dueDate = '',
     this.status = 'Pending',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   static const categories = [
     'Documentation',
@@ -328,7 +330,7 @@ class LaunchKnowledgeTransfer {
     this.method = '',
     this.status = 'Pending',
     this.artifacts = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchKnowledgeTransfer copyWith({
     String? topic,
@@ -395,7 +397,7 @@ class LaunchApproval {
     this.status = 'Pending',
     this.date = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchApproval copyWith({
     String? stakeholder,
@@ -459,7 +461,7 @@ class LaunchContractItem {
     this.value = '',
     this.closeOutStatus = 'Open',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   static const closeOutStatuses = [
     'Open',
@@ -530,7 +532,7 @@ class LaunchCloseOutStep {
     this.contractRef = '',
     this.status = 'Pending',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchCloseOutStep copyWith({
     String? step,
@@ -590,7 +592,7 @@ class LaunchVendorItem {
     this.outstandingItems = '',
     this.performanceRating = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchVendorItem copyWith({
     String? vendorName,
@@ -658,7 +660,7 @@ class LaunchAccessItem {
     this.revokedDate = '',
     this.confirmedBy = '',
     this.status = 'Pending',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchAccessItem copyWith({
     String? system,
@@ -728,7 +730,7 @@ class LaunchWarrantyItem {
     this.expiryDate = '',
     this.terms = '',
     this.status = 'Active',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchWarrantyItem copyWith({
     String? item,
@@ -798,7 +800,7 @@ class LaunchGapItem {
     this.gapDescription = '',
     this.gapStatus = 'Met',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   static const gapStatuses = ['Met', 'Partial', 'Missed', 'Exceeded'];
 
@@ -862,7 +864,7 @@ class LaunchMilestoneVariance {
     this.actualDate = '',
     this.varianceDays = '',
     this.status = 'On Track',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchMilestoneVariance copyWith({
     String? milestone,
@@ -925,7 +927,7 @@ class LaunchBudgetVariance {
     this.actualAmount = '',
     this.variance = '',
     this.variancePercent = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchBudgetVariance copyWith({
     String? category,
@@ -986,7 +988,7 @@ class LaunchCloseOutCheckItem {
     this.item = '',
     this.status = 'Pending',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   static const categories = [
     'Deliverables',
@@ -1054,7 +1056,7 @@ class LaunchArchiveItem {
     this.retentionPeriod = '',
     this.accessChange = '',
     this.status = 'Pending',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchArchiveItem copyWith({
     String? repository,
@@ -1116,7 +1118,7 @@ class LaunchCommunicationItem {
     this.channel = '',
     this.sendDate = '',
     this.status = 'Planned',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchCommunicationItem copyWith({
     String? audience,
@@ -1177,7 +1179,7 @@ class LaunchOpsCostItem {
     this.monthlyCost = '',
     this.annualCost = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchOpsCostItem copyWith({
     String? category,
@@ -1231,7 +1233,7 @@ class LaunchFinancialMetric {
     this.label = '',
     this.value = '',
     this.notes = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchFinancialMetric copyWith({
     String? label,
@@ -1286,7 +1288,7 @@ class LaunchRootCauseItem {
     this.impact = '',
     this.correctiveAction = '',
     this.status = 'Open',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchRootCauseItem copyWith({
     String? gap,
@@ -1345,7 +1347,7 @@ class LaunchHighlightItem {
     this.title = '',
     this.details = '',
     this.category = 'Win',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   LaunchHighlightItem copyWith({
     String? title,

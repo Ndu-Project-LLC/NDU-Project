@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/addon_users_selector.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 const Color _pageBackground = Color(0xFFFFFFFF);
 const Color _primaryText = Color(0xFF0F0F0F);
@@ -47,7 +49,7 @@ class PaymentDialog extends StatefulWidget {
     String? displayPeriod,
     PricingTierId? pricingTierId,
   }) async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => PaymentDialog(
@@ -75,7 +77,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
   bool _isCheckingEligibility = true;
 
   // Coupon state
-  final _couponController = TextEditingController();
+  final _couponController = SpellCheckTextEditingController();
   AppliedCouponResult? _appliedCoupon;
   bool _isValidatingCoupon = false;
   String? _couponError;
@@ -222,9 +224,9 @@ class _PaymentDialogState extends State<PaymentDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: Color(0xFFF8FAFC),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -421,7 +423,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
   }
 
   Future<bool?> _showPaymentConfirmationDialog() async {
-    return showDialog<bool>(
+    return showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
@@ -490,10 +492,10 @@ class _PaymentDialogState extends State<PaymentDialog> {
             children: [
               Row(
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Complete Your Subscription',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: _primaryText,
@@ -700,7 +702,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: _accent),
+                            borderSide: const BorderSide(color: _accent),
                           ),
                           errorText: _couponError,
                           errorStyle: const TextStyle(fontSize: 11),
@@ -968,7 +970,7 @@ class _FreeTrialBanner extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Color(0xFF22C55E),
+                            color: const Color(0xFF22C55E),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: const Text(

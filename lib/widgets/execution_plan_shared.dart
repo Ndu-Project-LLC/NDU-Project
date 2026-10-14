@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
+import 'package:ndu_project/widgets/collapsible_notes_section.dart';
 import 'package:ndu_project/widgets/ai_diagram_panel.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -45,6 +46,7 @@ class ExecutionPlanHeader extends StatelessWidget {
     this.onNext,
     this.breadcrumbPhase,
     this.breadcrumbTitle,
+    this.walkthroughId,
     this.showExportPdf = true,
     this.showAiAssist = false,
     this.onExportPdf,
@@ -55,6 +57,9 @@ class ExecutionPlanHeader extends StatelessWidget {
   final VoidCallback? onNext;
   final String? breadcrumbPhase;
   final String? breadcrumbTitle;
+
+  /// Walkthrough page id; see UnifiedPhaseHeader.walkthroughId.
+  final String? walkthroughId;
 
   /// Show Export PDF button in the action row.
   final bool showExportPdf;
@@ -73,9 +78,9 @@ class ExecutionPlanHeader extends StatelessWidget {
     PdfExportHelper.exportScreenPdf(
       context: context,
       screenTitle: title,
-      sections: [
-        PdfSection.text(title, 'Project section export from Ndu Project.'),
-      ],
+      // No structured sections: the export captures the screen itself so the
+      // PDF contains everything actually on screen.
+      sections: const <PdfSection>[],
     );
   }
 
@@ -95,6 +100,7 @@ class ExecutionPlanHeader extends StatelessWidget {
           title: 'Execution Plan',
           breadcrumbPhase: breadcrumbPhase,
           breadcrumbTitle: breadcrumbTitle,
+          walkthroughId: walkthroughId,
           showDrawerButton: true,
           onBackPressed: onBack,
           onForwardPressed: onNext,
@@ -144,12 +150,11 @@ class _WhiteButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -177,8 +182,7 @@ class _AiAssistButton extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -206,7 +210,7 @@ class CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Color(0xFFE5E7EB)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Icon(
           icon,
@@ -224,9 +228,11 @@ class CurrentUserProfileChip extends StatelessWidget {
   String _initials(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return 'U';
-    final parts = trimmed.split(RegExp(r"\s+"));
+    final parts =
+        trimmed.split(RegExp(r"\s+")).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return trimmed[0].toUpperCase();
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return trimmed.substring(0, 1).toUpperCase();
+    return parts[0][0].toUpperCase();
   }
 
   @override
@@ -249,7 +255,7 @@ class CurrentUserProfileChip extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -420,41 +426,46 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
       }
     }
 
+    final lastSavedAt = _lastSavedAt;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AiSuggestingTextField(
-          fieldLabel: widget.title,
-          hintText: widget.hintText,
-          sectionLabel: 'Execution Plan',
-          showLabel: true,
-          initialText: noteKey == null
+        // Notes stay collapsed until the user opens them.
+        CollapsibleNotesSection(
+          title: widget.title,
+          card: true,
+          trailing: lastSavedAt == null
               ? null
-              : () {
-                  final projectData = ProjectDataHelper.getData(context);
-                  if (noteKey == 'execution_plan_outline') {
-                    return projectData
-                            .executionPhaseData?.executionPlanOutline ??
-                        projectData.planningNotes[noteKey];
-                  } else if (noteKey == 'execution_plan_strategy') {
-                    return projectData
-                            .executionPhaseData?.executionPlanStrategy ??
-                        projectData.planningNotes[noteKey];
-                  }
-                  return projectData.planningNotes[noteKey];
-                }(),
-          autoGenerate: true,
-          autoGenerateSection: widget.title,
-          onChanged: _handleChanged,
-        ),
-        if (_lastSavedAt != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
-              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            ),
+              : Text(
+                  'Saved ${TimeOfDay.fromDateTime(lastSavedAt).format(context)}',
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
+          child: AiSuggestingTextField(
+            fieldLabel: widget.title,
+            hintText: widget.hintText,
+            sectionLabel: 'Execution Plan',
+            showLabel: false,
+            initialText: noteKey == null
+                ? null
+                : () {
+                    final projectData = ProjectDataHelper.getData(context);
+                    if (noteKey == 'execution_plan_outline') {
+                      return projectData
+                              .executionPhaseData?.executionPlanOutline ??
+                          projectData.planningNotes[noteKey];
+                    } else if (noteKey == 'execution_plan_strategy') {
+                      return projectData
+                              .executionPhaseData?.executionPlanStrategy ??
+                          projectData.planningNotes[noteKey];
+                    }
+                    return projectData.planningNotes[noteKey];
+                  }(),
+            autoGenerate: true,
+            autoGenerateSection: widget.title,
+            onChanged: _handleChanged,
           ),
+        ),
         if (widget.showDiagram)
           AiDiagramPanel(
             sectionLabel: widget.title,
@@ -478,7 +489,7 @@ class InfoBadge extends StatelessWidget {
         color: Color(0xFFDAE9FF),
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB)),
+      child: const Icon(Icons.info_outline_rounded, color: Color(0xFFFFC812)),
     );
   }
 }
@@ -493,7 +504,7 @@ class AiTipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Color(0xFFE1EEFF),
+        color: const Color(0xFFE1EEFF),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -568,10 +579,9 @@ class AddRowButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -597,10 +607,9 @@ class AddSolutionButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -618,9 +627,9 @@ class CrossReferenceNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFFF0FDF4),
+        color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFBBF7D0)),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
       ),
       child: Row(
         children: [
@@ -658,8 +667,7 @@ class YellowActionButton extends StatelessWidget {
         foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         elevation: 0,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       child: Text(
         label,

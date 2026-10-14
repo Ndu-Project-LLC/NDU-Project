@@ -3,6 +3,9 @@
 /// P3.4: Added CBS/OBS/ControlAccount linkage for budget↔cost account
 /// traceability, enabling budget rows to roll up into CBS hierarchy and
 /// contribute to control account EVM calculations.
+library;
+import 'package:ndu_project/utils/unique_id.dart';
+
 class BudgetRow {
   final String id;
   String category; // e.g., "Contracts", "Staffing", "Tools", etc.
@@ -43,7 +46,7 @@ class BudgetRow {
     this.wbsId = '',
     this.costType = 'direct',
     this.commitmentStatus = 'uncommitted',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   /// Calculate variance (actual - planned)
   double get variance => actualAmount - plannedAmount;
@@ -122,7 +125,7 @@ class BudgetRow {
 
     return BudgetRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       category: json['category']?.toString() ?? '',
       plannedAmount: parseDouble(json['plannedAmount']),
       actualAmount: parseDouble(json['actualAmount']),

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ndu_project/screens/project_dashboard_screen.dart';
+import 'package:ndu_project/screens/project/project_dashboard_screen.dart';
 
 /// Tracks the last visited dashboard context for both client and admin
 /// surfaces, so clicking the brand logo can take the user to the most

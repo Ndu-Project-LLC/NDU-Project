@@ -529,6 +529,15 @@ class DesignPlanningDocument {
         'approvals': approvals.map((item) => item.toJson()).toList(),
       };
 
+  /// The diagram and module cards share rows; deleting one also removes its
+  /// incoming edges, so saved diagrams never retain dangling connections.
+  void removeArchitectureModule(String id) {
+    modules.removeWhere((module) => module.id == id);
+    for (final module in modules) {
+      module.connectedModuleIds.removeWhere((target) => target == id);
+    }
+  }
+
   void touch() {
     lastUpdatedIso = DateTime.now().toIso8601String();
   }
@@ -973,13 +982,20 @@ class DesignPlanningWorkItem {
     this.purpose = '',
     this.owner = '',
     this.status = 'Draft',
-  }) : id = id ?? _nextUniqueId();
+    this.diagramX,
+    this.diagramY,
+    List<String>? connectedModuleIds,
+  })  : id = id ?? _nextUniqueId(),
+        connectedModuleIds = connectedModuleIds ?? [];
 
   final String id;
   String name;
   String purpose;
   String owner;
   String status;
+  double? diagramX;
+  double? diagramY;
+  List<String> connectedModuleIds;
 
   factory DesignPlanningWorkItem.fromJson(Map<String, dynamic> json) {
     return DesignPlanningWorkItem(
@@ -988,6 +1004,10 @@ class DesignPlanningWorkItem {
       purpose: json['purpose']?.toString() ?? '',
       owner: json['owner']?.toString() ?? '',
       status: json['status']?.toString() ?? 'Draft',
+      diagramX: (json['diagramX'] as num?)?.toDouble(),
+      diagramY: (json['diagramY'] as num?)?.toDouble(),
+      connectedModuleIds: (json['connectedModuleIds'] as List?)
+          ?.map((id) => id.toString()).toSet().toList(),
     );
   }
 
@@ -997,6 +1017,10 @@ class DesignPlanningWorkItem {
         'purpose': purpose,
         'owner': owner,
         'status': status,
+        if (diagramX != null) 'diagramX': diagramX,
+        if (diagramY != null) 'diagramY': diagramY,
+        if (connectedModuleIds.isNotEmpty)
+          'connectedModuleIds': connectedModuleIds,
       };
 }
 

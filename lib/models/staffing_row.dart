@@ -1,4 +1,7 @@
 /// Model for a staffing requirement row in the Staff Team Orchestration page
+library;
+import 'package:ndu_project/utils/unique_id.dart';
+
 class StaffingRow {
   final String id;
   String role;
@@ -24,7 +27,7 @@ class StaffingRow {
     this.skillRequirements = '',
     this.notes = '',
     this.status = 'Not Started',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? newId();
 
   /// Calculate subtotal: quantity × duration × monthlyCost
   double get subtotal {
@@ -87,7 +90,7 @@ class StaffingRow {
   factory StaffingRow.fromJson(Map<String, dynamic> json) {
     return StaffingRow(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       role: json['role']?.toString() ?? '',
       quantity: json['quantity'] is int
           ? json['quantity'] as int

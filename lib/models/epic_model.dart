@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class Epic {
   final String id;
   String title;
@@ -44,7 +46,7 @@ class Epic {
     this.cbsId = '',
     this.controlAccountId = '',
     List<String>? featureIds,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         featureIds = featureIds ?? [];
 
   Epic copyWith({
@@ -119,7 +121,7 @@ class Epic {
 
     return Epic(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       theme: json['theme']?.toString() ?? '',

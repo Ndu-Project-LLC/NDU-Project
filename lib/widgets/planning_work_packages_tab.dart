@@ -29,7 +29,6 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
     final data = ProjectDataHelper.getData(context, listen: false);
     final methodology = data.planningNotes['planning_schedule_methodology'];
     if (methodology != null &&
-        methodology is String &&
         methodology.isNotEmpty) {
       _selectedMethodology = methodology;
     }
@@ -107,8 +106,13 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
     }
 
     final existingIds = data.workPackages.map((wp) => wp.id).toSet();
-    final newPackages =
-        generated.where((wp) => !existingIds.contains(wp.id)).toList();
+    // The id filter keeps saves honest; the identity pass beneath also drops
+    // packages that restate an existing one under a fresh id — which is what
+    // regenerating after a rebuilt WBS does (new node ids, same names).
+    final newPackages = IntegratedWorkPackageService.dedupePackagesAgainst(
+      generated.where((wp) => !existingIds.contains(wp.id)).toList(),
+      data.workPackages,
+    );
     if (newPackages.isEmpty) {
       _showInfo('Integrated package chains are already generated.');
       return;
@@ -122,7 +126,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
         .where((d) => d.linkedSpecificationIds.isNotEmpty)
         .length;
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Generate Integrated Package Chains'),
@@ -181,7 +185,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       return;
     }
 
-    final shouldImport = await showDialog<bool>(
+    final shouldImport = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Create Integrated Schedule Network'),
@@ -228,7 +232,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         wbsLevel2Options: wbsLevel2Ids,
@@ -257,7 +261,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       }
     }
 
-    final result = await showDialog<WorkPackage>(
+    final result = await showAppDialog<WorkPackage>(
       context: context,
       builder: (context) => WorkPackageDialog(
         initialWorkPackage: wp,
@@ -280,7 +284,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
   }
 
   Future<void> _deleteWorkPackage(WorkPackage wp) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Work Package'),
@@ -311,7 +315,8 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       setState(() {});
       _showInfo('Work package deleted.');
     }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+if (!mounted) return;
+            showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
@@ -320,7 +325,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
         data.scheduleActivities.where((a) => a.workPackageId == wp.id).toList();
 
     if (!mounted) return;
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (context) => WorkPackageDetailView(
         workPackage: wp,
@@ -344,13 +349,13 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
               dataUpdater: (data) => data.copyWith(workPackages: updated),
               showSnackbar: false,
             );
-            if (mounted) {
+            if (context.mounted) {
               setState(() {});
               _showInfo('EWP "${wp.title}" released for execution.');
             }
           } on StateError catch (e) {
-            Navigator.of(context).pop();
-            if (mounted) {
+            if (context.mounted) Navigator.of(context).pop();
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(e.message),
@@ -527,11 +532,11 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: AppSemanticColors.border),
+                      borderSide: const BorderSide(color: AppSemanticColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: AppSemanticColors.border),
+                      borderSide: const BorderSide(color: AppSemanticColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -670,7 +675,7 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFFC812);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -929,7 +934,7 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE5E7EB),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
               ),
             ),
           ],

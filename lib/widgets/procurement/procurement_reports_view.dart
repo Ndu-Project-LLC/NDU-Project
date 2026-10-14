@@ -228,7 +228,7 @@ class ProcurementReportsView extends StatelessWidget {
               icon: const Icon(Icons.auto_awesome, size: 18),
               label: const Text('Generate Data'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0EA5E9),
+                backgroundColor: const Color(0xFFFFC812),
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -254,7 +254,7 @@ class ProcurementReportsView extends StatelessWidget {
               icon: const Icon(Icons.file_download_outlined, size: 18),
               label: const Text('Export PDF'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
+                backgroundColor: const Color(0xFFFFC812),
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -386,7 +386,7 @@ class _SpendBreakdownCard extends StatelessWidget {
                     Container(
                       height: 8,
                       decoration: BoxDecoration(
-                        color: Color(0xFFE2E8F0),
+                        color: const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -471,7 +471,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
                 minHeight: 8,
                 backgroundColor: const Color(0xFFE2E8F0),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                    const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
               ),
             ),
             if (i != metrics.length - 1) const SizedBox(height: 12),

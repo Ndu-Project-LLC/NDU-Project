@@ -214,12 +214,6 @@ ANNOTATIONS: Dict[str, Dict[str, object]] = {
         'phase_after': ['Vendor Tracking', 'Progress Tracking'],
         'basis': 'shared model + workflow alignment',
     },
-    'scope_tracking_plan': {
-        'workstream': 'Scope & requirements',
-        'next_phase': ['Requirements Implementation', 'Design Deliverables'],
-        'phase_after': ['Scope Tracking Implementation', 'Scope Completion'],
-        'basis': 'shared model + workflow alignment',
-    },
     'contracts': {
         'workstream': 'Commercial & procurement',
         'next_phase': ['Long Lead Equipment Ordering'],

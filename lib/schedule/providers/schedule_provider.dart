@@ -11,69 +11,204 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
+import 'package:ndu_project/schedule/utils/schedule_duplicate_guard.dart';
+import 'package:ndu_project/schedule/utils/schedule_purchase_cost.dart';
+import 'package:ndu_project/schedule/utils/schedule_wbs_packages.dart';
+import 'package:ndu_project/utils/item_name_key.dart';
+import 'package:ndu_project/utils/project_scoped_storage.dart';
 
-const String _storageKey = 'ndu_schedule_v1';
+/// Project-scoped storage key prefix — see [projectScopedPrefsKey].
+///
+/// Storage used to be one global entry (`ndu_schedule_v1`), so every project in
+/// the workspace read back whichever project's schedule was saved last.
+/// Records under that legacy key are now adopted once, by the project they
+/// belong to, and then removed.
+const String _storageKeyPrefix = 'ndu_schedule_v2';
+const String _legacyStorageKey = 'ndu_schedule_v1';
 
 class ScheduleProvider extends ChangeNotifier {
   Schedule? _schedule;
   bool _setupComplete = false;
 
+  /// Project whose schedule is currently held in [_schedule] (see
+  /// [ensureProjectLoaded]) — [unattributedProjectId] until one is loaded.
+  String _activeProjectId = unattributedProjectId;
+
+  /// True until the constructor's bootstrap read of the current scope settles.
+  bool _isLoadingFromStorage = true;
+
   Schedule? get schedule => _schedule;
   bool get setupComplete => _setupComplete;
+
+  /// The project whose schedule this provider currently holds.
+  String get activeProjectId => _activeProjectId;
 
   ScheduleProvider() {
     _loadFromStorage();
   }
 
+  String _storageKeyForProject(String projectId) =>
+      projectScopedPrefsKey(_storageKeyPrefix, projectId);
+
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_storageKey);
+      final raw = prefs.getString(_storageKeyForProject(_activeProjectId));
       if (raw != null) {
-        final data = jsonDecode(raw) as Map<String, dynamic>;
-        final state = data['state'] as Map<String, dynamic>? ?? {};
-        _setupComplete = state['setupComplete'] as bool? ?? false;
-        // Simplified deserialization — in production, use full JSON mapping
-        if (state['schedule'] != null) {
-          _schedule =
-              _scheduleFromJson(state['schedule'] as Map<String, dynamic>);
-        }
-        notifyListeners();
+        _applyStoredState(jsonDecode(raw) as Map<String, dynamic>);
       }
     } catch (e) {
       debugPrint('Error loading schedule: $e');
+    } finally {
+      _isLoadingFromStorage = false;
+      notifyListeners();
     }
   }
 
-  Future<void> _saveToStorage() async {
+  /// Applies a decoded `{'state': {...}}` payload to this provider.
+  ///
+  /// Records duplicated by an earlier import run are collapsed on the way in,
+  /// so a project that already holds two rows with the same name stops showing
+  /// both as soon as it is loaded — the user never has to delete them by hand.
+  void _applyStoredState(Map<String, dynamic> decoded) {
+    final state = decoded['state'] as Map<String, dynamic>? ?? {};
+    _setupComplete = state['setupComplete'] as bool? ?? false;
+    final scheduleJson = state['schedule'] as Map<String, dynamic>?;
+    if (scheduleJson == null) {
+      _schedule = null;
+      return;
+    }
+    final restored = _scheduleFromJson(scheduleJson);
+    _schedule = restored.copyWith(
+      activities: _dedupeActivityNames(restored.activities),
+    );
+  }
+
+  /// Makes [projectId]'s own schedule the one in memory before any caller reads
+  /// [schedule].
+  ///
+  /// Screens must call this on entry (and whenever the active project changes):
+  /// storage is project-scoped, so without it the provider would keep showing
+  /// the previously opened project's activities, basis and reviewers. A legacy
+  /// global record is adopted here — once — by the project it belongs to and
+  /// then removed, so it can never appear inside another project.
+  ///
+  /// An empty [projectId] selects the [unattributedProjectId] scope rather than
+  /// silently keeping another project's schedule on screen.
+  Future<void> ensureProjectLoaded(
+    String projectId, {
+    String? projectName,
+  }) async {
+    final pid =
+        projectId.trim().isEmpty ? unattributedProjectId : projectId.trim();
+
+    // Wait for the constructor's bootstrap read so we don't race it.
+    while (_isLoadingFromStorage) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    if (_activeProjectId == pid) return;
+
+    // Reset before loading, so a missing/failed load can never leave the
+    // previous project's schedule on screen.
+    _activeProjectId = pid;
+    _schedule = null;
+    _setupComplete = false;
+    notifyListeners();
+
     try {
       final prefs = await SharedPreferences.getInstance();
-      final s = _schedule;
-      final data = {
-        'state': {
-          'schedule': s != null
-              ? {
-                  'id': s.id,
-                  'projectId': s.projectId,
-                  'projectName': s.projectName,
-                  'deliveryModel': s.basis.deliveryModel,
-                  'status': s.status.name,
-                  'isLocked': s.isLocked,
-                  'activities': s.activities.map((a) => a.toJson()).toList(),
-                }
-              : null,
-          'setupComplete': _setupComplete,
-        },
-      };
-      await prefs.setString(_storageKey, jsonEncode(data));
+      final raw = prefs.getString(_storageKeyForProject(pid));
+      if (raw != null) {
+        _applyStoredState(jsonDecode(raw) as Map<String, dynamic>);
+        notifyListeners();
+        return;
+      }
+      await _adoptLegacyRecord(prefs, pid, projectName);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading project-scoped schedule: $e');
+    }
+  }
+
+  /// Adopts the pre-scoping global record ([_legacyStorageKey]) for [pid] when
+  /// it belongs to that project, then moves it onto the project's own key and
+  /// clears the legacy entry so it is claimed exactly once.
+  Future<void> _adoptLegacyRecord(
+    SharedPreferences prefs,
+    String pid,
+    String? projectName,
+  ) async {
+    final raw = prefs.getString(_legacyStorageKey);
+    if (raw == null) return;
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    final state = decoded['state'] as Map<String, dynamic>? ?? {};
+    final scheduleJson = state['schedule'] as Map<String, dynamic>?;
+    if (scheduleJson == null) return;
+    if (!legacyRecordBelongsToProject(
+      projectId: pid,
+      projectName: projectName,
+      legacyProjectId: scheduleJson['projectId']?.toString(),
+      legacyProjectName: scheduleJson['projectName']?.toString(),
+    )) {
+      return;
+    }
+
+    _applyStoredState(decoded);
+    final adopted = _schedule;
+    if (adopted != null && adopted.projectId != pid) {
+      final resolvedName = (projectName ?? '').trim();
+      _schedule = adopted.copyWith(
+        projectId: pid,
+        projectName: resolvedName.isEmpty ? adopted.projectName : resolvedName,
+      );
+    }
+    await _saveToStorage();
+    await prefs.remove(_legacyStorageKey);
+  }
+
+  Future<void> _saveToStorage() async {
+    // Snapshot the target key and payload BEFORE awaiting: a project switch that
+    // lands while this write is in flight must not retarget it at another
+    // project's key or serialise the wrong state.
+    final key = _storageKeyForProject(_activeProjectId);
+    final payload = jsonEncode(_statePayload());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, payload);
     } catch (e) {
       debugPrint('Error saving schedule: $e');
     }
   }
 
+  /// Serialises the current state — written under the ACTIVE PROJECT's key
+  /// only, so a save can never write one project's schedule into another's.
+  Map<String, dynamic> _statePayload() {
+    final s = _schedule;
+    return {
+      'state': {
+        'schedule': s != null
+            ? {
+                'id': s.id,
+                'projectId': s.projectId,
+                'projectName': s.projectName,
+                'deliveryModel': s.basis.deliveryModel,
+                'status': s.status.name,
+                'isLocked': s.isLocked,
+                'basis': _basisToJson(s.basis),
+                'estimateBasis': _estimateBasisToJson(s.estimateBasis),
+                'activities': s.activities.map((a) => a.toJson()).toList(),
+              }
+            : null,
+        'setupComplete': _setupComplete,
+      },
+    };
+  }
+
   Schedule _scheduleFromJson(Map<String, dynamic> json) {
     final deliveryModel = json['deliveryModel'] as String? ?? 'WATERFALL';
     final s = createEmptySchedule(
+      projectId: json['projectId'] as String? ?? unattributedProjectId,
       projectName: json['projectName'] as String? ?? 'Project',
       deliveryModel: deliveryModel,
     );
@@ -82,15 +217,110 @@ class ScheduleProvider extends ChangeNotifier {
       final activities = rawActivities
           .map((a) => ScheduleActivity.fromJson(a as Map<String, dynamic>))
           .toList();
-      return s.copyWith(activities: activities);
+      var restored = s.copyWith(activities: activities);
+      final basisJson = json['basis'] as Map<String, dynamic>?;
+      if (basisJson != null) {
+        restored = restored.copyWith(basis: _basisFromJson(basisJson));
+      }
+      final estimateJson = json['estimateBasis'] as Map<String, dynamic>?;
+      if (estimateJson != null) {
+        restored = restored.copyWith(
+            estimateBasis: _estimateBasisFromJson(estimateJson));
+      }
+      return restored;
     }
     return s;
   }
 
+  static Map<String, dynamic> _basisToJson(ScheduleBasis b) => {
+        'deliveryModel': b.deliveryModel,
+        if (b.sprintDurationWeeks != null)
+          'sprintDurationWeeks': b.sprintDurationWeeks,
+        if (b.releaseCadence != null) 'releaseCadence': b.releaseCadence,
+        if (b.incrementStrategy != null)
+          'incrementStrategy': b.incrementStrategy,
+        if (b.definitionOfReady != null)
+          'definitionOfReady': b.definitionOfReady,
+        if (b.definitionOfDone != null) 'definitionOfDone': b.definitionOfDone,
+        'assumptions': b.assumptions,
+        'constraints': b.constraints,
+        'milestones': b.milestones,
+        'interfaces': b.interfaces,
+      };
+
+  static ScheduleBasis _basisFromJson(Map<String, dynamic> json) {
+    return ScheduleBasis(
+      deliveryModel: json['deliveryModel'] as String? ?? 'WATERFALL',
+      sprintDurationWeeks: (json['sprintDurationWeeks'] as num?)?.toInt(),
+      releaseCadence: json['releaseCadence'] as String?,
+      incrementStrategy: json['incrementStrategy'] as String?,
+      definitionOfReady: json['definitionOfReady'] as String?,
+      definitionOfDone: json['definitionOfDone'] as String?,
+      assumptions: (json['assumptions'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      constraints: (json['constraints'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      milestones: (json['milestones'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      interfaces: (json['interfaces'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+    );
+  }
+
+  static Map<String, dynamic>? _estimateBasisToJson(EstimateBasis? e) {
+    if (e == null) return null;
+    return {
+      'scopeAlignment': e.scopeAlignment,
+      'estimationMethods': e.estimationMethods.map((m) => m.name).toList(),
+      'keyAssumptions': e.keyAssumptions,
+      'procurementConsiderations': e.procurementConsiderations,
+      'engineeringConsiderations': e.engineeringConsiderations,
+      'constraintsAndRisks': e.constraintsAndRisks,
+      'validationBenchmarking': e.validationBenchmarking,
+      'documentation': e.documentation,
+    };
+  }
+
+  static EstimateBasis _estimateBasisFromJson(Map<String, dynamic> json) {
+    return EstimateBasis(
+      scopeAlignment: json['scopeAlignment'] as String? ?? '',
+      estimationMethods: (json['estimationMethods'] as List<dynamic>? ?? [])
+          .map((e) => EstimationMethod.values.byName(e.toString())
+              // Defensive: any unknown method falls back to expert judgment.
+              )
+          .toList()
+          .cast<EstimationMethod>(),
+      keyAssumptions:
+          Map<String, String>.from(json['keyAssumptions'] as Map? ?? {}),
+      procurementConsiderations: Map<String, String>.from(
+          json['procurementConsiderations'] as Map? ?? {}),
+      engineeringConsiderations: Map<String, String>.from(
+          json['engineeringConsiderations'] as Map? ?? {}),
+      constraintsAndRisks: (json['constraintsAndRisks'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      validationBenchmarking: json['validationBenchmarking'] as String? ?? '',
+      documentation: json['documentation'] as String? ?? '',
+    );
+  }
+
   // ─── Setup ──────────────────────────────────────────────────────────────
 
-  void setup({required String projectName, required String deliveryModel}) {
+  void setup({
+    required String projectName,
+    required String deliveryModel,
+    String projectId = '',
+  }) {
+    // Bind the new schedule to the active project so it is persisted (and read
+    // back) under that project's own key — never the shared `default` scope.
+    _activeProjectId =
+        projectId.trim().isNotEmpty ? projectId.trim() : _activeProjectId;
     _schedule = createEmptySchedule(
+      projectId: _activeProjectId,
       projectName: projectName,
       deliveryModel: deliveryModel,
     );
@@ -106,6 +336,23 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Re-syncs the schedule's delivery model with the project's current
+  /// Project Details methodology selection (AGILE / WATERFALL / HYBRID).
+  /// Existing activities and the rest of the basis are kept intact — only
+  /// the methodology-dependent view state (badge, agile hints, level
+  /// import behaviour) is updated.
+  void syncDeliveryModel(String deliveryModel) {
+    if (_schedule == null) return;
+    final normalized = deliveryModel.toUpperCase();
+    if (_schedule!.basis.deliveryModel.toUpperCase() == normalized) return;
+    _schedule = _schedule!.copyWith(
+      basis: _schedule!.basis.copyWith(deliveryModel: normalized),
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
   // ─── Basis ──────────────────────────────────────────────────────────────
 
   void updateBasis(ScheduleBasis patch) {
@@ -115,6 +362,7 @@ class ScheduleProvider extends ChangeNotifier {
         deliveryModel: patch.deliveryModel,
         sprintDurationWeeks: patch.sprintDurationWeeks,
         releaseCadence: patch.releaseCadence,
+        incrementStrategy: patch.incrementStrategy,
         definitionOfReady: patch.definitionOfReady,
         definitionOfDone: patch.definitionOfDone,
         assumptions: patch.assumptions,
@@ -128,21 +376,63 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
-  // ─── Activities ─────────────────────────────────────────────────────────
-
-  void setActivities(List<ScheduleActivity> activities) {
+  /// Update the schedule's estimate basis (assumptions, methods, data
+  /// sources used to determine activity durations).
+  void updateEstimateBasis(EstimateBasis patch) {
     if (_schedule == null) return;
+    final current = _schedule!.estimateBasis ?? createEmptyEstimateBasis();
     _schedule = _schedule!.copyWith(
-      activities: activities,
+      estimateBasis: current.copyWith(
+        scopeAlignment: patch.scopeAlignment,
+        estimationMethods: patch.estimationMethods,
+        keyAssumptions: patch.keyAssumptions,
+        procurementConsiderations: patch.procurementConsiderations,
+        engineeringConsiderations: patch.engineeringConsiderations,
+        constraintsAndRisks: patch.constraintsAndRisks,
+        validationBenchmarking: patch.validationBenchmarking,
+        documentation: patch.documentation,
+      ),
       updatedAt: DateTime.now(),
     );
     notifyListeners();
     _saveToStorage();
   }
 
+  // ─── Activities ─────────────────────────────────────────────────────────
+
+  /// Writes a whole tree back, collapsing any two records that share a name.
+  ///
+  /// Every import/sync path funnels through here, so a chain generated twice —
+  /// or a payload built from a list that already held a duplicate — can never
+  /// be persisted as two rows the user would see as the same item.
+  void setActivities(List<ScheduleActivity> activities) {
+    if (_schedule == null) return;
+    _schedule = _schedule!.copyWith(
+      activities: _dedupeActivityNames(activities),
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  /// Runs a full CPM pass: recomputes early/late dates, total float and the
+  /// critical path, then writes the result back onto the tree.
+  ///
+  /// [projectStart] is the day the CPM offsets are measured from. When it is
+  /// not supplied the schedule's OWN baseline is used — the project start date
+  /// set by "Setup Timeline", else the earliest dated activity, else today.
+  /// Anchoring on `DateTime.now()` instead (the old behaviour) meant a planner
+  /// who set a baseline of 01/06/26 still had every undated activity dated
+  /// from the day they happened to press the button, so the computed finish
+  /// date silently ignored the timeline the schedule already declared.
+  ///
+  /// Pass [overwriteDates] to push the computed dates onto rows that already
+  /// carry a date. The default leaves existing dates alone and only fills in
+  /// the ones that are still empty, so re-running CPM after an edit never
+  /// discards dates the planner set by hand.
   CpmResult? computeCpm({bool overwriteDates = false, DateTime? projectStart}) {
     if (_schedule == null || _schedule!.activities.isEmpty) return null;
-    final start = projectStart ?? DateTime.now();
+    final start = projectStart ?? _cpmAnchorDate();
     final flat = ScheduleCpmService.flatten(_schedule!.activities);
     final result = ScheduleCpmService.calculate(activities: flat);
     final updated = ScheduleCpmService.applyToActivities(
@@ -160,8 +450,45 @@ class ScheduleProvider extends ChangeNotifier {
     return result;
   }
 
+  /// The day [computeCpm] measures its offsets from: the project start set by
+  /// "Setup Timeline", else the earliest date on the schedule, else today.
+  /// Exposed so the UI can report the finish date the schedule actually holds
+  /// rather than recomputing an anchor that could disagree with it.
+  DateTime? get cpmAnchorDate =>
+      _schedule == null || _schedule!.activities.isEmpty
+          ? null
+          : _cpmAnchorDate();
+
+  /// The day CPM offsets are measured from when the caller does not name one.
+  ///
+  /// Prefers the schedule's declared project start, then the earliest date on
+  /// the schedule, and only falls back to today when nothing is dated yet.
+  /// Midnight-normalised so a start time never leaks into the day arithmetic.
+  DateTime _cpmAnchorDate() {
+    final activities = _schedule!.activities;
+    final rootStart = activities.isEmpty ? null : activities.first.startDate;
+    DateTime? earliest = rootStart;
+    for (final activity in ScheduleCpmService.flatten(activities)) {
+      final start = activity.startDate;
+      if (start != null && (earliest == null || start.isBefore(earliest))) {
+        earliest = start;
+      }
+    }
+    final anchor = earliest ?? DateTime.now();
+    return DateTime(anchor.year, anchor.month, anchor.day);
+  }
+
+  /// Adds [activity] under [parentId] and returns its new id.
+  ///
+  /// If the schedule already holds an activity with the same name, nothing is
+  /// added and the existing activity's id is returned instead. Callers that
+  /// import from elsewhere therefore link to the record they already created
+  /// rather than stacking a duplicate — running the same import twice is
+  /// idempotent.
   String addActivity(String parentId, ScheduleActivity activity) {
     if (_schedule == null || _schedule!.activities.isEmpty) return '';
+    final existingId = _idOfActivityNamed(activity.name);
+    if (existingId != null) return existingId;
     final id = newSchedId('act');
     final newActivity = activity.copyWith(id: id, code: '', level: 0);
     final root = _schedule!.activities[0];
@@ -182,8 +509,15 @@ class ScheduleProvider extends ChangeNotifier {
     return id;
   }
 
+  /// Saves an edit to one activity.
+  ///
+  /// A patch that renames the activity onto a name another record already holds
+  /// is dropped (the row keeps its current name) so an edit cannot introduce the
+  /// duplicate the user would then have to clean up by hand.
   void updateActivity(String id, ScheduleActivity patch) {
     if (_schedule == null || _schedule!.activities.isEmpty) return;
+    final clashId = _idOfActivityNamed(patch.name, ignoreId: id);
+    if (clashId != null) return;
     final root = _schedule!.activities[0];
     final updatedRoot = recalcActivityCodes(
       _findAndUpdate(
@@ -320,11 +654,252 @@ class ScheduleProvider extends ChangeNotifier {
     };
   }
 
-  /// Import AgileTask (story) records into the schedule as ScheduleActivity entries.
+  /// Schedule ← WBS: puts the WBS work packages the schedule does not carry yet
+  /// onto the schedule.
   ///
-  /// Groups stories under Feature/Epic summary activities. Only operates when
+  /// Product rule (voice note, 2026-09-10): "the schedule should be able to put
+  /// out everything that's like on the WBS [and it] should be able to find
+  /// itself on the schedule". The owner had work packages that existed in the
+  /// WBS but nowhere on the schedule, with no way to bring them across.
+  ///
+  /// Each [WbsPackagePull] becomes one leaf activity that keeps the link home —
+  /// `wbsNodeId` (the FK the Gantt, the Cost Estimate and Project Controls all
+  /// read) and the denormalised `wbsCode` — and starts from the package's own
+  /// planned window when the WBS has one. The activity name is the package's
+  /// `code — name` label, so the schedule row reads exactly like the WBS row.
+  ///
+  /// Idempotent by construction: a package whose node id is already linked from
+  /// any activity in the tree is skipped, so re-running the pull after a partial
+  /// import offers only what is still missing. Returns the number created.
+  int attachWbsPackages(List<WbsPackagePull> packages) {
+    if (packages.isEmpty) return 0;
+    final schedule = _schedule;
+    if (schedule == null || schedule.activities.isEmpty) return 0;
+
+    final alreadyLinked = <String>{
+      for (final activity in schedule.activities
+          .expand((root) => ScheduleCpmService.flatten([root])))
+        if ((activity.wbsNodeId ?? '').trim().isNotEmpty)
+          activity.wbsNodeId!.trim(),
+    };
+
+    final additions = <ScheduleActivity>[];
+    for (final package in packages) {
+      final nodeId = package.nodeId.trim();
+      if (nodeId.isEmpty || alreadyLinked.contains(nodeId)) continue;
+      alreadyLinked.add(nodeId);
+
+      final start = package.plannedStart;
+      final finish = package.plannedFinish;
+      additions.add(ScheduleActivity(
+        id: newSchedId('act'),
+        level: package.level.clamp(1, 4),
+        code: '',
+        name: package.label.trim().isEmpty ? package.name : package.label,
+        description: package.description,
+        type: ActivityType.task,
+        domain: _domainForLevel(package.level),
+        duration: start != null && finish != null
+            ? finish.difference(start).inDays + 1
+            : null,
+        durationUnit: 'day',
+        dependencies: const [],
+        aiGenerated: false,
+        wbsNodeId: nodeId,
+        wbsCode: package.code.trim().isEmpty ? null : package.code.trim(),
+        startDate: start,
+        endDate: finish,
+        status: 'planned',
+        importSource: 'wbs',
+        children: const [],
+      ));
+    }
+
+    if (additions.isEmpty) return 0;
+
+    final root = schedule.activities.first;
+    final updatedRoot = recalcActivityCodes(
+      root.copyWith(children: [...root.children, ...additions]),
+    );
+    _schedule = schedule.copyWith(
+      activities: [updatedRoot, ...schedule.activities.skip(1)],
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return additions.length;
+  }
+
+  /// Fills the planned window the WBS carries onto the schedule activities
+  /// linked to each node — the WBS → Schedule half of the timeline link.
+  ///
+  /// The other direction already exists (`WBSProvider.applyScheduleTimelines`
+  /// stamps the schedule's dates onto the WBS). This one covers the case where
+  /// the package's start and finish were agreed on the WBS first, and the
+  /// schedule rows are what is blank.
+  ///
+  /// A package's window is the span of the **whole** package, so when several
+  /// of its rows are blank it is divided between them: the window is cut into
+  /// one contiguous slice per blank row, in tree order, and the slices tile it
+  /// exactly — the first row starts on the planned start, the last finishes on
+  /// the planned finish, and no day is dropped or double-counted. Writing the
+  /// same window onto every row instead (which is what this used to do) gave a
+  /// package of three rows three identical Jan 5 – Jan 30 activities, which is
+  /// not a plan and which CPM then read as three parallel 26-day tasks.
+  ///
+  /// Rows that already carry dates keep them and are excluded from the split,
+  /// so a CPM pass or a hand-entered window is never overwritten. A package with
+  /// a single blank row — or one whose window is not a range to divide — gives
+  /// that row the whole window, which is the same result as before.
+  ///
+  /// Returns the number of activities that gained a date.
+  int applyWbsPlannedDates(
+      Map<String, ({DateTime? start, DateTime? finish})> byNodeId) {
+    if (byNodeId.isEmpty) return 0;
+    final schedule = _schedule;
+    if (schedule == null || schedule.activities.isEmpty) return 0;
+
+    // Which rows are blank, grouped per WBS node and held in tree order. The
+    // split is decided here, before any writing, so every row of a package gets
+    // its slice from one pass rather than from its own position in the walk.
+    final blankIdsByNode = <String, List<String>>{};
+    for (final activity in ScheduleCpmService.flatten(schedule.activities)) {
+      final nodeId = (activity.wbsNodeId ?? '').trim();
+      if (nodeId.isEmpty) continue;
+      final window = byNodeId[nodeId];
+      if (window == null || (window.start == null && window.finish == null)) {
+        continue;
+      }
+      if (activity.startDate != null || activity.endDate != null) continue;
+      blankIdsByNode.putIfAbsent(nodeId, () => []).add(activity.id);
+    }
+
+    final sliceByActivityId = <String, ({DateTime? start, DateTime? finish})>{};
+    for (final entry in blankIdsByNode.entries) {
+      final slices = _sliceWindow(byNodeId[entry.key]!, entry.value.length);
+      for (var i = 0; i < entry.value.length; i++) {
+        sliceByActivityId[entry.value[i]] = slices[i];
+      }
+    }
+    if (sliceByActivityId.isEmpty) return 0;
+
+    var updated = 0;
+
+    ScheduleActivity apply(ScheduleActivity activity) {
+      final children = activity.children.map(apply).toList(growable: false);
+      final slice = sliceByActivityId[activity.id];
+      if (slice == null) {
+        return children.isEmpty
+            ? activity
+            : activity.copyWith(children: children);
+      }
+
+      updated++;
+      return activity.copyWith(
+        startDate: slice.start,
+        endDate: slice.finish,
+        duration: slice.start != null && slice.finish != null
+            ? slice.finish!.difference(slice.start!).inDays + 1
+            : activity.duration,
+        children: children,
+      );
+    }
+
+    final updatedRoots = schedule.activities.map(apply).toList(growable: false);
+    if (updated == 0) return 0;
+
+    _schedule = schedule.copyWith(
+      activities: updatedRoots,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return updated;
+  }
+
+  /// Cuts [window] into [count] contiguous slices, in order.
+  ///
+  /// The slices tile the window exactly: `i` starts at
+  /// `start + floor(i * days / count)` and finishes the day before
+  /// `start + floor((i + 1) * days / count)`, so the last slice ends on the
+  /// window's finish and no day is left over. Dividing by [count] rather than
+  /// by a rounded per-row length keeps the sum exact for any window that does
+  /// not divide evenly.
+  ///
+  /// Falls back to handing the whole window to every row when it cannot be cut:
+  /// no window, no start to anchor on, a single row, or a range too short to
+  /// give each row a day. When there are more rows than days the surplus rows
+  /// share a day — clamped so no row is ever handed an end date before its own
+  /// start, which is what the arithmetic alone would produce once a row's slice
+  /// rounds down to zero days.
+  static List<({DateTime? start, DateTime? finish})> _sliceWindow(
+      ({DateTime? start, DateTime? finish}) window, int count) {
+    if (count <= 0) return const [];
+    final whole = List<({DateTime? start, DateTime? finish})>.filled(
+        count, (start: window.start, finish: window.finish));
+    final start = window.start;
+    if (start == null) return whole;
+    final finish = window.finish;
+    final days = finish == null ? 0 : finish.difference(start).inDays + 1;
+    if (count == 1 || days <= 1) return whole;
+
+    return [
+      for (var i = 0; i < count; i++)
+        (
+          start: start.add(Duration(days: _sliceStartDay(i, days, count))),
+          finish: start.add(Duration(days: _sliceEndDay(i, days, count))),
+        ),
+    ];
+  }
+
+  /// Day offset, from the window's start, at which slice [i] begins.
+  static int _sliceStartDay(int i, int days, int count) {
+    final day = (i * days / count).floor();
+    return day.clamp(0, days - 1);
+  }
+
+  /// Day offset at which slice [i] finishes — never before its own start.
+  static int _sliceEndDay(int i, int days, int count) {
+    final startDay = _sliceStartDay(i, days, count);
+    final day = ((i + 1) * days / count).floor() - 1;
+    return day.clamp(startDay, days - 1);
+  }
+
+  /// Stamps a Cost Estimate line onto the schedule activity it prices, so the
+  /// schedule row can show that it is costed (and the estimate keeps pointing
+  /// back at the row that created it).
+  ///
+  /// Returns the activity's WBS node id when it has one, so the caller can link
+  /// the same line onto the WBS node and close the Schedule → Cost → WBS loop.
+  String? attachCostLineToActivity(String activityId, String costLineId) {
+    final schedule = _schedule;
+    if (schedule == null) return null;
+    final activity = findActivityById(schedule.activities, activityId);
+    if (activity == null) return null;
+
+    updateActivity(activity.id, activity.copyWith(costLineId: costLineId));
+
+    final nodeId = (activity.wbsNodeId ?? '').trim();
+    return nodeId.isEmpty ? null : nodeId;
+  }
+
+  /// Import AgileTask (story) records into the schedule as ScheduleActivity
+  /// entries, grouped under Feature/Epic summary activities. Only operates when
   /// the schedule delivery model is AGILE or HYBRID.
-  void importStoriesFromAgile({
+  ///
+  /// Idempotent by construction: a story whose `AgileTask.id` is already on the
+  /// schedule is skipped, and the epic/feature summary rows a previous import
+  /// created are reused (matched by name) instead of a second copy being
+  /// appended. Pressing "Import Agile Stories" twice therefore tops the
+  /// schedule up with whatever is new instead of doubling the whole backlog —
+  /// which is what the old append-always behaviour did.
+  ///
+  /// Story prerequisites are resolved into real finish-to-start dependencies,
+  /// so the stories are CPM-ready rather than a flat list.
+  ///
+  /// Returns what the run actually did; the caller reports those numbers
+  /// instead of guessing them from the input list.
+  AgileStoryImportSummary importStoriesFromAgile({
     required List<
             ({
               AgileTask story,
@@ -335,102 +910,228 @@ class ScheduleProvider extends ChangeNotifier {
             })>
         stories,
   }) {
-    if (_schedule == null || _schedule!.activities.isEmpty) return;
+    if (_schedule == null || _schedule!.activities.isEmpty) {
+      return const AgileStoryImportSummary();
+    }
     final dm = _schedule!.basis.deliveryModel;
-    if (dm != 'AGILE' && dm != 'HYBRID') return;
+    if (dm != 'AGILE' && dm != 'HYBRID') {
+      return const AgileStoryImportSummary();
+    }
 
     final root = _schedule!.activities[0];
 
-    // Build a map: epic title → feature title → list of stories
-    final Map<String, Map<String, List<AgileTask>>> grouped = {};
-    final Map<String, String?> sprintLabelByStoryId = {};
-    final Map<String, String?> releaseLabelByStoryId = {};
-    for (final entry in stories) {
-      grouped.putIfAbsent(entry.epicTitle, () => {});
-      grouped[entry.epicTitle]!.putIfAbsent(entry.featureTitle, () => []);
-      grouped[entry.epicTitle]![entry.featureTitle]!.add(entry.story);
-      sprintLabelByStoryId[entry.story.id] = entry.sprintLabel;
-      releaseLabelByStoryId[entry.story.id] = entry.releaseLabel;
+    // Every AgileTask id already on the schedule, plus the activity it landed
+    // on — the second map is what lets a new story depend on an old one.
+    final importedTaskIds = <String>{};
+    final activityIdByTaskId = <String, String>{};
+    for (final activity in ScheduleCpmService.flatten([root])) {
+      final taskId = (activity.agileTaskId ?? '').trim();
+      if (taskId.isEmpty) continue;
+      importedTaskIds.add(taskId);
+      activityIdByTaskId[taskId] = activity.id;
     }
 
-    // Build feature activities as children of epic activities
-    final List<ScheduleActivity> epicActivities = [];
-    for (final epicEntry in grouped.entries) {
-      final featureActivities = <ScheduleActivity>[];
+    // Group the stories this run will actually add: epic → feature → stories.
+    final pending = <String, Map<String, List<AgileTask>>>{};
+    final labels = <String, ({String? sprint, String? release})>{};
+    for (final entry in stories) {
+      labels[entry.story.id] = (
+        sprint: entry.sprintLabel,
+        release: entry.releaseLabel,
+      );
+      if (importedTaskIds.contains(entry.story.id)) continue;
+      pending.putIfAbsent(entry.epicTitle, () => {});
+      pending[entry.epicTitle]!.putIfAbsent(entry.featureTitle, () => []).add(
+            entry.story,
+          );
+    }
+
+    var storiesSkipped = 0;
+    for (final entry in stories) {
+      if (importedTaskIds.contains(entry.story.id)) storiesSkipped++;
+    }
+    if (pending.isEmpty) {
+      return AgileStoryImportSummary(storiesSkipped: storiesSkipped);
+    }
+
+    // Ids first, so a story can depend on one that is added later in the walk.
+    final pendingIds = <String, String>{};
+    for (final featureStories in pending.values) {
+      for (final storyList in featureStories.values) {
+        for (final story in storyList) {
+          pendingIds[story.id] = newSchedId('act');
+        }
+      }
+    }
+    final allStoryIds = {...activityIdByTaskId, ...pendingIds};
+
+    var epicsAdded = 0;
+    var epicsReused = 0;
+    var featuresAdded = 0;
+    var featuresReused = 0;
+    var storiesAdded = 0;
+
+    // Summary rows a previous import created hold at least one story beneath
+    // them; that is what tells them apart from a planner-authored summary that
+    // merely shares a name.
+    final reusableEpics = <String, ScheduleActivity>{};
+    for (final child in _storyBearingSummaries(root.children)) {
+      reusableEpics.putIfAbsent(itemNameKey(child.name), () => child);
+    }
+
+    var epicChildren = [...root.children];
+    for (final epicEntry in pending.entries) {
+      final existingEpic = reusableEpics[itemNameKey(epicEntry.key)];
+
+      final reusableFeatures = <String, ScheduleActivity>{};
+      if (existingEpic != null) {
+        for (final child in _storyBearingSummaries(existingEpic.children)) {
+          reusableFeatures.putIfAbsent(itemNameKey(child.name), () => child);
+        }
+      }
+
+      var featureChildren = existingEpic?.children ?? <ScheduleActivity>[];
+      var epicGrew = false;
+
       for (final featureEntry in epicEntry.value.entries) {
-        final storyActivities = featureEntry.value.map((s) {
+        final storyActivities = featureEntry.value.map((story) {
+          final labelsForStory = labels[story.id];
+          final dependencies = <ActivityDependency>[];
+          for (final prerequisiteId in story.dependencyTaskIds) {
+            final targetId = allStoryIds[prerequisiteId];
+            // A prerequisite that is not on the schedule (or is this story) is
+            // left out rather than written as a link CPM would report missing.
+            if (targetId == null || targetId == pendingIds[story.id]) continue;
+            dependencies.add(ActivityDependency(
+              activityId: targetId,
+              type: DependencyType.finishToStart,
+            ));
+          }
           return ScheduleActivity(
-            id: newSchedId('act'),
+            id: pendingIds[story.id]!,
             level: 4,
             code: '',
-            name: s.userStory,
+            name: story.userStory,
             description:
-                s.taskDescription.isNotEmpty ? s.taskDescription : null,
+                story.taskDescription.isNotEmpty ? story.taskDescription : null,
             type: ActivityType.activity,
             domain: ScheduleDomain.execution,
             duration: null,
-            dependencies: [],
-            storyPoints: s.storyPoints.toDouble(),
-            sprintId: s.plannedSprintId.isNotEmpty ? s.plannedSprintId : null,
-            releaseId:
-                s.plannedReleaseId.isNotEmpty ? s.plannedReleaseId : null,
+            dependencies: dependencies,
+            storyPoints: story.storyPoints.toDouble(),
+            sprintId:
+                story.plannedSprintId.isNotEmpty ? story.plannedSprintId : null,
+            releaseId: story.plannedReleaseId.isNotEmpty
+                ? story.plannedReleaseId
+                : null,
             agileEpicTitle: epicEntry.key,
             agileFeatureTitle: featureEntry.key,
-            sprintLabel: sprintLabelByStoryId[s.id],
-            releaseLabel: releaseLabelByStoryId[s.id],
+            sprintLabel: labelsForStory?.sprint,
+            releaseLabel: labelsForStory?.release,
             estimationMethod: EstimationMethod.storyPoints,
             aiGenerated: false,
             children: [],
-            agileTaskId: s.id,
-            wbsNodeId: s.wbsId.isNotEmpty ? s.wbsId : null,
+            agileTaskId: story.id,
+            wbsNodeId: story.wbsId.isNotEmpty ? story.wbsId : null,
             importSource: 'agile_story',
             definitionOfReady: _schedule!.basis.definitionOfReady,
             definitionOfDone: _schedule!.basis.definitionOfDone,
-            prerequisites: s.dependencyTaskIds.isEmpty
+            prerequisites: story.dependencyTaskIds.isEmpty
                 ? null
-                : List<String>.from(s.dependencyTaskIds),
+                : List<String>.from(story.dependencyTaskIds),
           );
         }).toList();
 
-        featureActivities.add(
+        storiesAdded += storyActivities.length;
+        epicGrew = true;
+
+        final existingFeature = reusableFeatures[itemNameKey(featureEntry.key)];
+        if (existingFeature != null) {
+          featureChildren = featureChildren
+              .map((child) => child.id == existingFeature.id
+                  ? child.copyWith(
+                      children: [...child.children, ...storyActivities])
+                  : child)
+              .toList();
+          featuresReused++;
+        } else {
+          featureChildren = [
+            ...featureChildren,
+            ScheduleActivity(
+              id: newSchedId('act'),
+              level: 3,
+              code: '',
+              name: featureEntry.key,
+              type: ActivityType.summary,
+              domain: ScheduleDomain.execution,
+              dependencies: [],
+              aiGenerated: false,
+              importSource: 'agile_story',
+              children: storyActivities,
+            ),
+          ];
+          featuresAdded++;
+        }
+      }
+
+      if (!epicGrew) continue;
+
+      if (existingEpic != null) {
+        epicChildren = epicChildren
+            .map((child) => child.id == existingEpic.id
+                ? child.copyWith(children: featureChildren)
+                : child)
+            .toList();
+        epicsReused++;
+      } else {
+        epicChildren = [
+          ...epicChildren,
           ScheduleActivity(
             id: newSchedId('act'),
-            level: 3,
+            level: 2,
             code: '',
-            name: featureEntry.key,
+            name: epicEntry.key,
             type: ActivityType.summary,
             domain: ScheduleDomain.execution,
             dependencies: [],
             aiGenerated: false,
-            children: storyActivities,
+            importSource: 'agile_story',
+            children: featureChildren,
           ),
-        );
+        ];
+        epicsAdded++;
       }
-
-      epicActivities.add(
-        ScheduleActivity(
-          id: newSchedId('act'),
-          level: 2,
-          code: '',
-          name: epicEntry.key,
-          type: ActivityType.summary,
-          domain: ScheduleDomain.execution,
-          dependencies: [],
-          aiGenerated: false,
-          children: featureActivities,
-        ),
-      );
     }
 
-    final updatedRoot = recalcActivityCodes(root.copyWith(
-      children: [...root.children, ...epicActivities],
-    ));
+    final updatedRoot =
+        recalcActivityCodes(root.copyWith(children: epicChildren));
     _schedule = _schedule!.copyWith(
       activities: [updatedRoot],
       updatedAt: DateTime.now(),
     );
     notifyListeners();
     _saveToStorage();
+    return AgileStoryImportSummary(
+      epicsAdded: epicsAdded,
+      epicsReused: epicsReused,
+      featuresAdded: featuresAdded,
+      featuresReused: featuresReused,
+      storiesAdded: storiesAdded,
+      storiesSkipped: storiesSkipped,
+    );
+  }
+
+  /// The summary rows among [nodes] that an agile import created — a summary
+  /// with at least one story beneath it. A summary with no stories is the
+  /// planner's own and is never claimed by an import.
+  List<ScheduleActivity> _storyBearingSummaries(List<ScheduleActivity> nodes) {
+    return nodes
+        .where((node) =>
+            node.type == ActivityType.summary &&
+            itemNameKey(node.name).isNotEmpty &&
+            ScheduleCpmService.flatten([node])
+                .any((a) => (a.agileTaskId ?? '').trim().isNotEmpty))
+        .toList();
   }
 
   // ─── Review ─────────────────────────────────────────────────────────────
@@ -568,6 +1269,80 @@ class ScheduleProvider extends ChangeNotifier {
     );
   }
 
+  /// Collapses copies of the same activity across the whole tree, keeping the
+  /// first — see [dedupeScheduleItems] for what counts as a copy.
+  ///
+  /// A dropped copy's children are lifted onto the survivor so nothing is lost
+  /// when the copy happened to be a summary node. The project root is exempt:
+  /// it is the container, not a list item.
+  List<ScheduleActivity> _dedupeActivityNames(List<ScheduleActivity> roots) {
+    List<ScheduleActivity> walk(List<ScheduleActivity> nodes) {
+      final prepared = <ScheduleActivity>[];
+      for (final node in nodes) {
+        final children = walk(node.children);
+        prepared
+            .add(children.isEmpty ? node : node.copyWith(children: children));
+      }
+
+      final kept = <ScheduleActivity>[];
+      for (final node in prepared) {
+        final identity = scheduleItemIdentity(node);
+        final index = kept.indexWhere((candidate) => isDuplicateScheduleItem(
+              name: candidate.name,
+              identity: scheduleItemIdentity(candidate),
+              otherName: node.name,
+              otherIdentity: identity,
+            ));
+        if (index < 0) {
+          kept.add(node);
+          continue;
+        }
+        // A copy was dropped: hand its children to the record it duplicates so
+        // no work is lost when the copy happened to be a summary node.
+        if (node.children.isNotEmpty) {
+          final survivor = kept[index];
+          kept[index] = survivor.copyWith(
+            children: [...survivor.children, ...node.children],
+          );
+        }
+      }
+      return kept;
+    }
+
+    return walk(roots);
+  }
+
+  /// The id of the activity [name] would duplicate, or null when the name is
+  /// free. Blank names never match, so unnamed rows are not folded together.
+  String? _idOfActivityNamed(String name, {String? ignoreId}) {
+    final key = itemNameKey(name);
+    if (key.isEmpty) return null;
+    String? found;
+    void walk(List<ScheduleActivity> nodes) {
+      for (final node in nodes) {
+        if (found != null) return;
+        if (node.level > 0 && node.id != ignoreId) {
+          if (isDuplicateScheduleItem(
+            name: node.name,
+            identity: scheduleItemIdentity(node),
+            otherName: name,
+            otherIdentity: null,
+          )) {
+            found = node.id;
+            return;
+          }
+        }
+        walk(node.children);
+      }
+    }
+
+    for (final root in _schedule?.activities ?? const <ScheduleActivity>[]) {
+      walk([root]);
+      if (found != null) return found;
+    }
+    return null;
+  }
+
   ScheduleActivity _findAndRemove(ScheduleActivity root, String id) {
     return root.copyWith(
       children: root.children
@@ -609,4 +1384,34 @@ class ScheduleProvider extends ChangeNotifier {
         children:
             root.children.map((c) => _swapInTree(c, id, directionUp)).toList());
   }
+}
+
+/// What one `importStoriesFromAgile` run actually did.
+///
+/// The caller shows these numbers to the user. The import used to report
+/// nothing and the screen guessed at what had happened from the input list,
+/// which is how a re-import could claim "40 already imported" moments after it
+/// had created them.
+class AgileStoryImportSummary {
+  final int epicsAdded;
+  final int epicsReused;
+  final int featuresAdded;
+  final int featuresReused;
+  final int storiesAdded;
+  final int storiesSkipped;
+
+  const AgileStoryImportSummary({
+    this.epicsAdded = 0,
+    this.epicsReused = 0,
+    this.featuresAdded = 0,
+    this.featuresReused = 0,
+    this.storiesAdded = 0,
+    this.storiesSkipped = 0,
+  });
+
+  /// True when the run had nothing to add.
+  bool get isEmpty => storiesAdded == 0;
+
+  /// Rows added to the tree by this run.
+  int get rowsAdded => epicsAdded + featuresAdded + storiesAdded;
 }

@@ -1,22 +1,116 @@
-name: Deploy Firestore Rules
+name: Deploy Firestore Rules (Production)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger: MANUAL DISPATCH ONLY.
+#
+# Firestore Security Rules gate every read/write to the production Firebase
+# project (ndu-d3f60). A bad rule change can leak all user data instantly —
+# so rule deploys MUST be a deliberate, human-approved action.
+#
+# This workflow used to auto-fire on any push to main/staging that touched
+# firestore.rules. That was unsafe: any collaborator with push rights could
+# rewrite prod security posture with no review (CRITICAL audit finding #4).
+#
+# Safety layers now applied:
+#   1. Repo-scope guard  — only runs when triggered on Ndu-Project-LLC/NDU-Project
+#   2. Silent-actor gate — skips for bots in the SILENT_ACTORS repo variable
+#   3. Confirmation input — operator must type "deploy" to confirm intent
+#   4. Production environment gate — required reviewers must approve in GitHub
+#      before any deploy step runs (configured under repo Settings → Environments → production)
+#   5. Least-privilege permissions — only `contents: read`; no write scopes
+#
+# Usage:
+#   Actions tab → "Deploy Firestore Rules (Production)" → Run workflow →
+#   type "deploy" → click Run → wait for reviewer email → approve.
+# ─────────────────────────────────────────────────────────────────────────────
 
 on:
-  push:
-    branches: [ main, staging ]
-    paths:
-      - 'firestore.rules'
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: "Type 'deploy' to confirm deploying firestore.rules to production (ndu-d3f60)"
+        required: true
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-firestore-rules-production
+  cancel-in-progress: false
 
 jobs:
-  deploy-rules:
+  pre-check:
+    name: Pre-check (repo scope + confirmation)
     runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+      actor: ${{ github.actor }}
+    steps:
+      - id: check
+        run: |
+          set -eu
+
+          # Repo-scope guard — only the canonical NDU-Project repo is allowed.
+          if [ "${{ github.repository }}" != "Ndu-Project-LLC/NDU-Project" ]; then
+            echo "::notice::Refusing to run outside Ndu-Project-LLC/NDU-Project (was ${{ github.repository }})."
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Silent-actor gate.
+          ACTOR="${{ github.actor }}"
+          SILENT="${{ vars.SILENT_ACTORS }}"
+          if [ -n "$SILENT" ] && echo ",$SILENT," | grep -iq ",$ACTOR,"; then
+            echo "::notice::Skipping workflow — @$ACTOR is in SILENT_ACTORS."
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Confirmation input guard.
+          if [ "${{ inputs.confirm_deploy }}" != "deploy" ]; then
+            echo "::error::Confirmation string missing or incorrect. Type 'deploy' in the confirm_deploy input to proceed."
+            exit 1
+          fi
+
+          echo "should_skip=false" >> "$GITHUB_OUTPUT"
+          echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+
+  deploy-rules:
+    name: Deploy firestore.rules to production (requires approval)
+    needs: pre-check
+    if: needs.pre-check.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      # Required reviewers must approve here before any deploy step runs.
+      # Configured under repo Settings → Environments → production.
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Sanity check — firestore.rules exists and is non-empty
+        run: |
+          if [ ! -s firestore.rules ]; then
+            echo "::error::firestore.rules is missing or empty. Refusing to deploy."
+            exit 1
+          fi
+          echo "firestore.rules present ($(wc -l < firestore.rules) lines)."
+
+      - name: Show rule diff against production HEAD (informational)
+        run: |
+          echo "Rules to be deployed:"
+          cat firestore.rules
+
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
-      
+
       - name: Deploy Firestore Rules
         run: firebase deploy --only firestore:rules --project ndu-d3f60
         env:
           FIREBASE_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
           GOOGLE_APPLICATION_CREDENTIALS: ""
+
+      - name: Post-deploy notice
+        run: |
+          echo "::notice::firestore.rules deployed to production Firebase project ndu-d3f60 by @${{ github.actor }} (SHA ${{ github.sha }})."

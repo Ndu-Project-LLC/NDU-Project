@@ -18,6 +18,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 
 /// Represents a single unfinished work item on the current page.
 class UnfinishedItem {
@@ -88,7 +89,7 @@ Future<bool> showUnfinishedWorkDialog(
   BuildContext context, {
   required List<UnfinishedItem> items,
 }) async {
-  final result = await showDialog<bool>(
+  final result = await showAppDialog<bool>(
     context: context,
     barrierDismissible: true,
     builder: (context) => _UnfinishedWorkDialog(items: items),
@@ -289,7 +290,7 @@ class _UnfinishedWorkDialog extends StatelessWidget {
 
   Widget _severityDot(UnfinishedSeverity severity) {
     final color = switch (severity) {
-      UnfinishedSeverity.info => const Color(0xFF3B82F6),
+      UnfinishedSeverity.info => const Color(0xFFFFC812),
       UnfinishedSeverity.warning => const Color(0xFFF59E0B),
       UnfinishedSeverity.blocking => const Color(0xFFEF4444),
     };

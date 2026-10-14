@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -15,7 +16,7 @@ class MilestoneItemLinkageService {
     required WorkPackage workPackage,
     required List<Milestone> allMilestones,
   }) async {
-    final picked = await showDialog<List<String>>(
+    final picked = await showAppDialog<List<String>>(
       context: context,
       builder: (ctx) => MilestonePickerDialog(
         title: 'Link Milestones — ${workPackage.title}',
@@ -35,7 +36,7 @@ class MilestoneItemLinkageService {
     required AgileTask task,
     required List<Milestone> allMilestones,
   }) async {
-    final picked = await showDialog<List<String>>(
+    final picked = await showAppDialog<List<String>>(
       context: context,
       builder: (ctx) => MilestonePickerDialog(
         title: 'Link Milestones — ${task.userStory}',

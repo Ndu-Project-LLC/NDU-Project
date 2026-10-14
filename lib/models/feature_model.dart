@@ -1,3 +1,5 @@
+import 'package:ndu_project/utils/unique_id.dart';
+
 class Feature {
   final String id;
   String title;
@@ -48,7 +50,7 @@ class Feature {
     List<String>? scopeTrackingItemIds,
     this.weight = 0,
     this.percentComplete = 0,
-  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+  })  : id = id ?? newId(),
         scopeTrackingItemIds = scopeTrackingItemIds ?? [];
 
   Feature copyWith({
@@ -111,7 +113,7 @@ class Feature {
 
     return Feature(
       id: json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+          newId(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       epicId: json['epicId']?.toString() ?? '',

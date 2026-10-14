@@ -1,0 +1,1083 @@
+import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
+import 'package:ndu_project/theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/draggable_sidebar.dart';
+import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
+
+/// ═══════════════════════════════════════════════════════════════════════════
+/// RECOGNITION & AWARDS
+/// ═══════════════════════════════════════════════════════════════════════════
+///
+/// Celebrate project achievements by recognizing individuals and teams for
+/// outstanding contributions throughout the project lifecycle.
+class RecognitionAwardsScreen extends StatefulWidget {
+  const RecognitionAwardsScreen({super.key});
+
+  static void open(BuildContext context) {
+    context.push('/recognition-awards');
+  }
+
+  @override
+  State<RecognitionAwardsScreen> createState() =>
+      _RecognitionAwardsScreenState();
+}
+
+class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
+  bool _isLoading = true;
+  bool _hasLoaded = false;
+  List<_Recognition> _recognitions = [];
+  final TextEditingController _quickRecipientController =
+      SpellCheckTextEditingController();
+  final TextEditingController _quickTeamController = SpellCheckTextEditingController();
+  final TextEditingController _quickCommentsController =
+      SpellCheckTextEditingController();
+  String _quickCategory = _awardCategories.first;
+  String _quickStatus = 'Nominated';
+
+  String? get _projectId => ProjectDataHelper.getData(context).projectId;
+
+  static const List<String> _awardCategories = [
+    'Project Excellence',
+    'Delivery Champion',
+    'Collaboration Award',
+    'Innovation Award',
+    'Customer Impact Award',
+    'Leadership Excellence',
+    'Problem Solver Award',
+    'Rising Star',
+    'Quality Excellence',
+    'Continuous Improvement Champion',
+  ];
+
+  static const List<String> _recognitionTypes = [
+    'Milestone Achievement',
+    'Innovation Award',
+    'Collaboration Award',
+    'Leadership Recognition',
+    'Knowledge Sharing Award',
+    'Customer Appreciation',
+    'Team Success Award',
+    'Project Completion Recognition',
+  ];
+
+  static const List<String> _statuses = [
+    'Nominated',
+    'Approved',
+    'Rejected',
+    'Awarded',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
+  void dispose() {
+    _quickRecipientController.dispose();
+    _quickTeamController.dispose();
+    _quickCommentsController.dispose();
+    super.dispose();
+  }
+
+  void _submitQuickRecognition() {
+    final recipient = _quickRecipientController.text.trim();
+    if (recipient.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a recipient name to continue.')),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final date =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    setState(() {
+      _recognitions.insert(
+        0,
+        _Recognition(
+          category: _quickCategory,
+          type: _recognitionTypes.first,
+          recipient: recipient,
+          team: _quickTeamController.text.trim(),
+          nominatedBy: '',
+          date: date,
+          evidence: '',
+          comments: _quickCommentsController.text.trim(),
+          linkedMilestone: '',
+          status: _quickStatus,
+        ),
+      );
+      _quickRecipientController.clear();
+      _quickTeamController.clear();
+      _quickCommentsController.clear();
+      _quickCategory = _awardCategories.first;
+      _quickStatus = 'Nominated';
+    });
+    _saveData();
+  }
+
+  Future<void> _loadData() async {
+    if (_hasLoaded || _projectId == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(_projectId!)
+          .collection('execution_phase_entries')
+          .doc('recognition_awards')
+          .get();
+      final data = doc.data() ?? {};
+      final list = data['recognitions'] as List? ?? [];
+      _recognitions = list
+          .map((e) => _Recognition.fromMap(e as Map<String, dynamic>))
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasLoaded = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Recognition Awards load error: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveData() async {
+    if (_projectId == null) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(_projectId!)
+          .collection('execution_phase_entries')
+          .doc('recognition_awards')
+          .set({
+        'recognitions': _recognitions.map((r) => r.toMap()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Recognition Awards save error: $e');
+    }
+  }
+
+  void _addRecognition() {
+    _showRecognitionDialog();
+  }
+
+  void _editRecognition(int index) {
+    _showRecognitionDialog(editIndex: index, existing: _recognitions[index]);
+  }
+
+  void _deleteRecognition(int index) {
+    showAppDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Recognition'),
+        content:
+            const Text('Are you sure you want to delete this recognition?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              setState(() => _recognitions.removeAt(index));
+              _saveData();
+              showDeleteSuccessSnackBar(context, itemLabel: 'Recognition');
+              Navigator.of(ctx).pop();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showRecognitionDialog(
+      {int? editIndex, _Recognition? existing}) async {
+    final categoryCtrl = SpellCheckTextEditingController(
+        text: existing?.category ?? _awardCategories.first);
+    final recipientCtrl =
+        SpellCheckTextEditingController(text: existing?.recipient ?? '');
+    final teamCtrl = SpellCheckTextEditingController(text: existing?.team ?? '');
+    final nominatedByCtrl =
+        SpellCheckTextEditingController(text: existing?.nominatedBy ?? '');
+    final dateCtrl = SpellCheckTextEditingController(text: existing?.date ?? '');
+    final evidenceCtrl = SpellCheckTextEditingController(text: existing?.evidence ?? '');
+    final commentsCtrl = SpellCheckTextEditingController(text: existing?.comments ?? '');
+    final linkedMilestoneCtrl =
+        SpellCheckTextEditingController(text: existing?.linkedMilestone ?? '');
+    String status = existing?.status ?? 'Nominated';
+    String type = existing?.type ?? _recognitionTypes.first;
+
+    try {
+      await showAppDialog(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: Text(
+                editIndex != null ? 'Edit Recognition' : 'New Recognition'),
+            content: SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _dialogDropdown(
+                        'Award Category', categoryCtrl, _awardCategories),
+                    const SizedBox(height: 12),
+                    _dialogDropdown('Recognition Type', null, _recognitionTypes,
+                        value: type,
+                        onChanged: (v) => setDialogState(() => type = v!)),
+                    const SizedBox(height: 12),
+                    _dialogField('Recipient Name', recipientCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField('Team', teamCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField('Nominated By', nominatedByCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField('Date', dateCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField(
+                        'Linked Milestone/Deliverable', linkedMilestoneCtrl),
+                    const SizedBox(height: 12),
+                    _dialogDropdown('Status', null, _statuses,
+                        value: status,
+                        onChanged: (v) => setDialogState(() => status = v!)),
+                    const SizedBox(height: 12),
+                    _dialogField('Evidence', evidenceCtrl, maxLines: 2),
+                    const SizedBox(height: 12),
+                    _dialogField('Comments', commentsCtrl, maxLines: 3),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final recognition = _Recognition(
+                    category: categoryCtrl.text,
+                    type: type,
+                    recipient: recipientCtrl.text,
+                    team: teamCtrl.text,
+                    nominatedBy: nominatedByCtrl.text,
+                    date: dateCtrl.text,
+                    evidence: evidenceCtrl.text,
+                    comments: commentsCtrl.text,
+                    linkedMilestone: linkedMilestoneCtrl.text,
+                    status: status,
+                  );
+                  setState(() {
+                    if (editIndex != null) {
+                      _recognitions[editIndex] = recognition;
+                    } else {
+                      _recognitions.add(recognition);
+                    }
+                  });
+                  _saveData();
+                  Navigator.of(ctx).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B)),
+                child:
+                    const Text('Save', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      categoryCtrl.dispose();
+      recipientCtrl.dispose();
+      teamCtrl.dispose();
+      nominatedByCtrl.dispose();
+      dateCtrl.dispose();
+      evidenceCtrl.dispose();
+      commentsCtrl.dispose();
+      linkedMilestoneCtrl.dispose();
+    }
+  }
+
+  Widget _dialogField(String label, TextEditingController controller,
+      {int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            contentPadding: EdgeInsets.all(10),
+          ),
+          style: const TextStyle(fontSize: 13),
+        ),
+      ],
+    );
+  }
+
+  Widget _dialogDropdown(
+      String label, TextEditingController? controller, List<String> items,
+      {String? value, ValueChanged<String?>? onChanged}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          initialValue: value ?? (controller?.text),
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
+          onChanged: onChanged ??
+              (v) {
+                if (v != null && controller != null) controller.text = v;
+              },
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          ),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isMobile = AppBreakpoints.isMobile(context);
+    final double horizontalPadding = isMobile ? 18 : 32;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DraggableSidebar(
+              openWidth: AppBreakpoints.sidebarWidth(context),
+              child: const InitiationLikeSidebar(
+                  activeItemLabel:
+                      'Project Team Activities - Recognition & Awards'),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding, vertical: 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_isLoading)
+                          const LinearProgressIndicator(minHeight: 2),
+                        if (_isLoading) const SizedBox(height: 16),
+                        const PlanningPhaseHeader(
+                          title: 'Recognition & Awards',
+                          showNavigationButtons: false,
+                          showActivityLogAction: false,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildIntroCard(),
+                        const SizedBox(height: 24),
+                        _buildQuickEntryForm(),
+                        const SizedBox(height: 24),
+                        _buildStatsRow(),
+                        const SizedBox(height: 24),
+                        _buildCategoriesChips(),
+                        const SizedBox(height: 24),
+                        _buildRecognitionsList(),
+                        const SizedBox(height: 48),
+                      ],
+                    ),
+                  ),
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
+                      activeItemLabel:
+                          'Project Team Activities - Recognition & Awards',
+                    ),
+                  ),
+                  const KazAiChatBubble(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addRecognition,
+        backgroundColor: const Color(0xFFF59E0B),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('New Recognition'),
+      ),
+    bottomNavigationBar: const SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: PageNavigationFooter(
+          checkpoint: 'recognition_awards',
+          pageTitle: 'Recognition Awards',
+          showBorders: false,
+        ),
+      ),
+    ),
+    );
+  }
+
+  Widget _buildIntroCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.emoji_events,
+                    color: Color(0xFFD97706), size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Celebrate Project Achievements',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Recognize individuals and teams for outstanding contributions throughout the project lifecycle. '
+            'Reinforces positive behaviors, improves engagement, and fosters a culture of accountability, '
+            'collaboration, and continuous improvement.',
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickEntryForm() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Add Recognition',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Capture a nomination now. Use “New Recognition” for the full evidence and milestone form.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 18),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stacked = constraints.maxWidth < 760;
+              final fields = [
+                _quickTextField(
+                  label: 'Recipient name',
+                  controller: _quickRecipientController,
+                  hint: 'e.g. Jane Banda',
+                ),
+                _quickTextField(
+                  label: 'Team',
+                  controller: _quickTeamController,
+                  hint: 'e.g. Delivery Team',
+                ),
+              ];
+              if (stacked) {
+                return Column(
+                  children: [fields[0], const SizedBox(height: 14), fields[1]],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: fields[0]),
+                  const SizedBox(width: 16),
+                  Expanded(child: fields[1]),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final category = _quickDropdown(
+                label: 'Award category',
+                value: _quickCategory,
+                items: _awardCategories,
+                onChanged: (value) =>
+                    setState(() => _quickCategory = value ?? _quickCategory),
+              );
+              final status = _quickDropdown(
+                label: 'Status',
+                value: _quickStatus,
+                items: _statuses,
+                onChanged: (value) =>
+                    setState(() => _quickStatus = value ?? _quickStatus),
+              );
+              if (constraints.maxWidth < 760) {
+                return Column(
+                  children: [category, const SizedBox(height: 14), status],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: category),
+                  const SizedBox(width: 16),
+                  Expanded(child: status),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          _quickTextField(
+            label: 'Recognition note',
+            controller: _quickCommentsController,
+            hint: 'Describe the contribution and its impact…',
+            maxLines: 3,
+          ),
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _submitQuickRecognition,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Add recognition'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickTextField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: _quickInputDecoration(hint),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+        ),
+      ],
+    );
+  }
+
+  Widget _quickDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          key: ValueKey('$label-$value'),
+          initialValue: value,
+          isExpanded: true,
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
+          onChanged: onChanged,
+          decoration: _quickInputDecoration('Select an option'),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _quickInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 1.6),
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
+    final awarded = _recognitions.where((r) => r.status == 'Awarded').length;
+    final nominated =
+        _recognitions.where((r) => r.status == 'Nominated').length;
+    final approved = _recognitions.where((r) => r.status == 'Approved').length;
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final isWide = constraints.maxWidth > 900;
+      final stats = [
+        _StatCard('Total Recognitions', '${_recognitions.length}',
+            Icons.emoji_events, const Color(0xFFF59E0B)),
+        _StatCard(
+            'Awarded', '$awarded', Icons.verified, const Color(0xFF10B981)),
+        _StatCard('Approved', '$approved', Icons.check_circle,
+            const Color(0xFFFFC812)),
+        _StatCard(
+            'Nominated', '$nominated', Icons.star, const Color(0xFFB8860B)),
+      ];
+      if (isWide) {
+        return Row(
+          children: [
+            for (int i = 0; i < stats.length; i++) ...[
+              Expanded(child: stats[i]),
+              if (i < stats.length - 1) const SizedBox(width: 16),
+            ],
+          ],
+        );
+      }
+      return Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        children: stats
+            .map((s) => SizedBox(
+                  width: (constraints.maxWidth - 16) / 2,
+                  child: s,
+                ))
+            .toList(),
+      );
+    });
+  }
+
+  Widget _buildCategoriesChips() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Sample Award Categories',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827))),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _awardCategories.map((cat) {
+              return Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.emoji_events,
+                        color: Colors.white, size: 14),
+                    const SizedBox(width: 6),
+                    Text(cat,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecognitionsList() {
+    if (_recognitions.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(48),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.emoji_events_outlined,
+                size: 48, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text('No recognitions yet',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280))),
+            const SizedBox(height: 8),
+            const Text('Click "New Recognition" to nominate someone',
+                style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF))),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Recognition History',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827))),
+        const SizedBox(height: 16),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _recognitions.length,
+          itemBuilder: (context, index) {
+            final r = _recognitions[index];
+            return RepaintBoundary(
+              key: ValueKey('recognition_card_$index'),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildRecognitionCard(index, r),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecognitionCard(int index, _Recognition r) {
+    final statusColor = r.status == 'Awarded'
+        ? const Color(0xFF10B981)
+        : r.status == 'Approved'
+            ? const Color(0xFFFFC812)
+            : r.status == 'Rejected'
+                ? const Color(0xFFEF4444)
+                : const Color(0xFFB8860B);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.emoji_events,
+                    color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(r.category,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827))),
+                    const SizedBox(height: 2),
+                    Text(
+                        '${r.recipient}${r.team.isNotEmpty ? ' • ${r.team}' : ''}',
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFF6B7280))),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(r.status,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor)),
+              ),
+            ],
+          ),
+          if (r.comments.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(r.comments,
+                  style: const TextStyle(
+                      fontSize: 13, color: Color(0xFF4B5563), height: 1.5)),
+            ),
+          ],
+          if (r.nominatedBy.isNotEmpty || r.date.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${r.nominatedBy.isNotEmpty ? 'Nominated by ${r.nominatedBy}' : ''}'
+              '${r.nominatedBy.isNotEmpty && r.date.isNotEmpty ? ' • ' : ''}'
+              '${r.date.isNotEmpty ? r.date : ''}',
+              style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                onPressed: () => _editRecognition(index),
+                tooltip: 'Edit',
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline,
+                    size: 18, color: Colors.redAccent),
+                onPressed: () => _deleteRecognition(index),
+                tooltip: 'Delete',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _StatCard(this.label, this.value, this.icon, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111827))),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 11, color: Color(0xFF6B7280))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Recognition {
+  final String category;
+  final String type;
+  final String recipient;
+  final String team;
+  final String nominatedBy;
+  final String date;
+  final String evidence;
+  final String comments;
+  final String linkedMilestone;
+  final String status;
+
+  _Recognition({
+    required this.category,
+    required this.type,
+    required this.recipient,
+    required this.team,
+    required this.nominatedBy,
+    required this.date,
+    required this.evidence,
+    required this.comments,
+    required this.linkedMilestone,
+    required this.status,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'category': category,
+        'type': type,
+        'recipient': recipient,
+        'team': team,
+        'nominatedBy': nominatedBy,
+        'date': date,
+        'evidence': evidence,
+        'comments': comments,
+        'linkedMilestone': linkedMilestone,
+        'status': status,
+      };
+
+  factory _Recognition.fromMap(Map<String, dynamic> m) => _Recognition(
+        category: m['category'] ?? '',
+        type: m['type'] ?? '',
+        recipient: m['recipient'] ?? '',
+        team: m['team'] ?? '',
+        nominatedBy: m['nominatedBy'] ?? '',
+        date: m['date'] ?? '',
+        evidence: m['evidence'] ?? '',
+        comments: m['comments'] ?? '',
+        linkedMilestone: m['linkedMilestone'] ?? '',
+        status: m['status'] ?? 'Nominated',
+      );
+}

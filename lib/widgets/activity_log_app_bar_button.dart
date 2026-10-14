@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/project/project_activities_log_screen.dart';
 
 /// A reusable activity-log button that can be dropped into any AppBar's
 /// `actions` list. Opens the full [ProjectActivitiesLogScreen] when tapped.

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/ai_error_message.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 /// Generic AI Assist helper that generates contextual content for any screen.
@@ -25,7 +27,7 @@ class AiAssistHelper {
     int maxTokens = 1000,
   }) async {
     // Show loading dialog
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
@@ -95,7 +97,7 @@ IMPORTANT RULES:
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI Assist failed: $e'),
+            content: Text('AI Assist failed: ${aiErrorMessage(e)}'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: const Color(0xFFEF4444),
           ),
@@ -110,7 +112,7 @@ IMPORTANT RULES:
     String sectionLabel,
     String content,
   ) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Row(

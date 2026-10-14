@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
 class PremiumEditDialog extends StatelessWidget {
@@ -26,7 +27,7 @@ class PremiumEditDialog extends StatelessWidget {
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 12,
-      backgroundColor: Colors.white,
+      backgroundColor: modalSurface(context),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 550),
         child: Column(
@@ -37,9 +38,8 @@ class PremiumEditDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: const BoxDecoration(
-                color: Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                color: ModalColors.surface,
+                border: Border(bottom: BorderSide(color: ModalColors.border)),
               ),
               child: Row(
                 children: [
@@ -86,10 +86,8 @@ class PremiumEditDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
-                color: Color(0xFFF9FAFB),
-                borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(20)),
-                border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                color: ModalColors.surface,
+                border: Border(top: BorderSide(color: ModalColors.border)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -156,9 +154,9 @@ class PremiumEditDialog extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ModalColors.field,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFFD1D5DB)),
+        border: Border.all(color: ModalColors.border),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: VoiceTextField(

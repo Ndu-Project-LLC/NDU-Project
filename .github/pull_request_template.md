@@ -17,6 +17,7 @@
 - [ ] Code has been tested locally
 - [ ] No breaking changes (or breaking changes are documented)
 - [ ] CODEOWNERS review requested
+- [ ] Staging deploy uses `scripts/deploy_to_staging.sh` (pre-validates via CI)
 
 ---
 

@@ -213,7 +213,7 @@ class TierPricingConfig {
       maxUsers:
           (data['maxUsers'] as num?)?.toInt() ?? _defaultFor(id).maxUsers,
       addonPricePerRole:
-          parseAddons(data['addonPricePerRole']) ?? _defaultFor(id).addonPricePerRole,
+          parseAddons(data['addonPricePerRole']),
       features: (data['features'] as List?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -277,8 +277,8 @@ class AddonUserSelection {
   /// given a tier's per-role add-on prices.
   double monthlyAddonCost(TierPricingConfig tier) {
     double sum = 0;
-    counts.forEach((role, count) {
-      sum += (tier.addonPricePerRole[role] ?? 0) * count;
+    counts.forEach((role, qty) {
+      sum += (tier.addonPricePerRole[role] ?? 0) * qty;
     });
     return sum;
   }
@@ -320,7 +320,9 @@ class SubscriptionPricingConfig {
       );
 
   TierPricingConfig tier(PricingTierId id) =>
-      tiers[id] ?? TierPricingConfig.defaults.firstWhere((t) => t.id == id);
+      tiers[id] ??
+      TierPricingConfig.defaults.where((t) => t.id == id).firstOrNull ??
+      tiers.values.first;
 
   Map<String, dynamic> toFirestore() => {
         'currencyCode': currencyCode,

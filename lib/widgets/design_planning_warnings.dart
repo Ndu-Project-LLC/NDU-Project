@@ -63,8 +63,8 @@ class DesignPlanningWarningsWidget extends StatelessWidget {
         icon = Icons.warning_amber_rounded;
         break;
       case WarningSeverity.info:
-        bgColor = Colors.blue.shade50;
-        iconColor = Colors.blue.shade700;
+        bgColor = const Color(0xFFFFF8E1);
+        iconColor = const Color(0xFFB8860B);
         icon = Icons.info_outline;
         break;
       case WarningSeverity.success:
@@ -79,7 +79,7 @@ class DesignPlanningWarningsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: iconColor.withOpacity(0.2)),
+        border: Border.all(color: iconColor.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -166,7 +166,7 @@ class CoverageSummaryCard extends StatelessWidget {
                   title: 'Total Specs',
                   value: '$totalSpecs',
                   icon: Icons.description_outlined,
-                  color: Colors.indigo,
+                  color: const Color(0xFFB8860B),
                 )),
                 const SizedBox(width: 12),
                 Expanded(
@@ -227,7 +227,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

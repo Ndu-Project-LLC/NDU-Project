@@ -1,126 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/routing/app_router.dart';
-import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/potential_solutions_screen.dart';
-import 'package:ndu_project/screens/risk_identification_screen.dart';
-import 'package:ndu_project/screens/it_considerations_screen.dart';
-import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
-import 'package:ndu_project/screens/core_stakeholders_screen.dart';
-import 'package:ndu_project/screens/cost_analysis_screen.dart';
-import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_summary.dart';
-import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_risks_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_opportunities_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
-import 'package:ndu_project/screens/planning_procurement_screen.dart';
-import 'package:ndu_project/screens/front_end_planning_security.dart';
-import 'package:ndu_project/screens/front_end_planning_allowance.dart';
-import 'package:ndu_project/screens/front_end_planning_milestone.dart';
-import 'package:ndu_project/screens/project_charter_screen.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
-import 'package:ndu_project/screens/project_framework_screen.dart';
-import 'package:ndu_project/screens/project_framework_next_screen.dart';
+import 'package:ndu_project/screens/project/initiation_phase_screen.dart';
+import 'package:ndu_project/screens/planning/potential_solutions_screen.dart';
+import 'package:ndu_project/screens/risk/risk_identification_screen.dart';
+import 'package:ndu_project/screens/technology/it_considerations_screen.dart';
+import 'package:ndu_project/screens/technology/infrastructure_considerations_screen.dart';
+import 'package:ndu_project/screens/stakeholders/core_stakeholders_screen.dart';
+import 'package:ndu_project/screens/commercial/cost_analysis_screen.dart';
+import 'package:ndu_project/screens/planning/preferred_solution_analysis_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_summary.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_requirements_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_risks_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_opportunities_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_contract_vendor_quotes_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_procurement_screen.dart';
+import 'package:ndu_project/screens/planning/planning_procurement_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_security.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_allowance.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_milestone.dart';
+import 'package:ndu_project/screens/project/project_charter_screen.dart';
+import 'package:ndu_project/screens/project/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/project/project_framework_screen.dart';
+import 'package:ndu_project/screens/project/project_framework_next_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
-import 'package:ndu_project/screens/planning_requirements_screen.dart';
-import 'package:ndu_project/screens/ssher_stacked_screen.dart';
+import 'package:ndu_project/screens/planning/planning_requirements_screen.dart';
+import 'package:ndu_project/screens/ssher/ssher_stacked_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
-import 'package:ndu_project/screens/issue_management_screen.dart';
-import 'package:ndu_project/screens/cost_estimate_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
-import 'package:ndu_project/screens/planning_contracting_screen.dart';
-import 'package:ndu_project/screens/project_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
-import 'package:ndu_project/screens/execution_plan_details_screen.dart';
-import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
-import 'package:ndu_project/screens/execution_issue_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
-import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
-import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_stakeholder_identification_screen.dart';
-import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
-import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
-import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
+import 'package:ndu_project/screens/risk/issue_management_screen.dart';
+import 'package:ndu_project/screens/commercial/cost_estimate_screen.dart';
+import 'package:ndu_project/screens/planning/planning_contracting_screen.dart';
+import 'package:ndu_project/screens/project/project_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_solutions_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_details_screen.dart';
+import 'package:ndu_project/screens/execution/execution_enabling_work_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_issue_management_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_lessons_learned_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_best_practices_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_construction_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_infrastructure_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_agile_delivery_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_stakeholder_identification_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_interface_management_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_communication_plan_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_interface_management_plan_screen.dart';
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
-import 'package:ndu_project/screens/design_phase_screen.dart';
-import 'package:ndu_project/screens/design_planning_screen.dart';
-import 'package:ndu_project/screens/planning_technology_screen.dart';
-import 'package:ndu_project/screens/interface_management_screen.dart';
-import 'package:ndu_project/screens/startup_planning_screen.dart';
+import 'package:ndu_project/screens/design/design_phase_screen.dart';
+import 'package:ndu_project/screens/design/design_planning_screen.dart';
+import 'package:ndu_project/screens/planning/planning_technology_screen.dart';
+import 'package:ndu_project/screens/execution/interface_management_screen.dart';
+import 'package:ndu_project/screens/startup_planning/startup_planning_screen.dart';
 import 'package:ndu_project/screens/startup_planning_subsections_screen.dart';
-import 'package:ndu_project/screens/deliverables_roadmap_screen.dart';
-import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart';
-import 'package:ndu_project/screens/deliverables_roadmap_overview_screen.dart';
-import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
-import 'package:ndu_project/screens/document_review_matrix_screen.dart';
-import 'package:ndu_project/screens/project_baseline_screen.dart';
-import 'package:ndu_project/screens/project_plan_subsections_screen.dart';
-import 'package:ndu_project/screens/organization_plan_subsections_screen.dart';
-import 'package:ndu_project/screens/team_management_screen.dart';
-import 'package:ndu_project/screens/stakeholder_management_screen.dart';
-import 'package:ndu_project/screens/risk_assessment_screen.dart';
-import 'package:ndu_project/screens/security_management_screen.dart';
-import 'package:ndu_project/screens/quality_management_screen.dart';
-import 'package:ndu_project/screens/ui_ux_design_screen.dart';
-import 'package:ndu_project/screens/backend_design_screen.dart';
-import 'package:ndu_project/screens/engineering_design_screen.dart';
-import 'package:ndu_project/screens/technical_alignment_screen.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
-import 'package:ndu_project/screens/tools_integration_screen.dart';
-import 'package:ndu_project/screens/long_lead_equipment_ordering_screen.dart';
-import 'package:ndu_project/screens/specialized_design_screen.dart';
-import 'package:ndu_project/screens/design_deliverables_screen.dart';
-import 'package:ndu_project/screens/staff_team_screen.dart';
-import 'package:ndu_project/screens/team_meetings_screen.dart';
-import 'package:ndu_project/screens/progress_tracking_screen.dart';
-import 'package:ndu_project/screens/contracts_tracking_screen.dart';
-import 'package:ndu_project/screens/vendor_tracking_screen.dart';
-import 'package:ndu_project/screens/deliverable_status_updates_screen.dart';
-import 'package:ndu_project/screens/recurring_deliverables_screen.dart';
-import 'package:ndu_project/screens/status_reports_screen.dart';
-import 'package:ndu_project/screens/detailed_design_screen.dart';
-import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
-import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
-import 'package:ndu_project/screens/agile_team_structure_screen.dart';
-import 'package:ndu_project/screens/agile_epics_features_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
-import 'package:ndu_project/screens/agile_release_plan_screen.dart';
-import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
-import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
-import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
-import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
-import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
-import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
-import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
-import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
-import 'package:ndu_project/screens/launch_checklist_screen.dart';
-import 'package:ndu_project/screens/risk_tracking_screen.dart';
-import 'package:ndu_project/screens/scope_completion_screen.dart';
-import 'package:ndu_project/screens/gap_analysis_scope_reconcillation_screen.dart';
-import 'package:ndu_project/screens/punchlist_actions_screen.dart';
-import 'package:ndu_project/screens/technical_debt_management_screen.dart';
-import 'package:ndu_project/screens/identify_staff_ops_team_screen.dart';
-import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
-import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
-import 'package:ndu_project/screens/finalize_project_screen.dart';
-import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
-import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
-import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
-import 'package:ndu_project/screens/project_close_out_screen.dart';
-import 'package:ndu_project/screens/demobilize_team_screen.dart';
-import 'package:ndu_project/screens/requirements_implementation_screen.dart';
-import 'package:ndu_project/screens/technical_development_screen.dart';
-import 'package:ndu_project/screens/lessons_learned_screen.dart';
-import 'package:ndu_project/screens/team_training_building_screen.dart';
-import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
-import 'package:ndu_project/screens/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverables_roadmap_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverable_roadmap_subsections_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverables_roadmap_overview_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverables_roadmap_detailed_screen.dart';
+import 'package:ndu_project/screens/deliverables/document_review_matrix_screen.dart';
+import 'package:ndu_project/screens/project/project_baseline_screen.dart';
+import 'package:ndu_project/screens/project/project_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/team/organization_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/team/team_management_screen.dart';
+import 'package:ndu_project/screens/stakeholders/stakeholder_management_screen.dart';
+import 'package:ndu_project/screens/risk/risk_assessment_screen.dart';
+import 'package:ndu_project/screens/risk/security_management_screen.dart';
+import 'package:ndu_project/screens/execution/quality_management_screen.dart';
+import 'package:ndu_project/screens/design/ui_ux_design_screen.dart';
+import 'package:ndu_project/screens/design/backend_design_screen.dart';
+import 'package:ndu_project/screens/design/engineering_design_screen.dart';
+import 'package:ndu_project/screens/technology/technical_alignment_screen.dart';
+import 'package:ndu_project/screens/execution/development_set_up_screen.dart';
+import 'package:ndu_project/screens/integrations/tools_integration_screen.dart';
+import 'package:ndu_project/screens/commercial/long_lead_equipment_ordering_screen.dart';
+import 'package:ndu_project/screens/design/specialized_design_screen.dart';
+import 'package:ndu_project/screens/deliverables/design_deliverables_screen.dart';
+import 'package:ndu_project/screens/team/staff_team_screen.dart';
+import 'package:ndu_project/screens/team/team_meetings_screen.dart';
+import 'package:ndu_project/screens/execution/progress_tracking_screen.dart';
+import 'package:ndu_project/screens/commercial/contracts_tracking_screen.dart';
+import 'package:ndu_project/screens/commercial/vendor_tracking_screen.dart';
+import 'package:ndu_project/screens/deliverables/deliverable_status_updates_screen.dart';
+import 'package:ndu_project/screens/deliverables/recurring_deliverables_screen.dart';
+import 'package:ndu_project/screens/reporting/status_reports_screen.dart';
+import 'package:ndu_project/screens/design/detailed_design_screen.dart';
+import 'package:ndu_project/screens/agile/agile_development_iterations_screen.dart';
+import 'package:ndu_project/screens/agile/agile_delivery_model_screen.dart';
+import 'package:ndu_project/screens/agile/agile_team_structure_screen.dart';
+import 'package:ndu_project/screens/agile/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile/agile_sprint_calendar_screen.dart';
+import 'package:ndu_project/screens/agile/agile_release_plan_screen.dart';
+import 'package:ndu_project/screens/agile/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/agile/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile/agile_metrics_planning_screen.dart';
+import 'package:ndu_project/screens/agile/agile_scrum_config_screen.dart';
+import 'package:ndu_project/screens/agile/agile_capacity_planning_screen.dart';
+import 'package:ndu_project/screens/schedule_scope/scope_tracking_implementation_screen.dart';
+import 'package:ndu_project/screens/stakeholders/stakeholder_alignment_screen.dart';
+import 'package:ndu_project/screens/execution/update_ops_maintenance_plans_screen.dart';
+import 'package:ndu_project/screens/execution/launch_checklist_screen.dart';
+import 'package:ndu_project/screens/risk/risk_tracking_screen.dart';
+import 'package:ndu_project/screens/schedule_scope/scope_completion_screen.dart';
+import 'package:ndu_project/screens/schedule_scope/gap_analysis_scope_reconcillation_screen.dart';
+import 'package:ndu_project/screens/execution/punchlist_actions_screen.dart';
+import 'package:ndu_project/screens/technology/technical_debt_management_screen.dart';
+import 'package:ndu_project/screens/team/identify_staff_ops_team_screen.dart';
+import 'package:ndu_project/screens/closeout/salvage_disposal_team_screen.dart';
+import 'package:ndu_project/screens/reporting/actual_vs_planned_gap_analysis_screen.dart';
+import 'package:ndu_project/screens/closeout/finalize_project_screen.dart';
+import 'package:ndu_project/screens/closeout/deliver_project_closure_screen.dart';
+import 'package:ndu_project/screens/closeout/transition_to_prod_team_screen.dart';
+import 'package:ndu_project/screens/commercial/contract_close_out_screen.dart';
+import 'package:ndu_project/screens/commercial/vendor_account_close_out_screen.dart';
+import 'package:ndu_project/screens/risk/summarize_account_risks_screen.dart';
+import 'package:ndu_project/screens/project/project_close_out_screen.dart';
+import 'package:ndu_project/screens/closeout/demobilize_team_screen.dart';
+import 'package:ndu_project/screens/planning/requirements_implementation_screen.dart';
+import 'package:ndu_project/screens/technology/technical_development_screen.dart';
+import 'package:ndu_project/screens/closeout/lessons_learned_screen.dart';
+import 'package:ndu_project/screens/team/team_training_building_screen.dart';
+import 'package:ndu_project/screens/execution/execution_plan_interface_management_overview_screen.dart';
+import 'package:ndu_project/screens/commercial/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/execution/execution_quality_tracking_screen.dart';
+import 'package:ndu_project/screens/execution/execution_work_packages_screen.dart';
+import 'package:ndu_project/screens/integration_dashboard_screen.dart';
+import 'package:ndu_project/screens/execution/fat_mechanical_completion_screen.dart';
+import 'package:ndu_project/screens/closeout/financial_closeout_screen.dart';
+import 'package:ndu_project/screens/closeout/benefits_realization_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -311,8 +316,6 @@ class NavigationRouteResolver {
         return const IssueManagementScreen();
       case 'cost_estimate':
         return const CostEstimateScreen();
-      case 'scope_tracking_plan':
-        return const ScopeTrackingPlanScreen();
       case 'contracts':
         return const PlanningContractingScreen();
       case 'procurement':
@@ -343,6 +346,14 @@ class NavigationRouteResolver {
         );
       case 'execution_enabling_work_plan':
         return const ExecutionEnablingWorkPlanScreen();
+      case 'execution_work_packages':
+        return const ExecutionWorkPackagesScreen();
+      case 'execution_quality_tracking':
+        return const ExecutionQualityTrackingScreen();
+      case 'integration_dashboard':
+        return const IntegrationDashboardScreen(
+          initialView: IntegrationDashboardView.baseline,
+        );
       case 'execution_issue_management':
         return const ExecutionIssueManagementScreen();
       case 'execution_plan_lessons_learned':
@@ -521,6 +532,12 @@ class NavigationRouteResolver {
         return const TransitionToProdTeamScreen();
       case 'contract_close_out':
         return const ContractCloseOutScreen();
+      case 'fat_mechanical_completion':
+        return const FatMechanicalCompletionScreen();
+      case 'financial_closeout':
+        return const FinancialCloseoutScreen();
+      case 'benefits_realization':
+        return const BenefitsRealizationScreen();
       case 'vendor_account_close_out':
         return const VendorAccountCloseOutScreen();
       case 'summarize_account_risks':
@@ -544,8 +561,19 @@ class NavigationRouteResolver {
   /// Returns the go_router URL for a project checkpoint so every page opened
   /// through the checkpoint resolver has a unique, shareable URL.
   static String resolveCheckpointToUrl(String? checkpoint) {
+    return tryResolveCheckpointToUrl(checkpoint) ??
+        '/${AppRoutes.initiationPhase}';
+  }
+
+  /// Same lookup as [resolveCheckpointToUrl] but returns null for an unknown
+  /// checkpoint instead of falling back to the initiation phase. Callers that
+  /// link to a user-supplied checkpoint (e.g. an activity's `sourceSection`)
+  /// use this so an unmapped value does not silently navigate somewhere
+  /// unrelated.
+  static String? tryResolveCheckpointToUrl(String? checkpoint) {
     final normalized = _normalizeCheckpoint(checkpoint ?? '');
-    return _checkpointUrls[normalized] ?? '/${AppRoutes.initiationPhase}';
+    if (normalized.isEmpty) return null;
+    return _checkpointUrls[normalized];
   }
 
   /// Checkpoint → deep-link URL map (mirrors [resolveCheckpointToScreen]).
@@ -577,7 +605,6 @@ class NavigationRouteResolver {
     'change_management': '/${AppRoutes.changeManagementModule}',
     'issue_management': '/${AppRoutes.issueManagement}',
     'cost_estimate': '/${AppRoutes.costEstimateScreen}',
-    'scope_tracking_plan': '/${AppRoutes.scopeTrackingPlan}',
     'contracts': '/${AppRoutes.fepContracts}',
     'procurement': '/${AppRoutes.planningProcurement}',
     'project_plan': '/${AppRoutes.projectPlan}',
@@ -589,6 +616,9 @@ class NavigationRouteResolver {
     'execution_plan_details': '/${AppRoutes.executionPlanDetails}',
     'execution_early_works': '/${AppRoutes.executionPlanDetails}',
     'execution_enabling_work_plan': '/${AppRoutes.executionEnablingWorkPlan}',
+    'execution_work_packages': '/${AppRoutes.executionWorkPackages}',
+    'execution_quality_tracking': '/${AppRoutes.executionQualityTracking}',
+    'integration_dashboard': '/${AppRoutes.integrationDashboard}',
     'execution_issue_management': '/${AppRoutes.executionIssueManagement}',
     'execution_plan_lessons_learned': '/${AppRoutes.executionPlanLessonsLearned}',
     'execution_plan_best_practices': '/${AppRoutes.executionPlanBestPractices}',
@@ -675,6 +705,9 @@ class NavigationRouteResolver {
     'deliver_project_closure': '/${AppRoutes.deliverProjectClosure}',
     'transition_to_prod_team': '/${AppRoutes.transitionToProdTeam}',
     'contract_close_out': '/${AppRoutes.contractCloseOut}',
+    'fat_mechanical_completion': '/${AppRoutes.fatMechanicalCompletion}',
+    'financial_closeout': '/${AppRoutes.financialCloseout}',
+    'benefits_realization': '/${AppRoutes.benefitsRealization}',
     'vendor_account_close_out': '/${AppRoutes.vendorAccountCloseOut}',
     'summarize_account_risks': '/${AppRoutes.summarizeAccountRisks}',
     'commerce_viability': '/${AppRoutes.commerceViability}',

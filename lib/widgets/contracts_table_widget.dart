@@ -59,7 +59,7 @@ class ContractsTableWidget extends StatelessWidget {
         children: [
           // Table Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: const BoxDecoration(
               color: Color(0xFFF8FAFC),
               borderRadius: BorderRadius.only(
@@ -69,13 +69,13 @@ class ContractsTableWidget extends StatelessWidget {
             ),
             child: const Row(
               children: [
-                _TableHeaderCell('Vendor/Party Name', flex: 2),
+                _TableHeaderCell('Vendor/Party Name', flex: 3),
                 _TableHeaderCell('Contract Type', flex: 2),
                 _TableHeaderCell('Status', flex: 2),
                 _TableHeaderCell('Effective Date', flex: 2),
                 _TableHeaderCell('Expiry', flex: 2),
                 _TableHeaderCell('Total Value', flex: 2),
-                _TableHeaderCell('Actions', flex: 2),
+                _TableHeaderCell('Actions', flex: 3),
               ],
             ),
           ),
@@ -158,6 +158,7 @@ class _TableHeaderCell extends StatelessWidget {
       child: Text(
         label,
         textAlign: TextAlign.center,
+        softWrap: true,
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -737,6 +738,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                       style: const TextStyle(
                           fontSize: 11, color: Color(0xFF111827)),
                       textAlign: TextAlign.center,
+                      maxLines: null,
                     ),
                   ),
                   Expanded(
@@ -751,15 +753,20 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                         hint: const Text(
                           'Select type',
                           style: TextStyle(fontSize: 11),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        isDense: true,
+                        isDense: false,
+                        itemHeight: null,
                         underline: const SizedBox(),
+                        selectedItemBuilder: (context) => contractTypeOptions
+                            .map((type) => Text(type,
+                                softWrap: true,
+                                style: const TextStyle(fontSize: 11)))
+                            .toList(),
                         items: contractTypeOptions
                             .map((type) => DropdownMenuItem(
                                   value: type,
                                   child: Text(type,
-                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
                                       style: const TextStyle(fontSize: 11)),
                                 ))
                             .toList(),
@@ -859,10 +866,11 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                     ),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 3,
                     child: Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           // KAZ AI button — always visible
                           Tooltip(

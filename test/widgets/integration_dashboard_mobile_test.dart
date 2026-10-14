@@ -27,6 +27,7 @@ import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/widgets/dashboard_header.dart';
 import 'package:ndu_project/widgets/integration_dashboard/_integration_tokens.dart';
 import 'package:ndu_project/widgets/integration_dashboard/integration_workspaces_view.dart';
+import 'package:ndu_project/widgets/page_navigation_footer.dart';
 
 /// A basic-plan workspace with the longest plausible field values, so the
 /// data-rich layout is exercised rather than the empty state.
@@ -264,6 +265,25 @@ void main() {
       (tester) async {
     await _pumpScreen(tester, const Size(427, 952));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the dashboard carries no phase navigation footer',
+      (tester) async {
+    await _pumpScreen(tester, const Size(427, 952));
+
+    // The dashboard is a sidebar-less command centre: its own Workspaces /
+    // Baseline switcher is the navigation for this screen, so the shared
+    // Previous / Continue strip must not render on it at all.
+    expect(find.byType(PageNavigationFooter), findsNothing);
+    expect(find.text('Previous'), findsNothing);
+  });
+
+  testWidgets('the desktop dashboard carries no phase navigation footer',
+      (tester) async {
+    await _pumpScreen(tester, const Size(1440, 900));
+
+    expect(find.byType(PageNavigationFooter), findsNothing);
+    expect(find.text('Previous'), findsNothing);
   });
 
   testWidgets('the view switcher highlights only the selected segment',

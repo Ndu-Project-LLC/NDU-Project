@@ -15,7 +15,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ndu_project/screens/project_decision_summary_screen.dart';
+import 'package:ndu_project/screens/project/project_decision_summary_screen.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 

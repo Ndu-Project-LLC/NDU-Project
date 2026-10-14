@@ -36,7 +36,9 @@ class InlineEditableText extends StatefulWidget {
   final String hint;
   final TextStyle? style;
   final TextAlign textAlign;
-  final int maxLines;
+  /// Maximum visible lines in display mode. Null means no limit, so the text
+  /// wraps fully instead of being cut off with an ellipsis.
+  final int? maxLines;
   final bool isListField;
   final bool isProseField;
   final bool showRegenerate;
@@ -328,7 +330,11 @@ class _InlineEditableTextState extends State<InlineEditableText> {
                             fontSize: 13, color: Color(0xFF111827))),
                 textAlign: widget.textAlign,
                 maxLines: widget.maxLines,
-                overflow: TextOverflow.ellipsis,
+                // Ellipsis forces a single line when no line limit is set, so
+                // only apply it when a limit exists.
+                overflow: widget.maxLines == null
+                    ? null
+                    : TextOverflow.ellipsis,
               ),
             ),
             if (voiceEnabled && !_isListening)

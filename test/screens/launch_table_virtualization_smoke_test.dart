@@ -4,17 +4,17 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
-import 'package:ndu_project/screens/commerce_viability_screen.dart';
-import 'package:ndu_project/screens/contract_close_out_screen.dart';
-import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
-import 'package:ndu_project/screens/demobilize_team_screen.dart';
-import 'package:ndu_project/screens/identify_staff_ops_team_screen.dart';
-import 'package:ndu_project/screens/launch_checklist_screen.dart';
-import 'package:ndu_project/screens/project_close_out_screen.dart';
-import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
-import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
-import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
+import 'package:ndu_project/screens/reporting/actual_vs_planned_gap_analysis_screen.dart';
+import 'package:ndu_project/screens/commercial/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/commercial/contract_close_out_screen.dart';
+import 'package:ndu_project/screens/closeout/deliver_project_closure_screen.dart';
+import 'package:ndu_project/screens/closeout/demobilize_team_screen.dart';
+import 'package:ndu_project/screens/team/identify_staff_ops_team_screen.dart';
+import 'package:ndu_project/screens/execution/launch_checklist_screen.dart';
+import 'package:ndu_project/screens/project/project_close_out_screen.dart';
+import 'package:ndu_project/screens/risk/summarize_account_risks_screen.dart';
+import 'package:ndu_project/screens/closeout/transition_to_prod_team_screen.dart';
+import 'package:ndu_project/screens/commercial/vendor_account_close_out_screen.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 

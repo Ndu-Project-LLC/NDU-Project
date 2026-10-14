@@ -31,7 +31,6 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:ndu_project/widgets/page_navigation_footer.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +40,7 @@ import 'package:ndu_project/project_controls/providers/project_controls_provider
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
-import 'package:ndu_project/screens/initiation_phase_screen.dart';
+import 'package:ndu_project/screens/project/initiation_phase_screen.dart';
 import 'package:ndu_project/services/dashboard_metrics_service.dart';
 import 'package:ndu_project/services/ibr_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
@@ -482,17 +481,6 @@ class _IntegrationDashboardScreenState
             );
           },
         ),
-      bottomBar: const SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
-          child: PageNavigationFooter(
-            checkpoint: 'integration_dashboard',
-            pageTitle: 'Integration Dashboard',
-            showBorders: false,
-          ),
-        ),
-      ),
       ),
     );
   }

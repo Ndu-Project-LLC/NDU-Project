@@ -18,7 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
-import 'package:ndu_project/screens/agile_release_plan_screen.dart';
+import 'package:ndu_project/screens/agile/agile_release_plan_screen.dart';
 
 Epic _epic(String id, String title) => Epic(id: id, title: title);
 

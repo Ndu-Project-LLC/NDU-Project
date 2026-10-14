@@ -19,7 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/interface_management_screen.dart';
+import 'package:ndu_project/screens/execution/interface_management_screen.dart';
 
 /// Every tab on the screen, in the order they appear in the tab bar.
 ///

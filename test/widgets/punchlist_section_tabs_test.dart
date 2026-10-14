@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/punchlist_actions_screen.dart';
+import 'package:ndu_project/screens/execution/punchlist_actions_screen.dart';
 
 /// Punchlist Overview shows its three sections as tabs: completion health,
 /// item distribution and action velocity. Only the selected section is built.

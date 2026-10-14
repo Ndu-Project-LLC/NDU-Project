@@ -21,7 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/quality_management_screen.dart';
+import 'package:ndu_project/screens/execution/quality_management_screen.dart';
 
 /// A TextField found by the label it carries in the entry dialog.
 Finder _labelledField(String label) => find.byWidgetPredicate(

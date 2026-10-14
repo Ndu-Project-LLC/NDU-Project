@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/dashboard_metrics_service.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/project/project_activities_log_screen.dart';
 
 /// A Gantt-style timeline chart showing all projects in a portfolio as
 /// horizontal bars across a date axis. Each bar is colored by status

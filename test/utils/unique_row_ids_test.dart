@@ -30,9 +30,9 @@ import 'package:flutter_test/flutter_test.dart';
 const Map<String, String> clockUseAllowList = {
   'lib/models/project_data_model.dart':
       'The timestamp is combined with a monotonic counter, so it cannot repeat.',
-  'lib/screens/cost_analysis_screen.dart':
+  'lib/screens/commercial/cost_analysis_screen.dart':
       'One timestamp is read once and suffixed with the loop index.',
-  'lib/screens/stakeholder_management_screen.dart':
+  'lib/screens/stakeholders/stakeholder_management_screen.dart':
       'The timestamp is combined with a stable per-row suffix.',
   'lib/services/security_services.dart':
       'Used as a Random seed, not as an id.',
@@ -143,7 +143,7 @@ void main() {
   test('the design tables repair duplicated ids when they load', () {
     // Minting unique ids fixes new data; rows already saved with a shared id
     // are only fixed if the load path repairs them.
-    final backend = sources['lib/screens/backend_design_screen.dart'];
+    final backend = sources['lib/screens/design/backend_design_screen.dart'];
     expect(backend, isNotNull);
     expect(
       'persistedId('.allMatches(backend!).length,

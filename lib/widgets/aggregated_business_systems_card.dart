@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ndu_project/screens/business_system_integrations_screen.dart';
+import 'package:ndu_project/screens/integrations/business_system_integrations_screen.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 import 'package:ndu_project/services/program_service.dart';
 

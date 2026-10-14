@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/issue_management_screen.dart';
+import 'package:ndu_project/screens/risk/issue_management_screen.dart';
 import 'package:ndu_project/services/execution_service.dart';
 
 void main() {

@@ -3,7 +3,7 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/project_service.dart';
-import 'package:ndu_project/screens/home_screen.dart';
+import 'package:ndu_project/screens/core/home_screen.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
 import 'package:ndu_project/widgets/unified_phase_header.dart';

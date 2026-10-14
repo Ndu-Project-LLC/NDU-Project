@@ -2489,14 +2489,37 @@ class _AttachmentList extends StatelessWidget {
   }
 }
 
-class _OperationsPageBody extends StatelessWidget {
+class _OperationsPageBody extends StatefulWidget {
   const _OperationsPageBody({required this.state, required this.onChanged});
   final _PlanningPageState state;
   final ValueChanged<_PlanningPageState> onChanged;
   @override
+  State<_OperationsPageBody> createState() => _OperationsPageBodyState();
+}
+
+class _OperationsPageBodyState extends State<_OperationsPageBody>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 5, vsync: this)
+      ..addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final onChanged = widget.onChanged;
     final data = state.operations;
-    return Column(children: [
+    final sections = <Widget>[
       _SectionFieldsCard(
         title: 'Service and ownership',
         fields: [
@@ -2534,14 +2557,12 @@ class _OperationsPageBody extends StatelessWidget {
           }),
         ],
       ),
-      const SizedBox(height: 16),
       _RunbookRegisterCard(
           rows: data.runbookRegister,
           onChanged: (rows) {
             data.runbookRegister = rows;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistTableCard(
           title: 'Monitoring and alerting register',
           items: data.monitoringItems,
@@ -2549,7 +2570,6 @@ class _OperationsPageBody extends StatelessWidget {
             data.monitoringItems = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistTableCard(
           title: 'Recovery and resilience register',
           items: data.recoveryItems,
@@ -2557,26 +2577,96 @@ class _OperationsPageBody extends StatelessWidget {
             data.recoveryItems = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
-      SwitchListTile.adaptive(
-          value: data.goLiveApproved,
-          title: const Text('Operational sign-off complete'),
-          onChanged: (v) {
-            data.goLiveApproved = v;
-            onChanged(state);
-          }),
+      Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE5E7EB))),
+        child: SwitchListTile.adaptive(
+            value: data.goLiveApproved,
+            title: const Text('Operational sign-off complete'),
+            onChanged: (v) {
+              data.goLiveApproved = v;
+              onChanged(state);
+            }),
+      ),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicator: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: const Color(0xFF111827),
+          unselectedLabelColor: const Color(0xFF6B7280),
+          labelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          unselectedLabelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          padding: const EdgeInsets.all(4),
+          tabs: const [
+            Tab(text: 'Service & ownership'),
+            Tab(text: 'Runbooks'),
+            Tab(text: 'Monitoring & alerting'),
+            Tab(text: 'Recovery & resilience'),
+            Tab(text: 'Sign-off'),
+          ],
+        ),
+      ),
+      sections[_tabController.index],
     ]);
   }
 }
 
-class _HypercarePageBody extends StatelessWidget {
+class _HypercarePageBody extends StatefulWidget {
   const _HypercarePageBody({required this.state, required this.onChanged});
   final _PlanningPageState state;
   final ValueChanged<_PlanningPageState> onChanged;
   @override
+  State<_HypercarePageBody> createState() => _HypercarePageBodyState();
+}
+
+class _HypercarePageBodyState extends State<_HypercarePageBody>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 6, vsync: this)
+      ..addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final onChanged = widget.onChanged;
     final data = state.hypercare;
-    return Column(children: [
+    final sections = <Widget>[
       _SectionFieldsCard(
         title: 'Projected hypercare window',
         fields: [
@@ -2620,7 +2710,6 @@ class _HypercarePageBody extends StatelessWidget {
           }),
         ],
       ),
-      const SizedBox(height: 16),
       _ChecklistCard(
           title: 'Validation register',
           items: data.validationChecks,
@@ -2628,14 +2717,12 @@ class _HypercarePageBody extends StatelessWidget {
             data.validationChecks = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _WatchRegisterCard(
           rows: data.watchRegister,
           onChanged: (rows) {
             data.watchRegister = rows;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistCard(
           title: 'Exit criteria register',
           items: data.exitCriteria,
@@ -2643,7 +2730,6 @@ class _HypercarePageBody extends StatelessWidget {
             data.exitCriteria = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _StringListTableCard(
           title: 'Communication plan',
           columnLabel: 'Communication step',
@@ -2653,7 +2739,6 @@ class _HypercarePageBody extends StatelessWidget {
                 list.where((e) => e.trim().isNotEmpty).toList();
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       SwitchListTile.adaptive(
           value: data.handoverReady,
           title: const Text('Ready to exit hypercare'),
@@ -2661,18 +2746,83 @@ class _HypercarePageBody extends StatelessWidget {
             data.handoverReady = v;
             onChanged(state);
           }),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicator: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: const Color(0xFF111827),
+          unselectedLabelColor: const Color(0xFF6B7280),
+          labelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          unselectedLabelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          padding: const EdgeInsets.all(4),
+          tabs: const [
+            Tab(text: 'Hypercare window'),
+            Tab(text: 'Validation'),
+            Tab(text: 'Watch register'),
+            Tab(text: 'Exit criteria'),
+            Tab(text: 'Communication'),
+            Tab(text: 'Exit readiness'),
+          ],
+        ),
+      ),
+      sections[_tabController.index],
     ]);
   }
 }
 
-class _DevOpsPageBody extends StatelessWidget {
+class _DevOpsPageBody extends StatefulWidget {
   const _DevOpsPageBody({required this.state, required this.onChanged});
   final _PlanningPageState state;
   final ValueChanged<_PlanningPageState> onChanged;
   @override
+  State<_DevOpsPageBody> createState() => _DevOpsPageBodyState();
+}
+
+class _DevOpsPageBodyState extends State<_DevOpsPageBody>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 6, vsync: this)
+      ..addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final onChanged = widget.onChanged;
     final data = state.devops;
-    return Column(children: [
+    final sections = <Widget>[
       _SectionFieldsCard(
         title: 'Release ownership and controls',
         fields: [
@@ -2704,14 +2854,12 @@ class _DevOpsPageBody extends StatelessWidget {
           }),
         ],
       ),
-      const SizedBox(height: 16),
       _ObservabilityRegisterCard(
           rows: data.observabilityRegister,
           onChanged: (rows) {
             data.observabilityRegister = rows;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistCard(
           title: 'Secrets and configuration register',
           items: data.secretsChecks,
@@ -2719,7 +2867,6 @@ class _DevOpsPageBody extends StatelessWidget {
             data.secretsChecks = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistCard(
           title: 'Release controls register',
           items: data.releaseChecklist,
@@ -2727,7 +2874,6 @@ class _DevOpsPageBody extends StatelessWidget {
             data.releaseChecklist = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _SectionFieldsCard(
         title: 'DORA baseline',
         fields: [
@@ -2751,7 +2897,6 @@ class _DevOpsPageBody extends StatelessWidget {
           }),
         ],
       ),
-      const SizedBox(height: 16),
       SwitchListTile.adaptive(
           value: data.devOpsApproved,
           title: const Text('DevOps readiness approved'),
@@ -2759,18 +2904,83 @@ class _DevOpsPageBody extends StatelessWidget {
             data.devOpsApproved = v;
             onChanged(state);
           }),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicator: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: const Color(0xFF111827),
+          unselectedLabelColor: const Color(0xFF6B7280),
+          labelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          unselectedLabelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          padding: const EdgeInsets.all(4),
+          tabs: const [
+            Tab(text: 'Ownership & controls'),
+            Tab(text: 'Observability'),
+            Tab(text: 'Secrets & config'),
+            Tab(text: 'Release controls'),
+            Tab(text: 'DORA baseline'),
+            Tab(text: 'Readiness'),
+          ],
+        ),
+      ),
+      sections[_tabController.index],
     ]);
   }
 }
 
-class _CloseOutPageBody extends StatelessWidget {
+class _CloseOutPageBody extends StatefulWidget {
   const _CloseOutPageBody({required this.state, required this.onChanged});
   final _PlanningPageState state;
   final ValueChanged<_PlanningPageState> onChanged;
   @override
+  State<_CloseOutPageBody> createState() => _CloseOutPageBodyState();
+}
+
+class _CloseOutPageBodyState extends State<_CloseOutPageBody>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 7, vsync: this)
+      ..addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final onChanged = widget.onChanged;
     final data = state.closeout;
-    return Column(children: [
+    final sections = <Widget>[
       _SectionFieldsCard(
         title: 'Close-out ownership',
         fields: [
@@ -2816,7 +3026,6 @@ class _CloseOutPageBody extends StatelessWidget {
           }, hint: 'YYYY-MM-DD'),
         ],
       ),
-      const SizedBox(height: 16),
       _ChecklistTableCard(
           title: 'Acceptance register',
           items: data.acceptanceItems,
@@ -2824,7 +3033,6 @@ class _CloseOutPageBody extends StatelessWidget {
             data.acceptanceItems = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistCard(
           title: 'Support handoff register',
           items: data.handoverArtifacts,
@@ -2832,7 +3040,6 @@ class _CloseOutPageBody extends StatelessWidget {
             data.handoverArtifacts = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ChecklistCard(
           title: 'Knowledge transfer register',
           items: data.knowledgeTransfer,
@@ -2840,14 +3047,12 @@ class _CloseOutPageBody extends StatelessWidget {
             data.knowledgeTransfer = items;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _ResidualActionRegisterCard(
           rows: data.residualRegister,
           onChanged: (rows) {
             data.residualRegister = rows;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       _StringListTableCard(
           title: 'Lessons learned',
           columnLabel: 'Lesson',
@@ -2856,7 +3061,6 @@ class _CloseOutPageBody extends StatelessWidget {
             data.lessonsLearned = list;
             onChanged(state);
           }),
-      const SizedBox(height: 16),
       SwitchListTile.adaptive(
           value: data.closeoutApproved,
           title: const Text('Close-out approved'),
@@ -2864,6 +3068,49 @@ class _CloseOutPageBody extends StatelessWidget {
             data.closeoutApproved = v;
             onChanged(state);
           }),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicator: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: const Color(0xFF111827),
+          unselectedLabelColor: const Color(0xFF6B7280),
+          labelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          unselectedLabelStyle:
+              const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          padding: const EdgeInsets.all(4),
+          tabs: const [
+            Tab(text: 'Ownership'),
+            Tab(text: 'Acceptance'),
+            Tab(text: 'Support handoff'),
+            Tab(text: 'Knowledge transfer'),
+            Tab(text: 'Residual risks'),
+            Tab(text: 'Lessons learned'),
+            Tab(text: 'Approval'),
+          ],
+        ),
+      ),
+      sections[_tabController.index],
     ]);
   }
 }

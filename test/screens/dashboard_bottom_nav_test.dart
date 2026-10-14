@@ -33,7 +33,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/routing/app_router.dart';
-import 'package:ndu_project/screens/project_dashboard_mobile_shell.dart';
+import 'package:ndu_project/screens/project/project_dashboard_mobile_shell.dart';
 import 'package:ndu_project/widgets/dashboard_bottom_nav_bar.dart';
 
 /// Every tab, and the route it must reach. The values are the same constants

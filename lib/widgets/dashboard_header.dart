@@ -24,7 +24,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/routing/app_router.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/project/project_activities_log_screen.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/utils/dashboard_palette.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';

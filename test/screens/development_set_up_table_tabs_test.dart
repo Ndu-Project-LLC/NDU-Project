@@ -17,7 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/development_set_up_screen.dart';
+import 'package:ndu_project/screens/execution/development_set_up_screen.dart';
 import 'package:ndu_project/widgets/launch_phase_table_tabs.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 

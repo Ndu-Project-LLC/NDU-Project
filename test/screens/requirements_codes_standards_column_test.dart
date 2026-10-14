@@ -24,7 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
+import 'package:ndu_project/screens/front_end_planning/front_end_planning_requirements_screen.dart';
 import 'package:ndu_project/widgets/codes_standards_selectors.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/security_management_screen.dart';
+import 'package:ndu_project/screens/risk/security_management_screen.dart';
 import 'package:provider/provider.dart';
 
 /// The Roles table's Edit and Permissions buttons used to do nothing. These

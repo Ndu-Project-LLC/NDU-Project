@@ -48,11 +48,11 @@ analyzer:
     - lib/services/quality_ai_integration.dart
     - lib/utils/staffing_reminder_helper.dart
     - lib/widgets/quality_insights_panel.dart
-    - lib/screens/execution_quality_tracking_screen.dart
-    - lib/screens/kaz_ai_screen.dart
-    - lib/screens/differentiator_screen.dart
-    - lib/screens/trusted_by_screen.dart
-    - lib/screens/agile_task_board_screen.dart
+    - lib/screens/execution/execution_quality_tracking_screen.dart
+    - lib/screens/ai/kaz_ai_screen.dart
+    - lib/screens/landing/differentiator_screen.dart
+    - lib/screens/landing/trusted_by_screen.dart
+    - lib/screens/agile/agile_task_board_screen.dart
     - lib/widgets/draggable_card_canvas.dart
     - lib/widgets/rate_card_management_dialog.dart
     - lib/widgets/milestone_edit_dialog.dart

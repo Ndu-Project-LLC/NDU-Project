@@ -18,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
-import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
+import 'package:ndu_project/screens/agile/agile_kanban_board_screen.dart';
 import 'package:ndu_project/services/kanban_config_service.dart';
 
 AgileTask _story(String id, String title) => AgileTask(

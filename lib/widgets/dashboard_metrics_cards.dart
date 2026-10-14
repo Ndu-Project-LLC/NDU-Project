@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/project/project_activities_log_screen.dart';
 import 'package:ndu_project/services/dashboard_metrics_service.dart';
 
 /// Reusable card showing activities assigned to the current user, filtered

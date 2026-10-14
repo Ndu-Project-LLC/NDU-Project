@@ -10,7 +10,7 @@
 //   2. Merely opening the FEP Allowance screen auto-runs that AI when the
 //      section is empty — initState -> postFrame ->
 //      _checkAndGenerateDefaultAllowances -> _generateDefaultAllowances
-//      (lib/screens/front_end_planning_allowance.dart:109,174).
+//      (lib/screens/front_end_planning/front_end_planning_allowance.dart:109,174).
 //   3. _syncItemsToProvider -> applyTaggedFrontEndPlanningData turns every
 //      allowance tagged 'Estimate' into a project cost item.
 //   4. The Cost Estimate module auto-imports those items into lines when the

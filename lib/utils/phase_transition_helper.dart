@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/utils/navigation_route_resolver.dart'
+    show NavigationRouteResolver;
+import 'package:ndu_project/utils/web_utils.dart' show syncBrowserUrl;
 
 class PhaseTransitionHelper {
   static Route<T> buildRoute<T>({
@@ -48,8 +53,8 @@ class PhaseTransitionHelper {
     String? sourceCheckpoint,
     RouteSettings? settings,
   }) {
-    return Navigator.of(context).push(
-      buildRoute(
+    final Future<T?> routeFuture =
+        Navigator.of(context).push<T>(buildRoute<T>(
         context: context,
         builder: builder,
         destinationCheckpoint: destinationCheckpoint,
@@ -57,6 +62,26 @@ class PhaseTransitionHelper {
         settings: settings,
       ),
     );
+
+    // Address-bar sync (web only, replaceState — see syncBrowserUrl): the
+    // browser URL now mirrors the deepest project screen instead of staying
+    // on /#/dashboard forever (E2E deep-link gap). Purely cosmetic: no
+    // history entries are created, so back/forward behaviour is untouched.
+    _syncUrlForCheckpoint(destinationCheckpoint);
+    unawaited(routeFuture.then((_) {
+      // When the pushed screen is popped, restore the URL of the screen we
+      // returned to (its checkpoint was recorded as the source).
+      _syncUrlForCheckpoint(sourceCheckpoint);
+    }));
+
+    return routeFuture;
+  }
+
+  static void _syncUrlForCheckpoint(String? checkpoint) {
+    if (checkpoint == null || checkpoint.trim().isEmpty) return;
+    final url = NavigationRouteResolver.tryResolveCheckpointToUrl(checkpoint);
+    if (url == null) return;
+    syncBrowserUrl(url);
   }
 }
 

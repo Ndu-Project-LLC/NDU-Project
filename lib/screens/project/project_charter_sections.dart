@@ -483,14 +483,26 @@ class CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  bool inviting = false;
 
  // Load users and compute the suggested sponsor in the background.
+ // Firestore rules restrict /users to own-document reads, so the old
+ // whole-collection fetch (limit 200) failed with permission-denied every
+ // time. Load the signed-in user's own profile instead — suggestSponsor
+ // primarily needs to recognise "yourself"; other matches come from the
+ // charter data (see CharterApprovalService).
  Future<void> loadSuggestion = () async {
    try {
-     final snap = await FirebaseFirestore.instance
-         .collection('users')
-         .limit(200)
-         .get();
-     allUsers =
-         snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+     final uid = FirebaseAuth.instance.currentUser?.uid;
+     if (uid != null && uid.isNotEmpty) {
+       final doc = await FirebaseFirestore.instance
+           .collection('users')
+           .doc(uid)
+           .get();
+       if (doc.exists) {
+         allUsers = [
+           UserModel.fromJson(
+               doc.data() ?? <String, dynamic>{'uid': uid})
+         ];
+       }
+     }
      suggested =
          CharterApprovalService.suggestSponsor(allUsers: allUsers);
    } catch (e) {
@@ -809,11 +821,23 @@ if (!mounted) return;
    bool wasPreviouslyInvited = false;
 
    try {
-     final snap = await FirebaseFirestore.instance
-         .collection('users')
-         .limit(200)
-         .get();
-     allUsers = snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+     // Own-document read only — the whole-collection fetch was always
+     // denied by Firestore rules (E2E console error "Manager users load
+     // failed"). The signed-in user remains assignable; a full searchable
+     // directory requires the server-side `searchUsers` callable.
+     final uid = FirebaseAuth.instance.currentUser?.uid;
+     if (uid != null && uid.isNotEmpty) {
+       final ownDoc = await FirebaseFirestore.instance
+           .collection('users')
+           .doc(uid)
+           .get();
+       if (ownDoc.exists) {
+         allUsers = [
+           UserModel.fromJson(
+               ownDoc.data() ?? <String, dynamic>{'uid': uid})
+         ];
+       }
+     }
      final existingEmail = (data.charterEmail).trim().toLowerCase();
      final existingName = data.charterProjectManagerName.trim();
      if (existingEmail.isNotEmpty && existingName.isNotEmpty) {
@@ -2939,12 +2963,24 @@ class _CharterFloatingApprovalBarState
     if (_resolving) return;
     setState(() => _resolving = true);
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection('users')
-          .limit(200)
-          .get();
-      final users =
-          snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+      // Firestore rules restrict /users to own-document reads only, so the
+      // previous whole-collection fetch (limit 200) failed with
+      // permission-denied on every open (E2E console error). Sponsor/PM
+      // names come from the charter data itself; the only document we may
+      // (and need to) read here is the signed-in user's own profile.
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      UserModel? ownUser;
+      if (uid != null && uid.isNotEmpty) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get();
+        if (doc.exists) {
+          ownUser = UserModel.fromJson(
+              doc.data() ?? <String, dynamic>{'uid': uid});
+        }
+      }
+      final users = ownUser == null ? const <UserModel>[] : [ownUser];
       if (!mounted) return;
       setState(() {
         _allUsers = users;
@@ -3321,12 +3357,23 @@ class _CharterFloatingApprovalBarState
       // Try to suggest a sponsor on the fly (highest role authority).
       ResolvedApprover? suggestion;
       try {
-        final snap = await FirebaseFirestore.instance
-            .collection('users')
-            .limit(200)
-            .get();
-        final users =
-            snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+        // Own-document read only — the whole-collection fetch was always
+        // denied by Firestore rules (E2E console errors). The signed-in
+        // user is the realistic on-the-fly sponsor candidate here.
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        var users = const <UserModel>[];
+        if (uid != null && uid.isNotEmpty) {
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+          if (doc.exists) {
+            users = [
+              UserModel.fromJson(
+                  doc.data() ?? <String, dynamic>{'uid': uid})
+            ];
+          }
+        }
         suggestion = CharterApprovalService.suggestSponsor(allUsers: users);
       } catch (e) {
         debugPrint('On-the-fly sponsor suggestion failed: $e');

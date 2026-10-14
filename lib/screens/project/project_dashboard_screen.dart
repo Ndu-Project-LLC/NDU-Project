@@ -723,54 +723,65 @@ class _StatusStrip extends StatelessWidget {
           ProjectService.streamProjects(ownerId: user.uid, limit: 100),
       builder: (context, projectSnapshot) {
         final projects = projectSnapshot.data ?? const <ProjectRecord>[];
-        final projectCount =
-            projects.where((p) => !p.isBasicPlanProject).length;
-        final basicProjectCount =
-            projects.where((p) => p.isBasicPlanProject).length;
+        // Show a neutral placeholder while the first snapshot is in flight —
+        // a hard "0" during load reads as "you have no data" (E2E defect:
+        // 0s flashed before the real 9/91/503/3 counts arrived).
+        final projectsLoading = !projectSnapshot.hasData;
+        final projectCount = projectsLoading
+            ? null
+            : projects.where((p) => !p.isBasicPlanProject).length;
+        final basicProjectCount = projectsLoading
+            ? null
+            : projects.where((p) => p.isBasicPlanProject).length;
 
         return StreamBuilder<List<ProgramModel>>(
           stream: programsStream ??
               ProgramService.streamPrograms(ownerId: user.uid),
           builder: (context, programSnapshot) {
-            final programCount =
-                programSnapshot.hasData ? programSnapshot.data!.length : 0;
+            final programsLoading = !programSnapshot.hasData;
+            final programCount = programsLoading
+                ? null
+                : programSnapshot.data!.length;
             return StreamBuilder<List<PortfolioModel>>(
               stream: portfoliosStream ??
                   PortfolioService.streamPortfolios(ownerId: user.uid),
               builder: (context, portfolioSnapshot) {
-                final portfolioCount = portfolioSnapshot.hasData
-                    ? portfolioSnapshot.data!.length
-                    : 0;
+                final portfoliosLoading = !portfolioSnapshot.hasData;
+                final portfolioCount = portfoliosLoading
+                    ? null
+                    : portfolioSnapshot.data!.length;
 
                 return _statGrid([
                   _WorldClassStatCard(
                     label: 'Regular Projects',
-                    value: '$basicProjectCount',
-                    subLabel: 'Basic plan workspaces',
+                    value: basicProjectCount == null
+                        ? '—'
+                        : '$basicProjectCount',
+                    subLabel: projectsLoading ? 'Loading…' : 'Basic plan workspaces',
                     icon: Icons.folder_special_rounded,
                     color: palette.primary,
                     onTap: openRegularProjects,
                   ),
                   _WorldClassStatCard(
                     label: 'Projects',
-                    value: '$projectCount',
-                    subLabel: 'Active workspaces',
+                    value: projectCount == null ? '—' : '$projectCount',
+                    subLabel: projectsLoading ? 'Loading…' : 'Active workspaces',
                     icon: Icons.folder_open_rounded,
                     color: palette.primaryDeep,
                     onTap: openProjects,
                   ),
                   _WorldClassStatCard(
                     label: 'Programs',
-                    value: '$programCount',
-                    subLabel: 'Grouped projects',
+                    value: programCount == null ? '—' : '$programCount',
+                    subLabel: programsLoading ? 'Loading…' : 'Grouped projects',
                     icon: Icons.layers_rounded,
                     color: palette.accent,
                     onTap: openPrograms,
                   ),
                   _WorldClassStatCard(
                     label: 'Portfolios',
-                    value: '$portfolioCount',
-                    subLabel: 'Executive views',
+                    value: portfolioCount == null ? '—' : '$portfolioCount',
+                    subLabel: portfoliosLoading ? 'Loading…' : 'Executive views',
                     icon: Icons.pie_chart_rounded,
                     color: palette.onTrack,
                     onTap: openPortfolios,

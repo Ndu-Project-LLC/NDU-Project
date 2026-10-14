@@ -195,7 +195,10 @@ class _DashboardHeaderState extends State<DashboardHeader> {
     final modeTitle = widget.modeTitle ??
         (widget.isBasicPlan
             ? 'Regular Projects · Basic plan workspace'
-            : 'Project workspace overview · Standard plan');
+            // "Pro plan" — matches the "PRO PLAN" badge shown beside it.
+            // The old "Standard plan" subtitle contradicted the badge
+            // (E2E finding: badge and subtitle disagreed about the tier).
+            : 'Project workspace overview · Pro plan');
     final crumbText = widget.crumbLabel ?? 'Project workspace overview';
 
     return Container(

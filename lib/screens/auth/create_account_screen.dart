@@ -22,12 +22,14 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  // Email/password use plain controllers: the spell-check span cache paints
+  // stale text under fast typing on web and rejects programmatic fills.
   final _firstNameController = SpellCheckTextEditingController();
   final _lastNameController = SpellCheckTextEditingController();
   final _companyController = SpellCheckTextEditingController();
-  final _emailController = SpellCheckTextEditingController();
-  final _passwordController = SpellCheckTextEditingController();
-  final _confirmPasswordController = SpellCheckTextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -302,8 +304,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   // ignore: unused_element
   void _showSignInDialog(BuildContext context) {
-    final emailController = SpellCheckTextEditingController();
-    final passwordController = SpellCheckTextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
     bool isPasswordVisible = false;
     bool isLoading = false;
     final parentNav = Navigator.of(context);

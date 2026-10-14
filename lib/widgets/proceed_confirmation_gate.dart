@@ -129,6 +129,82 @@ Future<bool> showProceedWithoutReviewDialog(
   return result ?? false;
 }
 
+/// Advisory dialog used inside step-submit flows (e.g. Requirements →
+/// Risks). Honours the user's "Skip confirmation for future steps"
+/// preference — when set, the dialog is skipped entirely and the flow
+/// continues. Returns:
+///   • true  → "Continue Anyway" (or auto-continued via the skip preference)
+///   • false → "Review Now" — the caller must abort the submit so the user
+///             can actually go back and review.
+///
+/// The previous behaviour pushed one dialog per guidance topic in sequence
+/// and both of each dialog's buttons continued the flow, so "Review Now"
+/// did nothing and opting out of confirmations had no effect (defects found
+/// in the Oct-2026 E2E pass).
+Future<bool> showStepGuidanceDialog(
+  BuildContext context, {
+  String? title,
+  String? message,
+}) async {
+  final shouldSkip = await UserPreferencesService.shouldSkipStepConfirmation();
+  if (shouldSkip) return true;
+
+  if (!context.mounted) return false;
+  final result = await showAppDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      return AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        title: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded,
+                color: Color(0xFFD97706)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                (title == null || title.trim().isEmpty)
+                    ? 'Guidance before you continue'
+                    : title,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message ?? '',
+          style: const TextStyle(fontSize: 13.5, color: Color(0xFF4B5563)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Review Now'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFD24C),
+              foregroundColor: Colors.black,
+              elevation: 0,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Continue Anyway'),
+          ),
+        ],
+      );
+    },
+  );
+  return result ?? false;
+}
+
 class ProceedConfirmationGate extends StatelessWidget {
   const ProceedConfirmationGate({
     super.key,

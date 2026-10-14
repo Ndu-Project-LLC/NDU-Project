@@ -709,8 +709,12 @@ class ProjectService {
     }
     return query.snapshots().map((snapshot) {
       final projects = snapshot.docs.map(ProjectRecord.fromDoc).toList();
-      debugPrint(
-          '📊 StreamProjects: Found ${projects.length} projects for ownerId: $ownerId');
+      // kDebugMode guard: this fired on EVERY snapshot in release builds,
+      // spamming the browser console (E2E finding).
+      if (kDebugMode) {
+        debugPrint(
+            '📊 StreamProjects: Found ${projects.length} projects for ownerId: $ownerId');
+      }
       return projects;
     });
   }

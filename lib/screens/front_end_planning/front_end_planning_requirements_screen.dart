@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
+import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 
@@ -2338,6 +2339,18 @@ if (!mounted) return;
     );
   }
 
+  /// "Row 1 does not have an assignment yet" / "Rows 1, 3 do not have
+  /// assignments yet" — correct singular/plural grammar (E2E defect: the
+  /// old copy always said "Rows 1 do not have any assignment yet").
+  String _missingRowsSentence(List<int> rows, String singularNoun) {
+    if (rows.isEmpty) return '';
+    final list = rows.join(', ');
+    if (rows.length == 1) {
+      return 'Row $list does not have $singularNoun yet.';
+    }
+    return 'Rows $list do not have ${singularNoun}s yet.';
+  }
+
   void _handleSubmit() async {
     final continueAnyway = await showProceedWithoutReviewDialog(
       context,
@@ -2374,73 +2387,60 @@ if (!mounted) return;
     }
 
 if (!mounted) return;
-        if (missingAssignmentRows.isNotEmpty) {
-      await showAppDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Assignment Guidance'),
-          content: Text(
-            'Discipline, Role, and Person help route each requirement to the right owners. Rows ${missingAssignmentRows.join(', ')} do not have any assignment yet.\n\nYou can continue now and complete those assignments later.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Review Now'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Continue Anyway'),
-            ),
-          ],
-        ),
+    // ONE combined guidance dialog (was: two sequential dialogs whose
+    // "Review Now" and "Continue Anyway" buttons did exactly the same
+    // thing). It honours the "Skip confirmation for future steps"
+    // preference, and "Review Now" now actually aborts the submit.
+    if (missingAssignmentRows.isNotEmpty || missingPhaseRows.isNotEmpty) {
+      final guidanceLines = <String>[
+        if (missingAssignmentRows.isNotEmpty)
+          '${_missingRowsSentence(missingAssignmentRows, 'assignment')} '
+              'Discipline, Role, and Person help route each requirement to '
+              'the right owners.',
+        if (missingPhaseRows.isNotEmpty)
+          '${_missingRowsSentence(missingPhaseRows, 'implementation phase')} '
+              'A phase is recommended for sequencing, but it is not required.',
+      ];
+      final continueAfterGuidance = await showStepGuidanceDialog(
+        context,
+        title: 'Before you continue to Project Risks',
+        message:
+            '${guidanceLines.join('\n\n')}\n\nYou can continue now and complete those details later.',
       );
-    }
-
-if (!mounted) return;
-        if (missingPhaseRows.isNotEmpty) {
-      await showAppDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Phase Guidance'),
-          content: Text(
-            'Rows ${missingPhaseRows.join(', ')} do not have an implementation phase yet. This is recommended for sequencing, but it should not block progression.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Review Now'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Continue Anyway'),
-            ),
-          ],
-        ),
-      );
+      if (!continueAfterGuidance || !mounted) return;
     }
 
     if (!mounted) return;
-    final confirmed = await showAppDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Requirement Coverage'),
-        content: const Text(
-          'Please confirm that all applicable project requirements, particularly regulatory, functional, and operational, are fully captured here, as this will serve as the foundation for the defined project scope.',
+    // Coverage confirmation also honours the skip preference: when the user
+    // opted out of step confirmations, submit directly instead of showing
+    // yet another modal on the way out.
+    final coverageConfirmSkipped =
+        await UserPreferencesService.shouldSkipStepConfirmation();
+    bool confirmed = coverageConfirmSkipped;
+    if (!confirmed && mounted) {
+      final result = await showAppDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm Requirement Coverage'),
+          content: const Text(
+            'Please confirm that all applicable project requirements, particularly regulatory, functional, and operational, are fully captured here, as this will serve as the foundation for the defined project scope.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Confirm and Submit'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirm and Submit'),
-          ),
-        ],
-      ),
-    );
+      );
+      confirmed = result == true;
+    }
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     final requirementsText = requirementItems
         .map((item) => item.description.trim())

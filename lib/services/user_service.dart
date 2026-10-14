@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/models/user_model.dart';
 import 'package:flutter/foundation.dart';
@@ -189,40 +190,52 @@ class UserService {
     }
   }
 
-  /// Search users by email or display name
+  /// Search users by email or display name.
+  ///
+  /// Runs through the `searchUsers` callable Cloud Function: Firestore rules
+  /// deliberately restrict the /users collection to own-document reads, so
+  /// the previous direct client-side query could NEVER succeed — every call
+  /// failed with permission-denied ("Error searching users" spam in the
+  /// console) and every "Company Members" picker silently lost its results.
+  ///
+  /// The callable performs the search with the Admin SDK and returns a
+  /// minimal projection (uid, displayName, email, isAdmin) only.
+  ///
+  /// Graceful degradation: until the function is deployed (or if it errors),
+  /// this returns [] quietly instead of spamming permission-denied errors —
+  /// pickers keep working with Project Team members. Requires a query of at
+  /// least 2 characters; empty queries return [] (the endpoint cannot be
+  /// used to enumerate the user base).
   static Future<List<UserModel>> searchUsers(String query) async {
+    final queryLower = query.toLowerCase().trim();
+    if (queryLower.length < 2) return [];
     try {
-      final queryLower = query.toLowerCase().trim();
-      
-      // Search by email (exact prefix match)
-      final emailResults = await _usersCollection
-          .where('email', isGreaterThanOrEqualTo: queryLower)
-          .where('email', isLessThan: '${queryLower}z')
-          .limit(10)
-          .get();
-
-      // Get all users and filter by displayName (Firestore doesn't support case-insensitive search)
-      final allUsers = await _usersCollection.limit(100).get();
-      final nameResults = allUsers.docs
-          .map((doc) => UserModel.fromJson(doc.data()))
-          .where((user) => 
-              user.displayName.toLowerCase().contains(queryLower) ||
-              user.email.toLowerCase().contains(queryLower))
-          .toList();
-
-      // Combine and deduplicate results
-      final emailUserIds = emailResults.docs.map((d) => d.id).toSet();
-      final combined = emailResults.docs.map((d) => UserModel.fromJson(d.data())).toList();
-      
-      for (final user in nameResults) {
-        if (!emailUserIds.contains(user.uid)) {
-          combined.add(user);
-        }
+      final callable = FirebaseFunctions.instance
+          .httpsCallable('searchUsers',
+              options: HttpsCallableOptions(
+                  timeout: const Duration(seconds: 20)));
+      final result = await callable.call(<String, dynamic>{
+        'query': queryLower,
+        'limit': 20,
+      });
+      final data = result.data;
+      if (data is Map && data['users'] is List) {
+        return (data['users'] as List)
+            .whereType<Map>()
+            .map((u) => UserModel.fromJson(<String, dynamic>{
+                  'uid': u['uid'] ?? '',
+                  'displayName': u['displayName'] ?? '',
+                  'email': u['email'] ?? '',
+                  'isAdmin': u['isAdmin'] == true,
+                }))
+            .toList();
       }
-
-      return combined.take(20).toList();
+      return [];
     } catch (e) {
-      debugPrint('Error searching users: $e');
+      // Callable missing (not deployed yet), rate limited, or network
+      // issue — degrade to "no company members found" instead of leaking a
+      // raw Firestore error into the console on every keystroke.
+      debugPrint('User search unavailable: $e');
       return [];
     }
   }

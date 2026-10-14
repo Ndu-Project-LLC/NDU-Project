@@ -425,9 +425,13 @@ class _StepStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final position = PageNavigationFooter.positionOf(checkpoint);
     final phase = SidebarNavigationService.phaseForCheckpoint(checkpoint);
+    // "· Step 11 of 128" instead of "(11 of 128)" — the bare parenthesised
+    // numbers read like a row/item count for the table on the page
+    // ("Project Risks (11 of 128)" next to a 1-row table). "Step" makes it
+    // unambiguous that this is the page's position in the flow.
     final where = position == null
         ? pageTitle
-        : '$pageTitle (${position.index + 1} of ${position.total})';
+        : '$pageTitle · Step ${position.index + 1} of ${position.total}';
 
     return Tooltip(
       message: phase == null ? where : '$phase · $where',

@@ -7,7 +7,6 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
-import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 /// Mobile-optimized Login screen
 /// Matches the design from provided screenshots
 class MobileLoginScreen extends StatefulWidget {
@@ -19,8 +18,9 @@ class MobileLoginScreen extends StatefulWidget {
 
 class _MobileLoginScreenState extends State<MobileLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = SpellCheckTextEditingController();
-  final _passwordController = SpellCheckTextEditingController();
+  // Plain controllers: spell-check span lag painted stale emails on web.
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _rememberMe = false;

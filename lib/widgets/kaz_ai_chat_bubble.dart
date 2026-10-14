@@ -459,6 +459,12 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
   bool _isHistoryLoading = true;
   int _activeTab = 0;
 
+  // Live service health, derived from the actual AI request results so the
+  // header badge stops claiming "AI Assistant Online" while every request
+  // is failing (e.g. OpenAI credits exhausted → HTTP 429).
+  bool _aiServiceDown = false;
+  String? _aiDownReason;
+
   // Support ticket state
   final _ticketSubjectController = SpellCheckTextEditingController();
   final _ticketDescController = SpellCheckTextEditingController();
@@ -562,6 +568,26 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
     }
   }
 
+  /// Updates the live AI health shown in the header badge. A null reason
+  /// means the service responded successfully again (badge goes back to
+  /// "Online"); a non-null reason flips the badge to an honest "Offline".
+  void _setAiServiceDown(String? reason) {
+    if (!mounted) return;
+    if (reason == null) {
+      if (!_aiServiceDown && _aiDownReason == null) return;
+      setState(() {
+        _aiServiceDown = false;
+        _aiDownReason = null;
+      });
+      return;
+    }
+    if (_aiServiceDown && _aiDownReason == reason) return;
+    setState(() {
+      _aiServiceDown = true;
+      _aiDownReason = reason;
+    });
+  }
+
   /// Multi-turn AI response with full conversation history
   Future<String> _getAiResponse(String userMessage) async {
     if (!OpenAiConfig.isConfigured) {
@@ -610,6 +636,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           .timeout(const Duration(seconds: 120));
 
       if (response.statusCode == 401) {
+        _setAiServiceDown('Authentication failed');
         return 'AI authentication failed. Please sign out and sign back in, then try again.';
       }
       if (response.statusCode == 429) {
@@ -618,17 +645,22 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         // enriched with the proxy/OpenAI error detail when available.
         if (isOpenAiCreditsExhausted(
             response.statusCode, response.body)) {
+          _setAiServiceDown('Credits exhausted');
           return const OpenAiCreditsExhaustedException().toString();
         }
         final detail = _extractAiErrorDetail(response.body);
+        _setAiServiceDown('Rate limited');
         return 'AI is rate limited right now.'
             '${detail.isNotEmpty ? ' ($detail)' : ''} Please try again in a minute.';
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final detail = _extractAiErrorDetail(response.body);
+        _setAiServiceDown('Service error ${response.statusCode}');
         return 'AI request failed (${response.statusCode})'
             '${detail.isNotEmpty ? ': $detail' : ''}. Please try again in a moment.';
       }
+
+      _setAiServiceDown(null);
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
@@ -966,15 +998,21 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                         Container(
                           width: 7,
                           height: 7,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4ADE80),
+                          decoration: BoxDecoration(
+                            color: _activeTab != 0
+                                ? const Color(0xFF4ADE80)
+                                : (_aiServiceDown
+                                    ? const Color(0xFFF87171)
+                                    : const Color(0xFF4ADE80)),
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           _activeTab == 0
-                              ? 'AI Assistant Online'
+                              ? (_aiServiceDown
+                                  ? 'AI Assistant Offline'
+                                  : 'AI Assistant Online')
                               : 'Support Agent',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.white.withValues(alpha: 0.9),
@@ -982,6 +1020,19 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (_activeTab == 0 &&
+                            _aiServiceDown &&
+                            (_aiDownReason?.isNotEmpty ?? false)) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '· $_aiDownReason',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.65),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],

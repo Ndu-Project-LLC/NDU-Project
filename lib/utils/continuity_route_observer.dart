@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/utils/web_utils.dart' show syncBrowserUrl;
 
 /// Global [NavigatorObserver] that keeps the deterministic continuity
 /// snapshot fresh on EVERY page push — not just the handful of routes that
@@ -32,12 +33,34 @@ class ContinuityRouteObserver extends NavigatorObserver {
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _syncUrl(route.settings.name);
     _refreshForRoute(route);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    if (newRoute != null) _refreshForRoute(newRoute);
+    if (newRoute != null) {
+      _syncUrl(newRoute.settings.name);
+      _refreshForRoute(newRoute);
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    // Returning to the screen underneath — restore its URL so the address
+    // bar always mirrors what the user sees (E2E deep-link gap).
+    if (previousRoute != null) _syncUrl(previousRoute.settings.name);
+  }
+
+  /// Best-effort address-bar sync for named routes (go_router pages carry
+  /// their route name/path in settings.name). Unnamed imperative routes and
+  /// dialogs are skipped — those are already covered by the checkpoint sync
+  /// in [PhaseTransitionHelper]. Root and query-string locations are skipped
+  /// so the landing page's `?auth=required` marker is never clobbered.
+  void _syncUrl(String? name) {
+    final n = (name ?? '').trim();
+    if (n.isEmpty || n == '/' || n.contains('?') || n.contains('#')) return;
+    syncBrowserUrl(n.startsWith('/') ? n : '/$n');
   }
 
   void _refreshForRoute(Route<dynamic> route) {

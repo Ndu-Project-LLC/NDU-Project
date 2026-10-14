@@ -13,7 +13,6 @@ import 'package:ndu_project/services/subscription_service.dart';
 
 import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/spell_check/spell_checking_text_controller.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -23,8 +22,13 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _emailController = SpellCheckTextEditingController();
-  final _passwordController = SpellCheckTextEditingController();
+  // Plain TextEditingController — NOT SpellCheckTextEditingController.
+  // The spell-check span cache lags one frame behind fast typing on web,
+  // which made the email field paint stale text (and submit a wrong email
+  // to Firebase). It also broke programmatic fills from password managers.
+  // Email/password fields never benefit from spell underlines anyway.
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
@@ -429,7 +433,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ElevatedAuthContainer(
+                  // AutofillGroup + hints let browser password managers
+                  // save/restore the credentials reliably on Flutter web.
+                  AutofillGroup(
+                    child: ElevatedAuthContainer(
                     maxWidth: maxContentWidth,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,6 +522,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             enableTextFormatting: false,
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
                             style: const TextStyle(fontSize: 15),
                             decoration: fieldDecoration('jane.joe@gmail.com'),
                           ),
@@ -534,6 +542,9 @@ class _SignInScreenState extends State<SignInScreen> {
                             enableTextFormatting: false,
                             controller: _passwordController,
                             obscureText: !_isPasswordVisible,
+                            autofillHints: const [
+                              AutofillHints.password
+                            ],
                             style: const TextStyle(fontSize: 15),
                             decoration: fieldDecoration(
                               '**********',
@@ -644,6 +655,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                       ],
                     ),
+                  ),
                   ),
                   const SizedBox(height: 20),
                   Center(

@@ -2061,6 +2061,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   Widget _buildSubExpandableHeader(String title,
       {required bool expanded,
       required VoidCallback onTap,
+      VoidCallback? onNavigate,
       bool isActive = false,
       bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
@@ -2070,10 +2071,21 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final textColor = isDisabled
         ? Colors.grey[400]
         : (isHighlighted ? activeColor : Colors.black87);
+    final canNavigate = onNavigate != null && isInteractive;
+    void handleTap() {
+      if (!isInteractive) return;
+      if (canNavigate) {
+        if (!expanded) onTap();
+        onNavigate();
+        return;
+      }
+      onTap();
+    }
+
     return Padding(
       padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
       child: InkWell(
-        onTap: isInteractive ? onTap : null,
+        onTap: handleTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -2207,16 +2219,34 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     );
   }
 
+  /// Phase/section header. The whole row toggles expansion by default.
+  ///
+  /// When [onNavigate] is provided, the label area navigates to the phase's
+  /// primary screen (expanding it first if collapsed) and only the chevron
+  /// collapses/expands. This fixes the E2E finding that phase headers
+  /// "expand but do not navigate", which also made the first click on a
+  /// collapsed header feel ignored (one click to expand, another to open).
   Widget _buildExpandableHeader(IconData icon, String title,
       {required bool expanded,
       required VoidCallback onTap,
+      VoidCallback? onNavigate,
       bool isActive = false}) {
     const activeColor = Color(0xFFD97706);
     final isHighlighted = isActive;
+    final canNavigate = onNavigate != null;
+    void handleTap() {
+      if (canNavigate) {
+        if (!expanded) onTap();
+        onNavigate();
+        return;
+      }
+      onTap();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
       child: InkWell(
-        onTap: onTap,
+        onTap: handleTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2255,12 +2285,21 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  color: isHighlighted ? activeColor : Colors.grey[700],
-                  size: 20),
+              // Chevron keeps the pure fold/unfold behaviour so users can
+              // still collapse a phase without navigating.
+              InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                      expanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: isHighlighted ? activeColor : Colors.grey[700],
+                      size: 20),
+                ),
+              ),
             ],
           ),
         ),
@@ -2483,6 +2522,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _initiationExpanded = !_initiationExpanded;
           _sharedInitiationExpanded = _initiationExpanded;
         }),
+        onNavigate: _openBusinessCase,
         isActive: _activeIn(_initiationPhaseLabels),
       ),
       if (_initiationExpanded) ...[
@@ -2493,6 +2533,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             _businessCaseExpanded = !_businessCaseExpanded;
             _sharedBusinessCaseExpanded = _businessCaseExpanded;
           }),
+          onNavigate: _openBusinessCase,
           isActive: _activeIn(_businessCaseLabels),
         ),
         if (_businessCaseExpanded) ...[
@@ -2546,6 +2587,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             _frontEndExpanded = !_frontEndExpanded;
             _sharedFrontEndExpanded = _frontEndExpanded;
           }),
+          onNavigate: _openSummary,
           isActive: _activeIn(_frontEndLabels),
         ),
         if (_frontEndExpanded) ...[
@@ -2601,6 +2643,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _planningPhaseExpanded = !_planningPhaseExpanded;
           _sharedPlanningPhaseExpanded = _planningPhaseExpanded;
         }),
+        onNavigate: _openProjectFramework,
         isActive: _activeIn(_planningPhaseLabels),
       ),
       if (_planningPhaseExpanded) ...[
@@ -3061,6 +3104,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _designPhaseExpanded = !_designPhaseExpanded;
           _sharedDesignPhaseExpanded = _designPhaseExpanded;
         }),
+        onNavigate: _openDesign,
         isActive: _activeIn(_designPhaseLabels),
       ),
       if (_designPhaseExpanded) ...[
@@ -3122,6 +3166,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _executionPhaseExpanded = !_executionPhaseExpanded;
           _sharedExecutionPhaseExpanded = _executionPhaseExpanded;
         }),
+        onNavigate: _openExecutionPlan,
         isActive: _activeIn(_executionPhaseLabels),
       ),
       if (_executionPhaseExpanded) ...[
@@ -3305,6 +3350,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _launchPhaseExpanded = !_launchPhaseExpanded;
           _sharedLaunchPhaseExpanded = _launchPhaseExpanded;
         }),
+        onNavigate: _openDeliverProjectClosure,
         isActive: _activeIn(_launchPhaseLabels),
       ),
       if (_launchPhaseExpanded) ...[

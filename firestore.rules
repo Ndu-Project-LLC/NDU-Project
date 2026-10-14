@@ -14,6 +14,12 @@ service cloud.firestore {
     }
 
     // ─── Users collection (own data only) ──────────────────────────────
+    // NOTE: cross-user search (the "Company Members" pickers) intentionally
+    // does NOT query this collection client-side — a list query can never be
+    // authorized under the own-data-only policy below. It goes through the
+    // `searchUsers` callable Cloud Function (functions/index.js), which
+    // validates auth, rate-limits, and returns a minimal projection
+    // (uid, displayName, email, isAdmin) computed with the Admin SDK.
     match /users/{userId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       allow create: if isAuthenticated() && request.auth.uid == userId;

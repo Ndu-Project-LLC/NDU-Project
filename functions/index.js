@@ -2893,6 +2893,83 @@ exports.oauthRefresh = functions
   });
 
 // ============================================================================
+// USER SEARCH (callable) — fixes the "Error searching users"
+// permission-denied defect
+// ============================================================================
+// Firestore security rules intentionally restrict the /users collection to
+// own-document reads only (no client can list other users' profiles), so the
+// old client-side `UserService.searchUsers` Firestore query could never
+// succeed — every call failed with permission-denied and every "Company
+// Members" picker silently lost its results.
+//
+// The correct pattern is a callable that runs with the Admin SDK (which
+// bypasses rules) and returns a MINIMAL projection of each matching user —
+// only the fields a picker needs. No tokens, settings, security data or any
+// other profile content is exposed.
+exports.searchUsers = functions
+  .runWith({
+    timeoutSeconds: 30,
+    memory: '256MB',
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'You must be signed in to search users.'
+      );
+    }
+
+    const query = typeof data.query === 'string' ? data.query.trim().toLowerCase() : '';
+    const limit = Math.min(Math.max(parseInt(data.limit, 10) || 20, 1), 20);
+
+    if (query.length < 2) {
+      // Deliberately returns an empty page for very short queries so the
+      // endpoint cannot be used to enumerate the whole user base.
+      return { users: [] };
+    }
+
+    await checkRateLimit(context.auth.uid, 'search_users', 60);
+
+    const emailPrefix = await db
+      .collection('users')
+      .where('email', '>=', query)
+      .where('email', '<=', query + '\uf8ff')
+      .limit(limit)
+      .get()
+      .catch(() => null);
+
+    const nameMatch = await db
+      .collection('users')
+      .where('displayName', '>=', query)
+      .where('displayName', '<=', query + '\uf8ff')
+      .limit(limit)
+      .get()
+      .catch(() => null);
+
+    const merged = new Map();
+    for (const snap of [emailPrefix, nameMatch]) {
+      if (!snap) continue;
+      snap.forEach((doc) => {
+        if (merged.size >= limit) return;
+        const d = doc.data() || {};
+        merged.set(doc.id, {
+          uid: doc.id,
+          displayName: typeof d.displayName === 'string' ? d.displayName : '',
+          email: typeof d.email === 'string' ? d.email : '',
+          isAdmin: d.isAdmin === true,
+        });
+      });
+    }
+
+    await logSecurityEvent('user_search', context.auth.uid, {
+      queryLength: query.length,
+      results: merged.size,
+    });
+
+    return { users: Array.from(merged.values()) };
+  });
+
+// ============================================================================
 // SECURITY UTILITIES (shared across all Cloud Functions)
 // ============================================================================
 
